@@ -1,0 +1,126 @@
+"""fh Real Estate SaaS — FastAPI application entry point."""
+
+import logging
+from collections.abc import AsyncIterator
+from contextlib import asynccontextmanager
+from pathlib import Path
+
+from fastapi import FastAPI, Request
+from fastapi.middleware.cors import CORSMiddleware
+from fastapi.responses import JSONResponse
+from fastapi.staticfiles import StaticFiles
+from starlette.exceptions import HTTPException as StarletteHTTPException
+
+from apps.api.config import settings
+from apps.api.middleware.logging import LoggingMiddleware
+from apps.api.middleware.security_headers import SecurityHeadersMiddleware
+from apps.api.routers import (
+    agents,
+    auth,
+    customers,
+    deals,
+    document_requests,
+    leads,
+    listings,
+    media,
+    properties,
+    tenants,
+    users,
+)
+from apps.api.routers.public import document_requests as public_document_requests
+
+logging.basicConfig(level=logging.INFO)
+
+
+@asynccontextmanager
+async def lifespan(app: FastAPI) -> AsyncIterator[None]:
+    """Startup / shutdown lifecycle."""
+    yield
+
+
+app = FastAPI(
+    title="fh Real Estate Platform API",
+    version="0.1.0",
+    description="Multi-tenant real estate SaaS — Phase 1",
+    lifespan=lifespan,
+)
+
+# ---------------------------------------------------------------------------
+# Middleware (last-added runs first)
+# ---------------------------------------------------------------------------
+app.add_middleware(SecurityHeadersMiddleware)
+app.add_middleware(LoggingMiddleware)
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=settings.cors_origins,
+    allow_credentials=True,
+    allow_methods=["*"],
+    allow_headers=["*"],
+)
+
+
+def _cors_headers(request: Request) -> dict[str, str]:
+    origin = request.headers.get("origin", "")
+    if origin in settings.cors_origins:
+        return {
+            "Access-Control-Allow-Origin": origin,
+            "Access-Control-Allow-Credentials": "true",
+        }
+    return {}
+
+
+@app.exception_handler(StarletteHTTPException)
+async def http_exception_handler(
+    request: Request, exc: StarletteHTTPException
+) -> JSONResponse:
+    """Return CORS headers on HTTP errors."""
+    return JSONResponse(
+        status_code=exc.status_code,
+        content={"detail": exc.detail},
+        headers=_cors_headers(request),
+    )
+
+
+@app.exception_handler(Exception)
+async def generic_exception_handler(
+    request: Request, exc: Exception
+) -> JSONResponse:
+    """Return CORS headers on unhandled 500 errors."""
+    logging.getLogger("fh.api").exception("Unhandled error: %s", exc)
+    return JSONResponse(
+        status_code=500,
+        content={"detail": "Internal server error"},
+        headers=_cors_headers(request),
+    )
+
+
+# ---------------------------------------------------------------------------
+# Routers
+# ---------------------------------------------------------------------------
+app.include_router(auth.router, prefix="/auth", tags=["auth"])
+app.include_router(tenants.router, prefix="/tenants", tags=["tenants"])
+app.include_router(users.router, prefix="/users", tags=["users"])
+app.include_router(agents.router, prefix="/agents", tags=["agents"])
+app.include_router(customers.router, prefix="/customers", tags=["customers"])
+app.include_router(leads.router, prefix="/leads", tags=["leads"])
+app.include_router(deals.router, prefix="/deals", tags=["deals"])
+app.include_router(properties.router, prefix="/properties", tags=["properties"])
+app.include_router(listings.router, prefix="", tags=["listings"])
+app.include_router(media.router, prefix="", tags=["media"])
+app.include_router(document_requests.router, prefix="/document-requests", tags=["document-requests"])
+app.include_router(public_document_requests.router, prefix="/public/document-requests", tags=["public"])
+
+
+@app.get("/health", tags=["health"])
+async def health() -> dict[str, str]:
+    """Liveness probe."""
+    return {"status": "healthy"}
+
+
+# ---------------------------------------------------------------------------
+# Local dev static mounts — public uploads only (never private)
+# ---------------------------------------------------------------------------
+if not settings.cf_r2_bucket:
+    _pub_dir = Path(settings.local_uploads_root) / "public"
+    _pub_dir.mkdir(parents=True, exist_ok=True)
+    app.mount("/_local-public", StaticFiles(directory=str(_pub_dir)), name="local-public")

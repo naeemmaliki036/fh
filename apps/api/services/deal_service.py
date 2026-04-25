@@ -1,0 +1,211 @@
+"""Deal CRUD + stage transitions service."""
+
+from datetime import UTC, datetime
+from decimal import Decimal
+from uuid import UUID
+
+from sqlalchemy import func, or_, select, text
+from sqlalchemy.ext.asyncio import AsyncSession
+
+from apps.api.models.agent import Agent
+from apps.api.models.customer import Customer
+from apps.api.models.deal import Deal
+from apps.api.models.enums import AuditAction, DealStage, DealType, TenantRole
+from apps.api.models.property import Property
+from apps.api.services.audit_service import AuditService
+from apps.api.services.base import BaseService
+from apps.api.utils.commission import compute_commission_amount
+from packages.common.utils.error_handlers import bad_request, forbidden, not_found
+
+_D = DealStage  # alias for compact transition table
+_TRANSITIONS: dict[DealStage, set[DealStage]] = {
+    _D.INITIATED:         {_D.DOCUMENTS_PENDING, _D.CANCELED, _D.CLOSED_LOST},
+    _D.DOCUMENTS_PENDING: {_D.DEPOSIT_PENDING, _D.INITIATED, _D.CANCELED, _D.CLOSED_LOST},
+    _D.DEPOSIT_PENDING:   {_D.CLOSED_WON, _D.DOCUMENTS_PENDING, _D.CANCELED, _D.CLOSED_LOST},
+    _D.CLOSED_WON:        set(),
+    _D.CLOSED_LOST:       set(),
+    _D.CANCELED:          set(),
+}
+_CLOSED = {DealStage.CLOSED_WON, DealStage.CLOSED_LOST, DealStage.CANCELED}
+_MANAGER_ROLES = {
+    TenantRole.COMPANY_OWNER.value, TenantRole.COMPANY_ADMIN.value,
+    TenantRole.PROPERTY_ADMIN.value, TenantRole.LISTING_MANAGER.value,
+}
+_ALL_DEAL_ROLES = _MANAGER_ROLES | {TenantRole.AGENT.value}
+
+
+class DealService(BaseService):
+    def __init__(self, session: AsyncSession) -> None:
+        super().__init__(session)
+        self._audit = AuditService(session)
+
+    async def _set_rls(self, tenant_id: UUID) -> None:
+        await self.session.execute(text(f"SET LOCAL app.tenant_id = '{tenant_id}'"))
+
+    def _require_deal_role(self, role: str) -> None:
+        if role not in _ALL_DEAL_ROLES:
+            raise forbidden("Insufficient role to manage deals")
+
+    async def _enrich(self, deal: Deal) -> dict:
+        customer = await self.session.get(Customer, deal.customer_id)
+        agent = await self.session.get(Agent, deal.primary_agent_id)
+        prop = await self.session.get(Property, deal.property_id)
+        commission_amount = compute_commission_amount(
+            deal.commission_type,
+            Decimal(str(deal.commission_value)),
+            Decimal(str(deal.transaction_value)),
+        )
+        return {
+            "deal": deal,
+            "customer": customer,
+            "primary_agent": agent,
+            "interest_property": prop,
+            "commission_amount": commission_amount,
+        }
+
+    # ------------------------------------------------------------------
+    # Read
+    # ------------------------------------------------------------------
+
+    async def list_deals(
+        self, tenant_id: UUID, *,
+        stage: DealStage | None = None, deal_type: DealType | None = None,
+        primary_agent_id: UUID | None = None, customer_id: UUID | None = None,
+        q: str | None = None, skip: int = 0, limit: int = 50,
+    ) -> tuple[list[dict], int]:
+        await self._set_rls(tenant_id)
+        stmt = select(Deal).where(Deal.tenant_id == tenant_id)
+        if stage:
+            stmt = stmt.where(Deal.stage == stage)
+        if deal_type:
+            stmt = stmt.where(Deal.deal_type == deal_type)
+        if primary_agent_id:
+            stmt = stmt.where(Deal.primary_agent_id == primary_agent_id)
+        if customer_id:
+            stmt = stmt.where(Deal.customer_id == customer_id)
+        if q:
+            cust_ids = select(Customer.id).where(
+                Customer.tenant_id == tenant_id,
+                or_(Customer.full_name.ilike(f"%{q}%"), Customer.phone_normalized.ilike(f"{q}%")),
+            )
+            stmt = stmt.where(Deal.customer_id.in_(cust_ids))
+        total = (await self.session.execute(
+            select(func.count()).select_from(stmt.subquery())
+        )).scalar_one()
+        result = await self.session.execute(
+            stmt.order_by(Deal.created_at.desc()).offset(skip).limit(limit)
+        )
+        deals = list(result.scalars().all())
+        return [await self._enrich(d) for d in deals], total
+
+    async def get_deal(self, deal_id: UUID, tenant_id: UUID) -> dict:
+        await self._set_rls(tenant_id)
+        deal = await self.session.get(Deal, deal_id)
+        if not deal or deal.tenant_id != tenant_id:
+            raise not_found("Deal")
+        return await self._enrich(deal)
+
+    # ------------------------------------------------------------------
+    # Create
+    # ------------------------------------------------------------------
+
+    async def create_deal(self, tenant_id: UUID, current_user: dict, **fields) -> dict:
+        self._require_deal_role(current_user["role"])
+        await self._set_rls(tenant_id)
+
+        agent = await self.session.get(Agent, fields["primary_agent_id"])
+        if not agent or agent.tenant_id != tenant_id:
+            raise not_found("Agent")
+
+        # Resolve commission
+        req_type = fields.pop("commission_type", None)
+        req_value = fields.pop("commission_value", None)
+        override_reason = fields.pop("commission_override_reason", None)
+
+        if req_type is None and req_value is None:
+            commission_type = agent.default_commission_type
+            commission_value = Decimal(str(agent.default_commission_value))
+            overridden = False
+        else:
+            commission_type = req_type or agent.default_commission_type
+            commission_value = req_value if req_value is not None else Decimal(str(agent.default_commission_value))
+            overridden = (
+                commission_type != agent.default_commission_type
+                or commission_value != Decimal(str(agent.default_commission_value))
+            )
+            if overridden and not override_reason:
+                raise bad_request("commission_override_reason is required when commission differs from agent default")
+
+        deal = Deal(
+            tenant_id=tenant_id,
+            commission_type=commission_type,
+            commission_value=commission_value,
+            commission_overridden=overridden,
+            commission_override_reason=override_reason if overridden else None,
+            created_by_user_id=UUID(current_user["id"]),
+            **fields,
+        )
+        self.session.add(deal)
+        await self.session.flush()
+
+        await self._audit.record(
+            AuditAction.OTHER, tenant_id=tenant_id,
+            actor_user_id=UUID(current_user["id"]),
+            entity_type="deal", entity_id=deal.id,
+            after={"deal_type": deal.deal_type.value, "stage": deal.stage.value},
+        )
+        if overridden:
+            await self._audit.record(
+                AuditAction.COMMISSION_OVERRIDDEN, tenant_id=tenant_id,
+                actor_user_id=UUID(current_user["id"]),
+                entity_type="deal", entity_id=deal.id,
+                before={"type": agent.default_commission_type.value, "value": str(agent.default_commission_value)},
+                after={"type": commission_type.value, "value": str(commission_value), "reason": override_reason},
+            )
+        await self.session.refresh(deal)
+        return await self._enrich(deal)
+
+    # ------------------------------------------------------------------
+    # Update
+    # ------------------------------------------------------------------
+
+    async def update_deal(self, deal_id: UUID, tenant_id: UUID, updates: dict) -> dict:
+        data = await self.get_deal(deal_id, tenant_id)
+        deal = data["deal"]
+        for k, v in updates.items():
+            if k in {"notes", "expected_close_at", "listing_id", "transaction_value", "transaction_currency"}:
+                setattr(deal, k, v)
+        await self.session.flush()
+        await self.session.refresh(deal)
+        return await self._enrich(deal)
+
+    # ------------------------------------------------------------------
+    # Stage transition
+    # ------------------------------------------------------------------
+
+    async def transition(
+        self, deal_id: UUID, tenant_id: UUID, current_user: dict,
+        new_stage: DealStage, description: str | None,
+    ) -> dict:
+        self._require_deal_role(current_user["role"])
+        data = await self.get_deal(deal_id, tenant_id)
+        deal = data["deal"]
+        old_stage = deal.stage
+        if new_stage not in _TRANSITIONS.get(old_stage, set()):
+            raise bad_request(
+                f"Transition '{old_stage.value}' → '{new_stage.value}' is not allowed. "
+                f"Legal: {[s.value for s in _TRANSITIONS[old_stage]]}"
+            )
+        deal.stage = new_stage
+        if new_stage in _CLOSED:
+            deal.closed_at = datetime.now(UTC).replace(tzinfo=None)
+        await self.session.flush()
+        await self._audit.record(
+            AuditAction.DEAL_STAGE_CHANGED, tenant_id=tenant_id,
+            actor_user_id=UUID(current_user["id"]),
+            entity_type="deal", entity_id=deal.id,
+            before={"stage": old_stage.value},
+            after={"stage": new_stage.value, "description": description},
+        )
+        await self.session.refresh(deal)
+        return await self._enrich(deal)

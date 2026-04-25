@@ -1,0 +1,91 @@
+{
+  "auth": {
+    "login": "Sign in",
+    "logout": "Sign out",
+    "signup": "Create account",
+    "email": "Email",
+    "password": "Password",
+    "pendingApproval": "Account Under Review"
+  },
+  "nav": {
+    "dashboard": "Dashboard",
+    "agents": "Agents",
+    "customers": "Customers",
+    "properties": "Properties",
+    "leads": "Leads",
+    "users": "Users",
+    "profile": "Profile",
+    "company": "Company",
+    "tenants": "Tenants"
+  },
+  "properties": {
+    "title": "Properties",
+    "newProperty": "New Property",
+    "overview": "Overview",
+    "media": "Media",
+    "listings": "Listings",
+    "agents": "Agents",
+    "noMedia": "No media yet",
+    "noListings": "No listings yet"
+  },
+  "customers": {
+    "title": "Customers",
+    "newCustomer": "New Customer",
+    "profile": "Profile",
+    "kyc": "KYC Documents",
+    "noDocuments": "No KYC documents yet",
+    "conflict": "Customer already exists",
+    "openExisting": "Open existing customer",
+    "disable": "Disable"
+  },
+  "agents": {
+    "title": "Agents",
+    "newAgent": "New Agent",
+    "profile": "Profile",
+    "documents": "Documents",
+    "noDocuments": "No documents yet",
+    "uploadDocument": "Upload Document",
+    "download": "Download",
+    "disable": "Disable",
+    "expiryWarning": "License expiring soon"
+  },
+  "leads": {
+    "title": "Leads",
+    "newLead": "New Lead",
+    "pipeline": "Pipeline",
+    "activities": "Activities",
+    "existingCustomer": "Existing Customer",
+    "newCustomer": "New Customer",
+    "terminalConfirm": "This is a terminal stage. Continue?",
+    "noActivity": "No activity yet"
+  },
+  "deals": {
+    "title": "Deals",
+    "newDeal": "New Deal",
+    "overview": "Overview",
+    "commission": "Commission",
+    "documents": "Documents",
+    "terminalConfirm": "This is a terminal stage and cannot be undone.",
+    "overrideCommission": "Override Commission",
+    "recordPayout": "Record Payout",
+    "cancelPayout": "Cancel Payout"
+  },
+  "docRequests": {
+    "title": "Document Requests",
+    "new": "New Request",
+    "codeWarning": "Save these now — shown once only",
+    "verificationCode": "Verification Code",
+    "customerLink": "Customer Link",
+    "regenerateCode": "Regenerate Code",
+    "cancelRequest": "Cancel Request",
+    "allDone": "You're all done!",
+    "verifyCode": "Enter the 6-digit code your agent shared with you",
+    "locked": "Too many attempts — this link is locked"
+  },
+  "common": {
+    "save": "Save changes",
+    "cancel": "Cancel",
+    "loading": "Loading...",
+    "error": "Something went wrong"
+  }
+}
