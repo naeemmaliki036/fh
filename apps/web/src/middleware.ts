@@ -7,9 +7,11 @@ const PUBLIC_PATHS = [
   "/pending-approval",
   "/d",
   "/api",
+  "/account-status",
+  "/contact",
 ];
 
-const PLATFORM_PATHS = ["/tenants"];
+const PLATFORM_PATHS = ["/tenants", "/notifications"];
 
 function isPublicPath(pathname: string): boolean {
   return PUBLIC_PATHS.some((p) => pathname.startsWith(p));

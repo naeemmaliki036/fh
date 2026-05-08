@@ -40,9 +40,15 @@ export function useLogin() {
       router.push("/dashboard");
     },
     onError: (error: Error) => {
-      if (error instanceof ApiError && error.isPendingApproval) {
-        router.push("/pending-approval");
-        return;
+      if (error instanceof ApiError) {
+        if (error.isPendingApproval) {
+          router.push("/account-status?reason=pending");
+          return;
+        }
+        if (error.isSuspended) {
+          router.push("/account-status?reason=suspended");
+          return;
+        }
       }
       toast.error(error.message);
     },

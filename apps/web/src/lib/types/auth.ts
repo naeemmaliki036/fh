@@ -17,6 +17,8 @@ export interface RegisterTenantRequest {
   owner_email: string;
   owner_password: string;
   owner_full_name: string;
+  contact_email: string;
+  contact_phone: string;
 }
 
 export interface TokenResponse {

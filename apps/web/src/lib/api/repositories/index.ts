@@ -11,3 +11,4 @@ export { LeadRepository, leadRepository } from "./lead.repository";
 export { DocumentRequestRepository, documentRequestRepository } from "./document-request.repository";
 export { publicDocumentRequestRepository } from "./public-document-request.repository";
 export { DealRepository, dealRepository } from "./deal.repository";
+export { NotificationRepository, notificationRepository } from "./notification.repository";

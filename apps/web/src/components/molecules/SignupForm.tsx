@@ -9,6 +9,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { useRegisterTenant } from "@/hooks/mutations/useAuthMutations";
 import { authRepository } from "@/lib/api/repositories/auth.repository";
+import { SlugStatusIndicator, type SlugStatus } from "@/components/molecules/SlugStatusIndicator";
 
 const schema = z.object({
   tenant_name: z.string().min(2, "Company name too short"),
@@ -19,6 +20,8 @@ const schema = z.object({
   owner_full_name: z.string().min(2, "Full name required"),
   owner_email: z.string().email("Invalid email"),
   owner_password: z.string().min(8, "Minimum 8 characters"),
+  contact_phone: z.string().min(5, "Phone too short").max(32, "Phone too long"),
+  contact_email: z.string().email("Invalid contact email"),
   currency: z.string().default("AED"),
   timezone: z.string().default("Asia/Dubai"),
 });
@@ -35,16 +38,10 @@ function slugify(input: string): string {
     .slice(0, 64);
 }
 
-type SlugStatus =
-  | { kind: "idle" }
-  | { kind: "checking" }
-  | { kind: "available" }
-  | { kind: "taken" }
-  | { kind: "invalid" };
-
 export function SignupForm(): React.ReactElement {
   const { mutate: register, isPending } = useRegisterTenant();
   const [slugStatus, setSlugStatus] = useState<SlugStatus>({ kind: "idle" });
+  const [mirrorContact, setMirrorContact] = useState(true);
   const slugTouchedRef = useRef(false);
   const debounceRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
@@ -56,17 +53,24 @@ export function SignupForm(): React.ReactElement {
     formState: { errors },
   } = useForm<FormValues>({
     resolver: zodResolver(schema),
-    defaultValues: { currency: "AED", timezone: "Asia/Dubai" },
+    defaultValues: { currency: "AED", timezone: "Asia/Dubai", contact_email: "" },
   });
 
   const nameValue = watch("tenant_name");
   const slugValue = watch("tenant_slug");
+  const ownerEmail = watch("owner_email");
 
   // Auto-suggest slug from name until the user manually edits the slug field.
   useEffect(() => {
     if (slugTouchedRef.current) return;
     setValue("tenant_slug", slugify(nameValue ?? ""), { shouldValidate: false });
   }, [nameValue, setValue]);
+
+  // Mirror owner_email → contact_email when toggle is on.
+  useEffect(() => {
+    if (!mirrorContact) return;
+    setValue("contact_email", ownerEmail ?? "", { shouldValidate: false });
+  }, [ownerEmail, mirrorContact, setValue]);
 
   // Debounced uniqueness check.
   useEffect(() => {
@@ -103,12 +107,16 @@ export function SignupForm(): React.ReactElement {
 
   return (
     <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
+      {/* Company Name */}
       <div className="space-y-1.5">
         <Label htmlFor="tenant_name">Company Name</Label>
         <Input id="tenant_name" placeholder="Acme Real Estate" {...field("tenant_name")} />
-        {errors.tenant_name && <p className="text-xs text-destructive">{errors.tenant_name.message}</p>}
+        {errors.tenant_name && (
+          <p className="text-xs text-destructive">{errors.tenant_name.message}</p>
+        )}
       </div>
 
+      {/* Slug */}
       <div className="space-y-1.5">
         <Label htmlFor="tenant_slug">Slug</Label>
         <Input
@@ -120,26 +128,88 @@ export function SignupForm(): React.ReactElement {
             slugFieldProps.onChange(e);
           }}
         />
-        <SlugStatusLine status={slugStatus} />
-        {errors.tenant_slug && <p className="text-xs text-destructive">{errors.tenant_slug.message}</p>}
+        <SlugStatusIndicator status={slugStatus} />
+        {errors.tenant_slug && (
+          <p className="text-xs text-destructive">{errors.tenant_slug.message}</p>
+        )}
       </div>
 
+      {/* Owner Name */}
       <div className="space-y-1.5">
         <Label htmlFor="owner_full_name">Your Name</Label>
         <Input id="owner_full_name" placeholder="Jane Smith" {...field("owner_full_name")} />
-        {errors.owner_full_name && <p className="text-xs text-destructive">{errors.owner_full_name.message}</p>}
+        {errors.owner_full_name && (
+          <p className="text-xs text-destructive">{errors.owner_full_name.message}</p>
+        )}
       </div>
 
+      {/* Owner Email */}
       <div className="space-y-1.5">
         <Label htmlFor="owner_email">Your Email</Label>
-        <Input id="owner_email" type="email" placeholder="jane@acme.com" {...field("owner_email")} />
-        {errors.owner_email && <p className="text-xs text-destructive">{errors.owner_email.message}</p>}
+        <Input
+          id="owner_email"
+          type="email"
+          placeholder="jane@acme.com"
+          {...field("owner_email")}
+        />
+        {errors.owner_email && (
+          <p className="text-xs text-destructive">{errors.owner_email.message}</p>
+        )}
       </div>
 
+      {/* Password */}
       <div className="space-y-1.5">
         <Label htmlFor="owner_password">Password</Label>
-        <Input id="owner_password" type="password" placeholder="Min 8 characters" {...field("owner_password")} />
-        {errors.owner_password && <p className="text-xs text-destructive">{errors.owner_password.message}</p>}
+        <Input
+          id="owner_password"
+          type="password"
+          placeholder="Min 8 characters"
+          {...field("owner_password")}
+        />
+        {errors.owner_password && (
+          <p className="text-xs text-destructive">{errors.owner_password.message}</p>
+        )}
+      </div>
+
+      {/* Contact Phone */}
+      <div className="space-y-1.5">
+        <Label htmlFor="contact_phone">Contact Phone</Label>
+        <Input id="contact_phone" type="tel" placeholder="+971 50 000 0000" {...field("contact_phone")} />
+        {errors.contact_phone && (
+          <p className="text-xs text-destructive">{errors.contact_phone.message}</p>
+        )}
+      </div>
+
+      {/* Contact Email (with mirror toggle) */}
+      <div className="space-y-1.5">
+        <div className="flex items-center justify-between">
+          <Label htmlFor="contact_email">Contact Email</Label>
+          <label className="flex items-center gap-1.5 cursor-pointer">
+            <input
+              type="checkbox"
+              className="h-3.5 w-3.5 rounded border-input accent-primary"
+              checked={mirrorContact}
+              onChange={(e) => {
+                const checked = e.target.checked;
+                setMirrorContact(checked);
+                if (checked) {
+                  setValue("contact_email", ownerEmail ?? "", { shouldValidate: false });
+                }
+              }}
+            />
+            <span className="text-xs text-muted-foreground">Same as owner email</span>
+          </label>
+        </div>
+        <Input
+          id="contact_email"
+          type="email"
+          placeholder="contact@acme.com"
+          disabled={mirrorContact}
+          {...field("contact_email")}
+        />
+        {errors.contact_email && (
+          <p className="text-xs text-destructive">{errors.contact_email.message}</p>
+        )}
       </div>
 
       <Button
@@ -151,12 +221,4 @@ export function SignupForm(): React.ReactElement {
       </Button>
     </form>
   );
-}
-
-function SlugStatusLine({ status }: { status: SlugStatus }): React.ReactElement | null {
-  if (status.kind === "idle") return null;
-  if (status.kind === "checking") return <p className="text-xs text-muted-foreground">Checking availability…</p>;
-  if (status.kind === "available") return <p className="text-xs text-green-600">Slug is available</p>;
-  if (status.kind === "taken") return <p className="text-xs text-destructive">Slug is already taken</p>;
-  return <p className="text-xs text-destructive">Only lowercase letters, numbers, hyphens</p>;
 }

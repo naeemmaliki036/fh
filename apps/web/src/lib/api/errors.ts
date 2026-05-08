@@ -7,6 +7,7 @@ export interface ApiErrorResponse {
 }
 
 const PENDING_APPROVAL_MSG = "Tenant account is pending approval";
+const SUSPENDED_MSG = "Tenant account is suspended";
 
 export class ApiError extends Error {
   public readonly status: number;
@@ -41,9 +42,11 @@ export class ApiError extends Error {
           ? "CONFLICT"
           : status === 403 && message === PENDING_APPROVAL_MSG
             ? "PENDING_APPROVAL"
-            : status === 403
-              ? "FORBIDDEN"
-              : "API_ERROR";
+            : status === 403 && message === SUSPENDED_MSG
+              ? "SUSPENDED"
+              : status === 403
+                ? "FORBIDDEN"
+                : "API_ERROR";
 
     // Capture all response body fields except `detail` as extras
     const extras: Record<string, unknown> = Object.fromEntries(
@@ -58,4 +61,5 @@ export class ApiError extends Error {
   get isConflict(): boolean { return this.status === 409; }
   get isServerError(): boolean { return this.status >= 500; }
   get isPendingApproval(): boolean { return this.code === "PENDING_APPROVAL"; }
+  get isSuspended(): boolean { return this.code === "SUSPENDED"; }
 }

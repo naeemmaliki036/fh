@@ -154,3 +154,11 @@ export type {
   VerifyResponse,
   UploadItemResponse,
 } from "./public-document-request";
+
+export type {
+  NotificationKind,
+  Notification,
+  NotificationListResponse,
+  UnreadCountResponse,
+  NotificationListParams,
+} from "./notification";
