@@ -2,11 +2,11 @@
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { Bell, Building2 } from "lucide-react";
+import { Bell, Building2, LogOut } from "lucide-react";
 import { cn } from "@/lib/utils/cn";
 import { usePlatformLogout } from "@/hooks/mutations/useAuthMutations";
 import { Button } from "@/components/ui/button";
-import { LogOut } from "lucide-react";
+import { useAuth } from "@/contexts/AuthContext";
 
 interface NavItem {
   href: string;
@@ -19,9 +19,14 @@ const NAV_ITEMS: NavItem[] = [
   { href: "/notifications", label: "Notifications", icon: Bell },
 ];
 
+function roleLabel(role: string): string {
+  return role.replaceAll("_", " ").replace(/\b\w/g, (c) => c.toUpperCase());
+}
+
 export function PlatformSidebar(): React.ReactElement {
   const pathname = usePathname();
   const { mutate: logout, isPending } = usePlatformLogout();
+  const { currentPlatformUser } = useAuth();
 
   return (
     <aside className="flex h-full w-64 flex-col bg-sidebar text-sidebar-foreground">
@@ -52,7 +57,23 @@ export function PlatformSidebar(): React.ReactElement {
         })}
       </nav>
 
-      <div className="border-t border-sidebar-border p-3">
+      <div className="border-t border-sidebar-border p-3 space-y-2">
+        {currentPlatformUser && (
+          <div className="flex items-center gap-3 rounded-md px-3 py-2">
+            <div className="flex h-9 w-9 flex-shrink-0 items-center justify-center rounded-full bg-sidebar-accent text-sidebar-accent-foreground text-sm font-semibold">
+              {currentPlatformUser.full_name.charAt(0).toUpperCase()}
+            </div>
+            <div className="min-w-0 flex-1">
+              <p className="truncate text-sm font-medium">{currentPlatformUser.full_name}</p>
+              <p className="truncate text-xs text-sidebar-foreground/60">
+                {currentPlatformUser.email}
+              </p>
+              <p className="truncate text-[10px] uppercase tracking-wide text-sidebar-foreground/50">
+                {roleLabel(currentPlatformUser.role)}
+              </p>
+            </div>
+          </div>
+        )}
         <Button
           variant="ghost"
           className="w-full justify-start"
