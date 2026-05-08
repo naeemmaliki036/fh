@@ -64,6 +64,7 @@ def get_private_storage() -> Storage:
             bucket=settings.aws_s3_bucket,
             access_key=settings.aws_access_key_id,
             secret_key=settings.aws_secret_access_key,
+            endpoint_url=settings.aws_s3_endpoint_url or None,
             region=settings.aws_region or "us-east-1",
             public_base_url=None,  # private: always signed URLs
         )

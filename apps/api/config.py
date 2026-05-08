@@ -33,11 +33,13 @@ class Settings(BaseSettings):
     # CORS — accepts a JSON list string or a Python list
     cors_origins: list[str] = ["http://localhost:3000"]
 
-    # AWS S3 (private documents)
+    # AWS S3 (private documents) — also accepts any S3-compatible provider (e.g. R2)
+    # via aws_s3_endpoint_url. When empty, boto3 defaults to AWS S3.
     aws_access_key_id: str = ""
     aws_secret_access_key: str = ""
     aws_s3_bucket: str = ""
     aws_region: str = "us-east-1"
+    aws_s3_endpoint_url: str = ""
 
     # Cloudflare R2 (public media)
     cf_r2_access_key_id: str = ""
