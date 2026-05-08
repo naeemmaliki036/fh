@@ -1,5 +1,6 @@
 """Tenant service — platform-level and tenant-level tenant management."""
 
+import logging
 from datetime import UTC, datetime
 from uuid import UUID
 
@@ -12,6 +13,8 @@ from apps.api.models.tenant import Tenant
 from apps.api.services.audit_service import AuditService
 from apps.api.services.base import BaseService
 from packages.common.utils.error_handlers import forbidden, not_found
+
+_log = logging.getLogger("fh.tenant")
 
 
 class TenantService(BaseService):
@@ -91,6 +94,22 @@ class TenantService(BaseService):
         )
 
         await self.session.refresh(tenant)
+
+        # Notify all platform users that the tenant is now active.
+        from apps.api.services.notification_service import NotificationService  # noqa: PLC0415
+
+        try:
+            notif_svc = NotificationService(self.session)
+            await notif_svc.create_for_all_platform_users(
+                event_type="tenant_approved",
+                title=f"Tenant approved: {tenant.name}",
+                body=f"{tenant.name} has been approved and is now active.",
+                link_path=f"/tenants/{tenant_id}",
+                payload={"tenant_id": str(tenant_id)},
+            )
+        except Exception:
+            _log.warning("approve_tenant: notification fan-out failed", exc_info=True)
+
         return tenant
 
     async def suspend_tenant(
@@ -125,6 +144,22 @@ class TenantService(BaseService):
         )
 
         await self.session.refresh(tenant)
+
+        # Notify all platform users that the tenant has been suspended.
+        from apps.api.services.notification_service import NotificationService  # noqa: PLC0415
+
+        try:
+            notif_svc = NotificationService(self.session)
+            await notif_svc.create_for_all_platform_users(
+                event_type="tenant_suspended",
+                title=f"Tenant suspended: {tenant.name}",
+                body=f"{tenant.name} has been suspended.",
+                link_path=f"/tenants/{tenant_id}",
+                payload={"tenant_id": str(tenant_id)},
+            )
+        except Exception:
+            _log.warning("suspend_tenant: notification fan-out failed", exc_info=True)
+
         return tenant
 
     # ------------------------------------------------------------------

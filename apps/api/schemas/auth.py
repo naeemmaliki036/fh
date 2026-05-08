@@ -1,6 +1,6 @@
 """Auth request/response schemas."""
 
-from pydantic import BaseModel, ConfigDict, EmailStr
+from pydantic import BaseModel, ConfigDict, EmailStr, Field
 
 
 class RegisterTenantRequest(BaseModel):
@@ -10,6 +10,9 @@ class RegisterTenantRequest(BaseModel):
     currency: str = "AED"
     timezone: str = "Asia/Dubai"
     locale: str = "en"
+    # Public contact details — stored on the Tenant row, not the owner's profile.
+    contact_email: EmailStr
+    contact_phone: str = Field(..., min_length=5, max_length=32)
     # Owner fields
     owner_email: EmailStr
     owner_password: str

@@ -49,6 +49,17 @@ class Tenant(Base, UUIDMixin, TimestampMixin):
         String(10), nullable=False, default="en", server_default="en"
     )
 
+    # Public company contact details — separate from the owner's personal email.
+    contact_email: Mapped[str] = mapped_column(
+        String(255),
+        nullable=False,
+        index=True,
+    )
+    contact_phone: Mapped[str] = mapped_column(
+        String(32),
+        nullable=False,
+    )
+
     # Approval trail — nullable until a platform admin approves.
     approved_at: Mapped[datetime | None] = mapped_column(
         nullable=True,

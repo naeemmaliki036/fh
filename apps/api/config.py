@@ -54,6 +54,10 @@ class Settings(BaseSettings):
     # Frontend base URL — used to build doc-request share links
     frontend_base_url: str = "http://localhost:3000"
 
+    # Transactional email via Resend
+    resend_api_key: str = ""
+    email_from: str = "fh <onboarding@resend.dev>"
+
     # Seeding
     seed_superadmin_email: str = "admin@fhplatform.com"
     seed_superadmin_password: str = "change-me"

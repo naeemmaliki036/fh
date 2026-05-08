@@ -74,6 +74,8 @@ class AuthService(BaseService):
         currency: str,
         timezone_: str,
         locale: str,
+        contact_email: str,
+        contact_phone: str,
         owner_email: str,
         owner_password: str,
         owner_full_name: str,
@@ -94,6 +96,8 @@ class AuthService(BaseService):
             currency=currency,
             timezone=timezone_,
             locale=locale,
+            contact_email=contact_email.lower(),
+            contact_phone=contact_phone,
         )
         self.session.add(tenant)
         await self.session.flush()
@@ -126,6 +130,29 @@ class AuthService(BaseService):
 
         await self.session.refresh(tenant)
         await self.session.refresh(user)
+
+        # Fan-out notification to all platform users — fire-and-forget on error.
+        from apps.api.services.notification_service import NotificationService  # noqa: PLC0415
+
+        try:
+            notif_svc = NotificationService(self.session)
+            await notif_svc.create_for_all_platform_users(
+                event_type="tenant_registered",
+                title=f"New tenant: {tenant.name}",
+                body=f"{tenant.name} just registered and is awaiting approval.",
+                link_path=f"/tenants/{tenant.id}",
+                payload={
+                    "tenant_id": str(tenant.id),
+                    "tenant_slug": tenant.slug,
+                    "owner_email": user.email,
+                },
+            )
+        except Exception:
+            import logging
+            logging.getLogger("fh.api").warning(
+                "register_tenant: notification fan-out failed", exc_info=True
+            )
+
         return {"tenant": tenant, "user": user}
 
     # ------------------------------------------------------------------

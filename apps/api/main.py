@@ -23,6 +23,7 @@ from apps.api.routers import (
     leads,
     listings,
     media,
+    notifications,
     properties,
     tenants,
     users,
@@ -109,6 +110,7 @@ app.include_router(listings.router, prefix="", tags=["listings"])
 app.include_router(media.router, prefix="", tags=["media"])
 app.include_router(document_requests.router, prefix="/document-requests", tags=["document-requests"])
 app.include_router(public_document_requests.router, prefix="/public/document-requests", tags=["public"])
+app.include_router(notifications.router, prefix="/platform/notifications", tags=["notifications"])
 
 
 @app.get("/health", tags=["health"])

@@ -36,6 +36,7 @@ from .lead import Lead
 from .lead_activity import LeadActivity
 from .listing import Listing
 from .media import Media
+from .notification import Notification
 from .platform_user import PlatformUser
 from .private_document import PrivateDocument
 from .property import Property
@@ -86,4 +87,5 @@ __all__ = [
     "DocumentRequest",
     "DocumentRequestItem",
     "Deal",
+    "Notification",
 ]

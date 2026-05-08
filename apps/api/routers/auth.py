@@ -60,6 +60,8 @@ async def register_tenant(
         currency=body.currency,
         timezone_=body.timezone,
         locale=body.locale,
+        contact_email=str(body.contact_email),
+        contact_phone=body.contact_phone,
         owner_email=str(body.owner_email),
         owner_password=body.owner_password,
         owner_full_name=body.owner_full_name,
