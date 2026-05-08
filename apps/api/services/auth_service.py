@@ -59,6 +59,13 @@ class AuthService(BaseService):
     # Tenant registration
     # ------------------------------------------------------------------
 
+    async def is_slug_available(self, slug: str) -> bool:
+        """Return True if the slug is not yet taken (case-insensitive)."""
+        result = await self.session.execute(
+            select(Tenant.id).where(func.lower(Tenant.slug) == slug.lower())
+        )
+        return result.scalar_one_or_none() is None
+
     async def register_tenant(
         self,
         *,

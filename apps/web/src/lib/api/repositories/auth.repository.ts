@@ -38,6 +38,15 @@ export class AuthRepository {
     return res.data;
   }
 
+  async checkSlug(slug: string): Promise<{ slug: string; available: boolean; valid_format: boolean }> {
+    const res = await this.tenantClient.get<{
+      slug: string;
+      available: boolean;
+      valid_format: boolean;
+    }>("/auth/check-slug", { params: { slug } });
+    return res.data;
+  }
+
   async login(data: LoginRequest): Promise<LoginResponse> {
     const res = await this.tenantClient.post<LoginResponse>("/auth/login", data);
     setTenantTokens(res.data.access_token, res.data.refresh_token);

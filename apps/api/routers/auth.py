@@ -1,6 +1,8 @@
 """Auth router — thin controller, all logic in AuthService."""
 
-from fastapi import APIRouter, Depends
+import re
+
+from fastapi import APIRouter, Depends, Query
 
 from apps.api.dependencies import (
     CurrentPlatformUser,
@@ -25,9 +27,24 @@ from apps.api.services.auth_service import AuthService
 
 router = APIRouter()
 
+_SLUG_RE = re.compile(r"^[a-z0-9-]+$")
+
 
 def _svc(db: DbSession) -> AuthService:
     return AuthService(db)
+
+
+@router.get("/check-slug")
+async def check_slug(
+    slug: str = Query(..., min_length=2, max_length=64),
+    svc: AuthService = Depends(_svc),
+) -> dict:
+    """Public — used by the signup form. Returns availability + format validity."""
+    valid_format = bool(_SLUG_RE.fullmatch(slug.lower()))
+    if not valid_format:
+        return {"slug": slug, "available": False, "valid_format": False}
+    available = await svc.is_slug_available(slug)
+    return {"slug": slug.lower(), "available": available, "valid_format": True}
 
 
 @router.post("/register-tenant", response_model=RegisterTenantResponse, status_code=201)
