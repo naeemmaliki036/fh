@@ -57,7 +57,7 @@ async def create_document_request(
         "items_count": len(items),
         "uploaded_count": 0,
         "verification_code": code,
-        "public_url": f"{settings.frontend_base_url}/document-requests/{dr.token}",
+        "public_url": f"{settings.frontend_base_url}/d/{dr.token}",
     })
 
 

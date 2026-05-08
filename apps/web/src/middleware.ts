@@ -5,7 +5,7 @@ const PUBLIC_PATHS = [
   "/signup",
   "/platform-login",
   "/pending-approval",
-  "/document-requests",
+  "/d",
   "/api",
 ];
 
