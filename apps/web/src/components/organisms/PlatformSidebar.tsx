@@ -31,7 +31,7 @@ export function PlatformSidebar(): React.ReactElement {
   return (
     <aside className="flex h-full w-64 flex-col bg-sidebar text-sidebar-foreground">
       <div className="flex h-16 items-center px-6">
-        <span className="text-lg font-bold tracking-tight">fh</span>
+        <span className="text-lg font-bold tracking-tight">AqarFlow</span>
         <span className="ml-1.5 text-xs text-sidebar-foreground/60">Platform</span>
       </div>
 

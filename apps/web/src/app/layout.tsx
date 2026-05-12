@@ -5,8 +5,8 @@ import { ToasterProvider } from "@/components/providers/ToasterProvider";
 import { AuthProvider } from "@/contexts/AuthContext";
 
 export const metadata: Metadata = {
-  title: "fh Real Estate Platform",
-  description: "Multi-tenant real estate SaaS",
+  title: "AqarFlow",
+  description: "Real estate operations platform",
 };
 
 export default function RootLayout({

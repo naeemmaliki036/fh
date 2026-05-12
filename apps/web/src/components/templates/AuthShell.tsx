@@ -13,8 +13,7 @@ export function AuthShell({ children, title, subtitle }: AuthShellProps): React.
         <div className="text-center space-y-1">
           <div className="flex justify-center mb-4">
             <div className="flex items-center gap-2">
-              <span className="text-2xl font-bold tracking-tight">fh</span>
-              <span className="text-xs text-muted-foreground font-light">real estate</span>
+              <span className="text-2xl font-bold tracking-tight">AqarFlow</span>
             </div>
           </div>
           <h1 className="text-2xl font-semibold tracking-tight">{title}</h1>

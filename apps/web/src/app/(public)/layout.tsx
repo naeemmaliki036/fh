@@ -5,8 +5,7 @@ export default function PublicLayout({ children }: { children: ReactNode }): Rea
   return (
     <div className="min-h-screen bg-muted/20">
       <header className="border-b bg-background px-6 py-4">
-        <span className="text-base font-bold tracking-tight">fh</span>
-        <span className="ml-1.5 text-xs text-muted-foreground font-light">real estate</span>
+        <span className="text-base font-bold tracking-tight">AqarFlow</span>
       </header>
       <main className="mx-auto max-w-lg px-4 py-8">
         {children}
