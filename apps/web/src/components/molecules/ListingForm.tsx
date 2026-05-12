@@ -7,6 +7,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { CURRENCIES } from "@/lib/constants/regions";
 import type { Listing, ListingCreateRequest, ListingUpdateRequest, ListingPurpose, RentPeriod, ListingTier } from "@/lib/types/listing";
 
 const PURPOSES: ListingPurpose[] = ["sale", "rent_short", "rent_long"];
@@ -85,7 +86,15 @@ export function ListingForm({ defaultValues, isPending, submitLabel, onSubmit, o
         <div className="space-y-1.5"><Label>Price</Label><Input {...register("price")} />
           {errors.price && <p className="text-xs text-destructive">{errors.price.message}</p>}
         </div>
-        <div className="space-y-1.5"><Label>Currency</Label><Input {...register("currency")} maxLength={3} /></div>
+        <div className="space-y-1.5">
+          <Label>Currency</Label>
+          <Controller name="currency" control={control} render={({ field }) => (
+            <Select value={field.value} onValueChange={field.onChange}>
+              <SelectTrigger><SelectValue /></SelectTrigger>
+              <SelectContent>{CURRENCIES.map(c => <SelectItem key={c.value} value={c.value}>{c.label}</SelectItem>)}</SelectContent>
+            </Select>
+          )} />
+        </div>
         {isRent && (
           <div className="space-y-1.5 col-span-2">
             <Label>Rent Period</Label>

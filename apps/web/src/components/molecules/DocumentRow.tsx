@@ -3,6 +3,7 @@
 import { Download, Trash2 } from "lucide-react";
 import { toast } from "sonner";
 import { KindBadge } from "@/components/atoms/KindBadge";
+import { ConfirmDialog } from "@/components/molecules/ConfirmDialog";
 import { Button } from "@/components/ui/button";
 import type { PrivateDocument, DownloadUrlResponse } from "@/lib/types/private-document";
 
@@ -46,15 +47,18 @@ export function DocumentRow({ doc, onDelete, isDeleting, getDownloadUrl }: Docum
           <Button size="icon" variant="ghost" onClick={handleDownload} title="Download">
             <Download className="h-4 w-4" />
           </Button>
-          <Button
-            size="icon"
-            variant="ghost"
-            onClick={() => onDelete(doc.id)}
-            disabled={isDeleting}
-            title="Delete"
-          >
-            <Trash2 className="h-4 w-4 text-destructive" />
-          </Button>
+          <ConfirmDialog
+            trigger={
+              <Button size="icon" variant="ghost" disabled={isDeleting} title="Delete">
+                <Trash2 className="h-4 w-4 text-destructive" />
+              </Button>
+            }
+            title="Delete document?"
+            description="This document is stored securely. Once deleted it cannot be recovered."
+            confirmLabel="Delete"
+            variant="destructive"
+            onConfirm={() => onDelete(doc.id)}
+          />
         </div>
       </td>
     </tr>

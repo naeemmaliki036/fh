@@ -1,16 +1,31 @@
 import { StatusBadge } from "@/components/atoms/StatusBadge";
 import { RoleBadge } from "@/components/atoms/RoleBadge";
 import { Button } from "@/components/ui/button";
-import type { User } from "@/lib/types";
+import type { User, UserStatus } from "@/lib/types";
+
+interface TransitionButton {
+  label: string;
+  targetStatus: UserStatus;
+  destructive: boolean;
+}
+
+function getTransitions(user: User): TransitionButton[] {
+  if (user.status === "active") {
+    return [{ label: "Disable", targetStatus: "disabled", destructive: true }];
+  }
+  return [{ label: "Enable", targetStatus: "active", destructive: false }];
+}
 
 interface UserRowProps {
   user: User;
   canManage: boolean;
   onEdit: (user: User) => void;
-  onDisable: (id: string) => void;
+  onStatusChange: (user: User, targetStatus: UserStatus) => void;
 }
 
-export function UserRow({ user, canManage, onEdit, onDisable }: UserRowProps): React.ReactElement {
+export function UserRow({ user, canManage, onEdit, onStatusChange }: UserRowProps): React.ReactElement {
+  const transitions = getTransitions(user);
+
   return (
     <tr className="border-b">
       <td className="px-4 py-3 text-sm font-medium">{user.full_name}</td>
@@ -27,15 +42,16 @@ export function UserRow({ user, canManage, onEdit, onDisable }: UserRowProps): R
             <Button size="sm" variant="outline" onClick={() => onEdit(user)}>
               Edit
             </Button>
-            {user.status === "active" && (
+            {transitions.map((t) => (
               <Button
+                key={t.targetStatus}
                 size="sm"
-                variant="destructive"
-                onClick={() => onDisable(user.id)}
+                variant={t.destructive ? "destructive" : "secondary"}
+                onClick={() => onStatusChange(user, t.targetStatus)}
               >
-                Disable
+                {t.label}
               </Button>
-            )}
+            ))}
           </div>
         </td>
       )}

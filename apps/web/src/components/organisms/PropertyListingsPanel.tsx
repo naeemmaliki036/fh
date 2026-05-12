@@ -1,19 +1,36 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
+import { LayoutGrid, List } from "lucide-react";
 import { usePropertyListings } from "@/hooks/queries/useProperties";
-import {
-  useDeleteListing,
-  useActivateListing,
-  usePauseListing,
-  useArchiveListing,
-} from "@/hooks/mutations/useListingMutations";
-import { ListingPurposeBadge } from "@/components/atoms/ListingPurposeBadge";
-import { ListingStatusBadge } from "@/components/atoms/ListingStatusBadge";
+import { useMyTenant } from "@/hooks/queries/useTenants";
+import { useDeleteListing, useChangeListingStatus } from "@/hooks/mutations/useListingMutations";
+import { ListingListView } from "@/components/organisms/ListingListView";
+import { ListingCardView } from "@/components/organisms/ListingCardView";
 import { ListingCreateDialog } from "@/components/organisms/ListingCreateDialog";
 import { ListingFormDialog } from "@/components/organisms/ListingFormDialog";
+import { StatusChangeDialog } from "@/components/molecules/StatusChangeDialog";
 import { Button } from "@/components/ui/button";
-import type { Listing } from "@/lib/types/listing";
+import { cn } from "@/lib/utils/cn";
+import {
+  LISTING_PAUSED_REASONS,
+  LISTING_ACTIVE_REASONS,
+  LISTING_ARCHIVED_REASONS,
+  LISTING_UNARCHIVE_REASONS,
+} from "@/lib/constants/status-reasons";
+import type { Listing, ListingStatus } from "@/lib/types/listing";
+import type { PropertiesViewMode } from "@/lib/types/tenant";
+
+const STORAGE_KEY = "listings_view_mode";
+
+type PendingTransition = { listing: Listing; targetStatus: ListingStatus };
+
+function reasonOptions(targetStatus: ListingStatus, fromStatus: ListingStatus) {
+  if (targetStatus === "paused") return LISTING_PAUSED_REASONS;
+  if (targetStatus === "archived") return LISTING_ARCHIVED_REASONS;
+  if (targetStatus === "active" && fromStatus === "archived") return LISTING_UNARCHIVE_REASONS;
+  return LISTING_ACTIVE_REASONS;
+}
 
 interface PropertyListingsPanelProps {
   propertyId: string;
@@ -21,21 +38,61 @@ interface PropertyListingsPanelProps {
 
 export function PropertyListingsPanel({ propertyId }: PropertyListingsPanelProps): React.ReactElement {
   const { data, isLoading, error } = usePropertyListings(propertyId);
+  const { data: tenant } = useMyTenant();
   const [showCreate, setShowCreate] = useState(false);
   const [editTarget, setEditTarget] = useState<Listing | null>(null);
+  const [pending, setPending] = useState<PendingTransition | null>(null);
+  const [viewMode, setViewMode] = useState<PropertiesViewMode | null>(null);
 
-  const { mutate: activate } = useActivateListing(propertyId);
-  const { mutate: pause } = usePauseListing(propertyId);
-  const { mutate: archive } = useArchiveListing(propertyId);
   const { mutate: remove } = useDeleteListing(propertyId);
+  const { mutateAsync: changeStatus } = useChangeListingStatus(propertyId);
 
+  useEffect(() => {
+    const stored = localStorage.getItem(STORAGE_KEY) as PropertiesViewMode | null;
+    if (stored === "card" || stored === "list") {
+      setViewMode(stored);
+    } else {
+      setViewMode(tenant?.default_properties_view ?? "card");
+    }
+  }, [tenant?.default_properties_view]);
+
+  const activeView = viewMode ?? "card";
   const listings = data?.items ?? [];
+
+  const handleViewChange = (mode: PropertiesViewMode): void => {
+    setViewMode(mode);
+    localStorage.setItem(STORAGE_KEY, mode);
+  };
 
   if (error) return <p className="text-sm text-destructive">Failed to load listings.</p>;
 
   return (
     <div className="space-y-4">
-      <div className="flex justify-end">
+      <div className="flex items-center justify-between">
+        <div className="flex items-center rounded-md border">
+          <button
+            type="button"
+            aria-label="Card view"
+            onClick={() => handleViewChange("card")}
+            className={cn(
+              "flex items-center justify-center h-8 w-8 rounded-l-md transition-colors",
+              activeView === "card" ? "bg-primary text-primary-foreground" : "hover:bg-muted",
+            )}
+          >
+            <LayoutGrid className="h-4 w-4" />
+          </button>
+          <button
+            type="button"
+            aria-label="List view"
+            onClick={() => handleViewChange("list")}
+            className={cn(
+              "flex items-center justify-center h-8 w-8 rounded-r-md transition-colors",
+              activeView === "list" ? "bg-primary text-primary-foreground" : "hover:bg-muted",
+            )}
+          >
+            <List className="h-4 w-4" />
+          </button>
+        </div>
         <Button onClick={() => setShowCreate(true)}>+ New Listing</Button>
       </div>
 
@@ -47,47 +104,22 @@ export function PropertyListingsPanel({ propertyId }: PropertyListingsPanelProps
         </div>
       )}
 
-      {listings.length > 0 && (
-        <div className="overflow-x-auto rounded-md border">
-          <table className="w-full text-sm">
-            <thead className="bg-muted/50">
-              <tr>
-                <th className="px-3 py-2 text-left font-medium">Title</th>
-                <th className="px-3 py-2 text-left font-medium">Purpose</th>
-                <th className="px-3 py-2 text-left font-medium">Price</th>
-                <th className="px-3 py-2 text-left font-medium">Status</th>
-                <th className="px-3 py-2 text-left font-medium">Tier</th>
-                <th className="px-3 py-2 text-left font-medium">Actions</th>
-              </tr>
-            </thead>
-            <tbody>
-              {listings.map(l => (
-                <tr key={l.id} className="border-b">
-                  <td className="px-3 py-2.5 font-medium max-w-[160px] truncate">{l.title}</td>
-                  <td className="px-3 py-2.5"><ListingPurposeBadge purpose={l.purpose} /></td>
-                  <td className="px-3 py-2.5 text-muted-foreground">{l.currency} {l.price}</td>
-                  <td className="px-3 py-2.5"><ListingStatusBadge status={l.status} /></td>
-                  <td className="px-3 py-2.5 capitalize text-muted-foreground">{l.listing_tier}</td>
-                  <td className="px-3 py-2.5">
-                    <div className="flex flex-wrap gap-1">
-                      <Button size="sm" variant="outline" onClick={() => setEditTarget(l)}>Edit</Button>
-                      {l.status === "draft" || l.status === "paused"
-                        ? <Button size="sm" variant="default" onClick={() => activate(l.id)}>Activate</Button>
-                        : null}
-                      {l.status === "active"
-                        ? <Button size="sm" variant="secondary" onClick={() => pause(l.id)}>Pause</Button>
-                        : null}
-                      {l.status !== "archived"
-                        ? <Button size="sm" variant="ghost" onClick={() => archive(l.id)}>Archive</Button>
-                        : null}
-                      <Button size="sm" variant="destructive" onClick={() => remove(l.id)}>Delete</Button>
-                    </div>
-                  </td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
-        </div>
+      {!isLoading && listings.length > 0 && activeView === "card" && (
+        <ListingCardView
+          listings={listings}
+          onEdit={setEditTarget}
+          onDelete={remove}
+          onStatusChange={(l, s) => setPending({ listing: l, targetStatus: s })}
+        />
+      )}
+
+      {!isLoading && listings.length > 0 && activeView === "list" && (
+        <ListingListView
+          listings={listings}
+          onEdit={setEditTarget}
+          onDelete={remove}
+          onStatusChange={(l, s) => setPending({ listing: l, targetStatus: s })}
+        />
       )}
 
       <ListingCreateDialog propertyId={propertyId} open={showCreate} onClose={() => setShowCreate(false)} />
@@ -97,6 +129,31 @@ export function PropertyListingsPanel({ propertyId }: PropertyListingsPanelProps
           listing={editTarget}
           open
           onClose={() => setEditTarget(null)}
+        />
+      )}
+
+      {pending && (
+        <StatusChangeDialog
+          open
+          onOpenChange={(o) => { if (!o) setPending(null); }}
+          title={`${pending.targetStatus === "archived" ? "Archive" : pending.targetStatus === "paused" ? "Pause" : "Activate"} listing?`}
+          description={
+            pending.targetStatus === "archived"
+              ? "This listing will be archived and no longer visible."
+              : pending.targetStatus === "paused"
+              ? "This listing will be paused and not shown publicly."
+              : "This listing will be set to active and visible."
+          }
+          reasonOptions={reasonOptions(pending.targetStatus, pending.listing.status)}
+          destructive={pending.targetStatus === "archived"}
+          onConfirm={async (reason_code, reason_note) => {
+            await changeStatus({
+              id: pending.listing.id,
+              status: pending.targetStatus,
+              reason_code,
+              reason_note,
+            });
+          }}
         />
       )}
     </div>

@@ -4,6 +4,7 @@ import type {
   ListingCreateRequest,
   ListingUpdateRequest,
   ListingListResponse,
+  ListingStatusChangeRequest,
 } from "@/lib/types/listing";
 
 export class ListingRepository extends BaseRepository<
@@ -40,6 +41,11 @@ export class ListingRepository extends BaseRepository<
 
   async archive(id: string): Promise<Listing> {
     const res = await this.client.post<Listing>(`${this.basePath}/${id}/archive`);
+    return res.data;
+  }
+
+  async changeStatus(id: string, body: ListingStatusChangeRequest): Promise<Listing> {
+    const res = await this.client.patch<Listing>(`${this.basePath}/${id}/status`, body);
     return res.data;
   }
 }

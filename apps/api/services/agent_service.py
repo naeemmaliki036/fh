@@ -148,6 +148,43 @@ class AgentService(BaseService):
         agent.status = AgentStatus.INACTIVE
         await self.session.flush()
 
+    async def change_status(
+        self,
+        agent_id: UUID,
+        tenant_id: UUID,
+        current_user: dict,
+        new_status: AgentStatus,
+        reason_code: str,
+        reason_note: str | None = None,
+        ip_address: str | None = None,
+        user_agent: str | None = None,
+    ) -> "Agent":
+        from packages.common.utils.error_handlers import conflict as _conflict
+        self._require_manager(current_user["role"])
+        agent = await self.get_agent(agent_id, tenant_id)
+        if agent.status == new_status:
+            raise _conflict(f"Agent is already {new_status.value}")
+        old_status = agent.status
+        agent.status = new_status
+        await self.session.flush()
+        await self._audit.record(
+            AuditAction.AGENT_STATUS_CHANGED,
+            tenant_id=tenant_id,
+            actor_user_id=UUID(current_user["id"]),
+            entity_type="agent",
+            entity_id=agent.id,
+            after={
+                "from": old_status.value,
+                "to": new_status.value,
+                "reason_code": reason_code,
+                "reason_note": reason_note,
+            },
+            ip_address=ip_address,
+            user_agent=user_agent,
+        )
+        await self.session.refresh(agent)
+        return agent
+
     # ------------------------------------------------------------------
     # Photo
     # ------------------------------------------------------------------

@@ -4,13 +4,14 @@ from uuid import UUID
 
 from fastapi import APIRouter, Depends
 
-from apps.api.dependencies import CurrentUser, DbSession, TenantContext
+from apps.api.dependencies import CurrentUser, DbSession, ReqCtx, TenantContext
 from apps.api.schemas.listing import (
     ListingCreateRequest,
     ListingListResponse,
     ListingResponse,
     ListingUpdateRequest,
 )
+from apps.api.schemas.status_change import ListingStatusChangeRequest
 from apps.api.services.listing_service import ListingService
 
 router = APIRouter()
@@ -124,4 +125,25 @@ async def archive_listing(
 ) -> ListingResponse:
     return ListingResponse.model_validate(
         await svc.archive(listing_id, tenant_id, current_user)
+    )
+
+
+@router.patch("/listings/{listing_id}/status", response_model=ListingResponse)
+async def change_listing_status(
+    listing_id: UUID,
+    body: ListingStatusChangeRequest,
+    current_user: CurrentUser,
+    tenant_id: TenantContext,
+    ctx: ReqCtx,
+    svc: ListingService = Depends(_svc),
+) -> ListingResponse:
+    return ListingResponse.model_validate(
+        await svc.change_status(
+            listing_id, tenant_id, current_user,
+            new_status=body.status,
+            reason_code=body.reason_code,
+            reason_note=body.reason_note,
+            ip_address=ctx.ip_address,
+            user_agent=ctx.user_agent,
+        )
     )

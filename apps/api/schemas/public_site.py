@@ -14,6 +14,18 @@ from pydantic import BaseModel, ConfigDict, EmailStr, Field, field_validator
 
 
 # ---------------------------------------------------------------------------
+# Public: tenant stats (embedded in profile response)
+# ---------------------------------------------------------------------------
+
+
+class PublicTenantStats(BaseModel):
+    listings_count: int
+    agents_count: int
+    featured_area: str | None = None
+    inventory_value_aed: int
+
+
+# ---------------------------------------------------------------------------
 # Public: tenant profile
 # ---------------------------------------------------------------------------
 
@@ -26,6 +38,7 @@ class PublicTenantProfileResponse(BaseModel):
     tagline: str | None = None
     contact_email: str
     contact_phone: str
+    stats: PublicTenantStats | None = None
 
 
 # ---------------------------------------------------------------------------
@@ -84,6 +97,24 @@ class PublicListingDetailResponse(BaseModel):
     amenities: list[Any] | None = None
     media_urls: list[str] = Field(default_factory=list)
     agent: PublicAgentSnippet | None = None
+
+
+# ---------------------------------------------------------------------------
+# Public: agents grid
+# ---------------------------------------------------------------------------
+
+
+class PublicAgentCard(BaseModel):
+    id: uuid.UUID
+    full_name: str
+    email: str
+    phone: str | None = None
+    photo_url: str | None = None
+    license_id: str | None = None
+
+
+class PublicAgentsResponse(BaseModel):
+    items: list[PublicAgentCard]
 
 
 # ---------------------------------------------------------------------------

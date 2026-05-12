@@ -7,6 +7,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { CURRENCIES, COUNTRIES } from "@/lib/constants/regions";
 import type { Property, PropertyCreateRequest, PropertyUpdateRequest, PropertyType, PropertyStatus } from "@/lib/types/property";
 
 const TYPES: PropertyType[] = ["apartment","villa","townhouse","penthouse","office","retail","warehouse","plot","building","other"];
@@ -97,12 +98,28 @@ export function PropertyForm({ defaultValues, showStatus, isPending, submitLabel
         <div className="space-y-1.5"><Label>Bathrooms</Label><Input type="number" {...register("bathrooms")} /></div>
         <div className="space-y-1.5"><Label>Size (sqft)</Label><Input {...register("size_sqft")} /></div>
         <div className="space-y-1.5"><Label>Price</Label><Input {...register("price")} /></div>
-        <div className="space-y-1.5"><Label>Currency</Label><Input {...register("currency")} maxLength={3} /></div>
+        <div className="space-y-1.5">
+          <Label>Currency</Label>
+          <Controller name="currency" control={control} render={({ field }) => (
+            <Select value={field.value ?? ""} onValueChange={field.onChange}>
+              <SelectTrigger><SelectValue placeholder="Select currency" /></SelectTrigger>
+              <SelectContent>{CURRENCIES.map(c => <SelectItem key={c.value} value={c.value}>{c.label}</SelectItem>)}</SelectContent>
+            </Select>
+          )} />
+        </div>
         <div className="space-y-1.5"><Label>Internal Ref</Label><Input {...register("internal_reference")} /></div>
         <div className="space-y-1.5"><Label>Address</Label><Input {...register("address_line")} /></div>
         <div className="space-y-1.5"><Label>City</Label><Input {...register("city")} /></div>
         <div className="space-y-1.5"><Label>Area</Label><Input {...register("area")} /></div>
-        <div className="space-y-1.5"><Label>Country</Label><Input {...register("country")} maxLength={2} /></div>
+        <div className="space-y-1.5">
+          <Label>Country</Label>
+          <Controller name="country" control={control} render={({ field }) => (
+            <Select value={field.value ?? ""} onValueChange={field.onChange}>
+              <SelectTrigger><SelectValue placeholder="Select country" /></SelectTrigger>
+              <SelectContent>{COUNTRIES.map(c => <SelectItem key={c.value} value={c.value}>{c.label}</SelectItem>)}</SelectContent>
+            </Select>
+          )} />
+        </div>
         <div className="space-y-1.5 col-span-2">
           <Label>Description</Label>
           <textarea {...register("description")} rows={3} className="flex w-full rounded-md border border-input bg-transparent px-3 py-2 text-sm shadow-sm focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring resize-none" />

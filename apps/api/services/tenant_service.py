@@ -179,6 +179,7 @@ class TenantService(BaseService):
         currency: str | None = None,
         timezone_: str | None = None,
         locale: str | None = None,
+        default_properties_view=None,
         ip_address: str | None = None,
         user_agent: str | None = None,
     ) -> Tenant:
@@ -194,6 +195,7 @@ class TenantService(BaseService):
         before = {
             "name": tenant.name, "currency": tenant.currency,
             "timezone": tenant.timezone, "locale": tenant.locale,
+            "default_properties_view": tenant.default_properties_view.value,
         }
 
         if name is not None:
@@ -204,11 +206,14 @@ class TenantService(BaseService):
             tenant.timezone = timezone_
         if locale is not None:
             tenant.locale = locale
+        if default_properties_view is not None:
+            tenant.default_properties_view = default_properties_view
 
         await self.session.flush()
         after = {
             "name": tenant.name, "currency": tenant.currency,
             "timezone": tenant.timezone, "locale": tenant.locale,
+            "default_properties_view": tenant.default_properties_view.value,
         }
 
         await self.session.execute(

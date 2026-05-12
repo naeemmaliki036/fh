@@ -8,6 +8,7 @@ import {
   useUpdateAgentAssignment,
   useUnassignAgent,
 } from "@/hooks/mutations/usePropertyMutations";
+import { ConfirmDialog } from "@/components/molecules/ConfirmDialog";
 import { Button } from "@/components/ui/button";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { cn } from "@/lib/utils/cn";
@@ -75,10 +76,18 @@ export function PropertyAgentsPanel({ propertyId, assignedAgents }: PropertyAgen
                     Set Primary
                   </Button>
                 )}
-                <Button size="icon" variant="ghost"
-                  onClick={() => unassign(a.agent_id)}>
-                  <Trash2 className="h-4 w-4 text-destructive" />
-                </Button>
+                <ConfirmDialog
+                  trigger={
+                    <Button size="icon" variant="ghost">
+                      <Trash2 className="h-4 w-4 text-destructive" />
+                    </Button>
+                  }
+                  title="Remove agent from property?"
+                  description={`${agent?.full_name ?? "This agent"} will no longer be assigned to this property.`}
+                  confirmLabel="Remove"
+                  variant="destructive"
+                  onConfirm={() => unassign(a.agent_id)}
+                />
               </div>
             </div>
           );

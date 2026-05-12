@@ -10,6 +10,7 @@ from apps.api.dependencies import (
     ReqCtx,
     TenantContext,
 )
+from apps.api.schemas.status_change import UserStatusChangeRequest
 from apps.api.schemas.user import (
     UserCreateRequest,
     UserListResponse,
@@ -121,4 +122,24 @@ async def disable_user(
     await svc.disable_user(
         user_id, tenant_id, current_user,
         ip_address=ctx.ip_address, user_agent=ctx.user_agent,
+    )
+
+
+@router.patch("/{user_id}/status", response_model=UserResponse)
+async def change_user_status(
+    user_id: UUID,
+    body: UserStatusChangeRequest,
+    current_user: CurrentUser,
+    tenant_id: TenantContext,
+    ctx: ReqCtx,
+    svc: UserService = Depends(_svc),
+) -> UserResponse:
+    """Enable or disable a user (company_owner or company_admin only)."""
+    return await svc.change_status(  # type: ignore[return-value]
+        user_id, tenant_id, current_user,
+        new_status=body.status,
+        reason_code=body.reason_code,
+        reason_note=body.reason_note,
+        ip_address=ctx.ip_address,
+        user_agent=ctx.user_agent,
     )

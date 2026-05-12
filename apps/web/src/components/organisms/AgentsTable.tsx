@@ -3,11 +3,12 @@
 import { useState } from "react";
 import Link from "next/link";
 import { useAgents } from "@/hooks/queries/useAgents";
-import { useDeleteAgent } from "@/hooks/mutations/useAgentMutations";
+import { useChangeAgentStatus } from "@/hooks/mutations/useAgentMutations";
 import { StatusBadge } from "@/components/atoms/StatusBadge";
 import { CommissionBadge } from "@/components/atoms/CommissionBadge";
 import { LicenseExpiryBadge, isExpiringWithin30Days } from "@/components/atoms/LicenseExpiryBadge";
 import { AgentCreateDialog } from "@/components/organisms/AgentCreateDialog";
+import { StatusChangeDialog } from "@/components/molecules/StatusChangeDialog";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import {
@@ -18,7 +19,12 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { cn } from "@/lib/utils/cn";
-import type { AgentStatus } from "@/lib/types";
+import {
+  AGENT_INACTIVE_REASONS,
+  AGENT_ACTIVE_REASONS,
+  AGENT_ON_LEAVE_REASONS,
+} from "@/lib/constants/status-reasons";
+import type { Agent, AgentStatus } from "@/lib/types";
 
 const STATUS_OPTIONS: { value: AgentStatus | "all"; label: string }[] = [
   { value: "all", label: "All statuses" },
@@ -27,16 +33,48 @@ const STATUS_OPTIONS: { value: AgentStatus | "all"; label: string }[] = [
   { value: "on_leave", label: "On Leave" },
 ];
 
+type PendingTransition = {
+  agent: Agent;
+  targetStatus: AgentStatus;
+  title: string;
+  description: string;
+  destructive: boolean;
+};
+
+function getTransitions(agent: Agent): { label: string; status: AgentStatus; destructive: boolean }[] {
+  switch (agent.status) {
+    case "active":
+      return [
+        { label: "Mark on leave", status: "on_leave", destructive: false },
+        { label: "Disable", status: "inactive", destructive: true },
+      ];
+    case "inactive":
+      return [{ label: "Enable", status: "active", destructive: false }];
+    case "on_leave":
+      return [
+        { label: "Enable", status: "active", destructive: false },
+        { label: "Disable", status: "inactive", destructive: true },
+      ];
+  }
+}
+
+function reasonOptions(targetStatus: AgentStatus) {
+  if (targetStatus === "inactive") return AGENT_INACTIVE_REASONS;
+  if (targetStatus === "active") return AGENT_ACTIVE_REASONS;
+  return AGENT_ON_LEAVE_REASONS;
+}
+
 export function AgentsTable(): React.ReactElement {
   const [statusFilter, setStatusFilter] = useState<AgentStatus | "all">("all");
   const [search, setSearch] = useState("");
   const [showCreate, setShowCreate] = useState(false);
+  const [pending, setPending] = useState<PendingTransition | null>(null);
 
   const { data, isLoading, error } = useAgents({
     status: statusFilter === "all" ? undefined : statusFilter,
     q: search || undefined,
   });
-  const { mutate: disable } = useDeleteAgent();
+  const { mutateAsync: changeStatus } = useChangeAgentStatus();
 
   if (error) return <p className="text-sm text-destructive">Failed to load agents.</p>;
 
@@ -84,6 +122,7 @@ export function AgentsTable(): React.ReactElement {
             <tbody>
               {agents.map((agent) => {
                 const expiryWarning = isExpiringWithin30Days(agent.license_expiry_at);
+                const transitions = getTransitions(agent);
                 return (
                   <tr
                     key={agent.id}
@@ -114,15 +153,33 @@ export function AgentsTable(): React.ReactElement {
                     </td>
                     <td className="px-3 py-2.5"><StatusBadge status={agent.status} /></td>
                     <td className="px-3 py-2.5">
-                      <div className="flex gap-1.5">
+                      <div className="flex gap-1.5 flex-wrap">
                         <Button size="sm" variant="outline" asChild>
                           <Link href={`/agents/${agent.id}`}>Edit</Link>
                         </Button>
-                        {agent.status !== "inactive" && (
-                          <Button size="sm" variant="destructive" onClick={() => disable(agent.id)}>
-                            Disable
+                        {transitions.map((t) => (
+                          <Button
+                            key={t.status}
+                            size="sm"
+                            variant={t.destructive ? "destructive" : "secondary"}
+                            onClick={() =>
+                              setPending({
+                                agent,
+                                targetStatus: t.status,
+                                title: `${t.label} ${agent.full_name}?`,
+                                description:
+                                  t.status === "inactive"
+                                    ? "This agent will not appear in new deals or assignments."
+                                    : t.status === "on_leave"
+                                    ? "This agent will be marked as on leave."
+                                    : "This agent will be restored to an active state.",
+                                destructive: t.destructive,
+                              })
+                            }
+                          >
+                            {t.label}
                           </Button>
-                        )}
+                        ))}
                       </div>
                     </td>
                   </tr>
@@ -137,6 +194,25 @@ export function AgentsTable(): React.ReactElement {
       )}
 
       <AgentCreateDialog open={showCreate} onClose={() => setShowCreate(false)} />
+
+      {pending && (
+        <StatusChangeDialog
+          open
+          onOpenChange={(o) => { if (!o) setPending(null); }}
+          title={pending.title}
+          description={pending.description}
+          reasonOptions={reasonOptions(pending.targetStatus)}
+          destructive={pending.destructive}
+          onConfirm={async (reason_code, reason_note) => {
+            await changeStatus({
+              id: pending.agent.id,
+              status: pending.targetStatus,
+              reason_code,
+              reason_note,
+            });
+          }}
+        />
+      )}
     </div>
   );
 }

@@ -96,3 +96,9 @@ export interface PropertyAgentAssignRequest {
 export interface PropertyAgentPatchRequest {
   is_primary: boolean;
 }
+
+export interface PropertyStatusChangeRequest {
+  status: PropertyStatus;
+  reason_code: string;
+  reason_note: string | null;
+}

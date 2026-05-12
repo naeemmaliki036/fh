@@ -9,6 +9,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { CustomerPicker } from "@/components/molecules/CustomerPicker";
+import { CURRENCIES } from "@/lib/constants/regions";
 import type { CustomerSummary } from "@/lib/types/lead";
 import type { Agent, Property } from "@/lib/types";
 import type { DealCreateRequest, DealType } from "@/lib/types/deal";
@@ -111,7 +112,12 @@ export function DealForm({ agents, properties, isPending, onSubmit, onCancel }: 
         </div>
         <div className="space-y-1.5">
           <Label>Currency</Label>
-          <Input {...register("transaction_currency")} maxLength={3} />
+          <Controller name="transaction_currency" control={control} render={({ field }) => (
+            <Select value={field.value} onValueChange={field.onChange}>
+              <SelectTrigger><SelectValue /></SelectTrigger>
+              <SelectContent>{CURRENCIES.map(c => <SelectItem key={c.value} value={c.value}>{c.label}</SelectItem>)}</SelectContent>
+            </Select>
+          )} />
         </div>
       </div>
       <div className="space-y-1.5">

@@ -1,12 +1,13 @@
 import { Badge } from "@/components/ui/badge";
+import { formatCommission } from "@/lib/utils/format-commission";
 import type { CommissionType } from "@/lib/types";
 
 interface CommissionBadgeProps {
   type: CommissionType;
   value: string;
+  currency?: string;
 }
 
-export function CommissionBadge({ type, value }: CommissionBadgeProps): React.ReactElement {
-  const label = type === "percentage" ? `${value}%` : `${value} fixed`;
-  return <Badge variant="outline">{label}</Badge>;
+export function CommissionBadge({ type, value, currency }: CommissionBadgeProps): React.ReactElement {
+  return <Badge variant="outline">{formatCommission(value, type, currency)}</Badge>;
 }

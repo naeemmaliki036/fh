@@ -13,6 +13,7 @@ import {
 } from "@/hooks/mutations/useDealMutations";
 import { DEAL_TERMINAL_STAGES } from "@/lib/types/deal";
 import type { Deal, DealCommissionOverrideRequest, DealCommissionPayoutRequest } from "@/lib/types/deal";
+import { formatCommission } from "@/lib/utils/format-commission";
 
 function fmt(v: string, cur: string): string {
   try { return new Intl.NumberFormat("en-AE", { style: "currency", currency: cur, maximumFractionDigits: 2 }).format(Number(v)); }
@@ -59,7 +60,7 @@ export function DealCommissionPanel({ deal }: DealCommissionPanelProps): React.R
           <span className="text-muted-foreground">Type</span>
           <span className="capitalize">{deal.commission_type}</span>
           <span className="text-muted-foreground">Value</span>
-          <span>{deal.commission_value}{deal.commission_type === "percentage" ? "%" : ` ${cur}`}</span>
+          <span>{formatCommission(deal.commission_value, deal.commission_type, cur)}</span>
           <span className="text-muted-foreground">Overridden</span>
           <span>{deal.commission_overridden ? "Yes" : "No"}</span>
           {deal.commission_override_reason && (

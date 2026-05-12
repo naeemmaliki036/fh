@@ -210,3 +210,54 @@ class UserService(BaseService):
             ip_address=ip_address,
             user_agent=user_agent,
         )
+
+    async def change_status(
+        self,
+        user_id: UUID,
+        tenant_id: UUID,
+        current_user: dict,
+        new_status: UserStatus,
+        reason_code: str,
+        reason_note: str | None = None,
+        ip_address: str | None = None,
+        user_agent: str | None = None,
+    ) -> "User":
+        from packages.common.utils.error_handlers import bad_request as _bad, conflict as _conflict
+        self._require_admin(current_user)
+        user = await self.get_user(user_id, tenant_id)
+
+        if str(user.id) == current_user.get("id"):
+            raise _bad("Cannot change status of your own account")
+
+        _allowed_transitions: dict[UserStatus, set[UserStatus]] = {
+            UserStatus.ACTIVE: {UserStatus.DISABLED},
+            UserStatus.DISABLED: {UserStatus.ACTIVE},
+        }
+        if new_status not in _allowed_transitions.get(user.status, set()):
+            raise _bad(f"Transition {user.status.value} → {new_status.value} is not allowed")
+
+        if user.status == new_status:
+            raise _conflict(f"User is already {new_status.value}")
+
+        old_status = user.status
+        user.status = new_status
+        await self.session.flush()
+
+        action = AuditAction.USER_ENABLED if new_status == UserStatus.ACTIVE else AuditAction.USER_DISABLED
+        await self._audit.record(
+            action,
+            tenant_id=tenant_id,
+            actor_user_id=UUID(current_user["id"]),
+            entity_type="user",
+            entity_id=user.id,
+            after={
+                "from": old_status.value,
+                "to": new_status.value,
+                "reason_code": reason_code,
+                "reason_note": reason_note,
+            },
+            ip_address=ip_address,
+            user_agent=user_agent,
+        )
+        await self.session.refresh(user)
+        return user

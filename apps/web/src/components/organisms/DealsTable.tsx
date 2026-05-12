@@ -13,6 +13,7 @@ import { Input } from "@/components/ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import type { DealStage, DealType } from "@/lib/types/deal";
 
+const PAGE_SIZE = 20;
 const STAGES: DealStage[] = ["initiated","documents_pending","deposit_pending","closed_won","closed_lost","canceled"];
 const TYPES: DealType[] = ["sale","rent_short","rent_long"];
 
@@ -35,6 +36,7 @@ export function DealsTable(): React.ReactElement {
   const [dealType, setDealType] = useState<DealType | "all">("all");
   const [agentFilter, setAgentFilter] = useState("");
   const [q, setQ] = useState("");
+  const [skip, setSkip] = useState(0);
   const [showCreate, setShowCreate] = useState(false);
 
   const { data, isLoading, error } = useDeals({
@@ -42,39 +44,42 @@ export function DealsTable(): React.ReactElement {
     deal_type: dealType === "all" ? undefined : dealType,
     primary_agent_id: agentFilter || undefined,
     q: q || undefined,
+    skip,
+    limit: PAGE_SIZE,
   });
   const { data: agentsData } = useAgents();
   const agents = agentsData?.items ?? [];
   const deals = data?.items ?? [];
+  const total = data?.total ?? 0;
 
   if (error) return <p className="text-sm text-destructive">Failed to load deals.</p>;
 
   return (
     <div className="space-y-4">
       <div className="flex flex-wrap gap-3 items-center">
-        <Input placeholder="Search customer…" value={q} onChange={e => setQ(e.target.value)} className="w-52" />
-        <Select value={stage} onValueChange={v => setStage(v as DealStage | "all")}>
+        <Input placeholder="Search customer…" value={q} onChange={e => { setQ(e.target.value); setSkip(0); }} className="w-52" />
+        <Select value={stage} onValueChange={v => { setStage(v as DealStage | "all"); setSkip(0); }}>
           <SelectTrigger className="w-44"><SelectValue /></SelectTrigger>
           <SelectContent>
             <SelectItem value="all">All stages</SelectItem>
             {STAGES.map(s => <SelectItem key={s} value={s}>{s.replace(/_/g," ")}</SelectItem>)}
           </SelectContent>
         </Select>
-        <Select value={dealType} onValueChange={v => setDealType(v as DealType | "all")}>
+        <Select value={dealType} onValueChange={v => { setDealType(v as DealType | "all"); setSkip(0); }}>
           <SelectTrigger className="w-36"><SelectValue /></SelectTrigger>
           <SelectContent>
             <SelectItem value="all">All types</SelectItem>
             {TYPES.map(t => <SelectItem key={t} value={t}>{t.replace(/_/g," ")}</SelectItem>)}
           </SelectContent>
         </Select>
-        <Select value={agentFilter || "all"} onValueChange={v => setAgentFilter(v === "all" ? "" : v)}>
+        <Select value={agentFilter || "all"} onValueChange={v => { setAgentFilter(v === "all" ? "" : v); setSkip(0); }}>
           <SelectTrigger className="w-44"><SelectValue placeholder="All agents" /></SelectTrigger>
           <SelectContent>
             <SelectItem value="all">All agents</SelectItem>
             {agents.map(a => <SelectItem key={a.id} value={a.id}>{a.full_name}</SelectItem>)}
           </SelectContent>
         </Select>
-        <span className="text-sm text-muted-foreground ml-auto">{data?.total ?? 0} deals</span>
+        <span className="text-sm text-muted-foreground ml-auto">{total} deals</span>
         <Button onClick={() => setShowCreate(true)}>+ New Deal</Button>
       </div>
 
@@ -125,6 +130,14 @@ export function DealsTable(): React.ReactElement {
         </table>
         {!isLoading && deals.length === 0 && <p className="py-8 text-center text-sm text-muted-foreground">No deals found</p>}
       </div>
+
+      {total > PAGE_SIZE && (
+        <div className="flex items-center gap-3 justify-end">
+          <Button variant="outline" size="sm" onClick={() => setSkip(Math.max(0, skip - PAGE_SIZE))} disabled={skip === 0}>Previous</Button>
+          <span className="text-sm text-muted-foreground">{skip + 1}–{Math.min(skip + PAGE_SIZE, total)} of {total}</span>
+          <Button variant="outline" size="sm" onClick={() => setSkip(skip + PAGE_SIZE)} disabled={skip + PAGE_SIZE >= total}>Next</Button>
+        </div>
+      )}
 
       <DealCreateDialog open={showCreate} onClose={() => setShowCreate(false)} />
     </div>

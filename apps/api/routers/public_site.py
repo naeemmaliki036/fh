@@ -12,12 +12,15 @@ from fastapi import APIRouter, Depends, Query, Request, status
 
 from apps.api.dependencies import DbSession
 from apps.api.schemas.public_site import (
+    PublicAgentsResponse,
     PublicLeadCreate,
     PublicLeadResponse,
     PublicListingDetailResponse,
     PublicListingListResponse,
     PublicTenantProfileResponse,
+    PublicTenantStats,
 )
+from apps.api.services.public_site_extras_service import PublicSiteExtrasService
 from apps.api.services.public_site_service import PublicSiteService
 from packages.common.utils.error_handlers import too_many_requests
 from packages.common.utils.rate_limit import is_rate_limited
@@ -32,6 +35,10 @@ def _svc(db: DbSession) -> PublicSiteService:
     return PublicSiteService(db)
 
 
+def _extras_svc(db: DbSession) -> PublicSiteExtrasService:
+    return PublicSiteExtrasService(db)
+
+
 # ---------------------------------------------------------------------------
 # Endpoint 1 — GET /public/sites/{slug}
 # ---------------------------------------------------------------------------
@@ -41,18 +48,21 @@ def _svc(db: DbSession) -> PublicSiteService:
 async def get_public_profile(
     slug: str,
     svc: PublicSiteService = Depends(_svc),
+    extras: PublicSiteExtrasService = Depends(_extras_svc),
 ) -> PublicTenantProfileResponse:
     """Return the public tenant profile for a given slug.
 
     404 if slug not found or public_site_enabled = false.
     """
     tenant = await svc.get_profile(slug)
+    stats_data = await extras.get_stats(slug)
     return PublicTenantProfileResponse(
         name=tenant.name,
         logo_url=tenant.public_site_logo_url,
         tagline=tenant.public_site_tagline,
         contact_email=tenant.contact_email,
         contact_phone=tenant.contact_phone,
+        stats=PublicTenantStats(**stats_data),
     )
 
 
@@ -109,7 +119,25 @@ async def get_public_listing_detail(
 
 
 # ---------------------------------------------------------------------------
-# Endpoint 4 — POST /public/sites/{slug}/leads
+# Endpoint 4 — GET /public/sites/{slug}/agents
+# ---------------------------------------------------------------------------
+
+
+@router.get("/{slug}/agents", response_model=PublicAgentsResponse)
+async def list_public_agents(
+    slug: str,
+    extras: PublicSiteExtrasService = Depends(_extras_svc),
+) -> PublicAgentsResponse:
+    """Up to 12 active agents for the public site, ordered by join date.
+
+    404 if slug not found or site disabled.
+    """
+    items = await extras.list_agents(slug)
+    return PublicAgentsResponse(items=items)
+
+
+# ---------------------------------------------------------------------------
+# Endpoint 5 — POST /public/sites/{slug}/leads
 # ---------------------------------------------------------------------------
 
 

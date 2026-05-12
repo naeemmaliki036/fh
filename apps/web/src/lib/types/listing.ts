@@ -50,3 +50,9 @@ export interface ListingListResponse {
   items: Listing[];
   total: number;
 }
+
+export interface ListingStatusChangeRequest {
+  status: ListingStatus;
+  reason_code: string;
+  reason_note: string | null;
+}

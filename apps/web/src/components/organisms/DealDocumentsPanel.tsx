@@ -20,8 +20,7 @@ export function DealDocumentsPanel({ dealId, customerId }: DealDocumentsPanelPro
   const { data, isLoading } = useDocumentRequests({ customer_id: customerId });
   const { mutate: create, isPending } = useCreateDocumentRequest();
 
-  // Filter to those linked to this deal (backend may not support deal_id filter yet)
-  const requests = (data?.items ?? []).filter(r => r.lead_id === dealId || r.deal_id === dealId || true);
+  const requests = (data?.items ?? []).filter(r => r.lead_id === dealId || r.deal_id === dealId);
 
   const handleCreate = (d: DocumentRequestCreate): void => {
     create({ ...d, deal_id: dealId, customer_id: customerId }, {

@@ -10,6 +10,7 @@ import type {
   PropertyAgentAssignment,
   PropertyAgentAssignRequest,
   PropertyAgentPatchRequest,
+  PropertyStatusChangeRequest,
 } from "@/lib/types/property";
 import { queryKeys } from "../queryKeys";
 
@@ -47,6 +48,20 @@ export function useDeleteProperty() {
     onSuccess: () => {
       qc.invalidateQueries({ queryKey: queryKeys.properties.all });
       toast.success("Property deleted");
+    },
+    onError: (e: Error) => { toast.error(e.message); },
+  });
+}
+
+export function useChangePropertyStatus() {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: ({ id, ...body }: { id: string } & PropertyStatusChangeRequest): Promise<Property> =>
+      propertyRepository.changeStatus(id, body),
+    onSuccess: (data) => {
+      qc.setQueryData(queryKeys.properties.detail(data.id), data);
+      qc.invalidateQueries({ queryKey: queryKeys.properties.all });
+      toast.success("Property status updated");
     },
     onError: (e: Error) => { toast.error(e.message); },
   });

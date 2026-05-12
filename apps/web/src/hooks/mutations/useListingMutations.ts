@@ -3,7 +3,7 @@
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { toast } from "sonner";
 import { listingRepository } from "@/lib/api/repositories";
-import type { Listing, ListingCreateRequest, ListingUpdateRequest } from "@/lib/types/listing";
+import type { Listing, ListingCreateRequest, ListingUpdateRequest, ListingStatusChangeRequest } from "@/lib/types/listing";
 import { queryKeys } from "../queryKeys";
 
 export function useCreateListing(propertyId: string) {
@@ -79,6 +79,20 @@ export function useArchiveListing(propertyId: string) {
       qc.setQueryData(queryKeys.listings.detail(data.id), data);
       qc.invalidateQueries({ queryKey: queryKeys.properties.listings(propertyId) });
       toast.success("Listing archived");
+    },
+    onError: (e: Error) => { toast.error(e.message); },
+  });
+}
+
+export function useChangeListingStatus(propertyId: string) {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: ({ id, ...body }: { id: string } & ListingStatusChangeRequest): Promise<Listing> =>
+      listingRepository.changeStatus(id, body),
+    onSuccess: (data) => {
+      qc.setQueryData(queryKeys.listings.detail(data.id), data);
+      qc.invalidateQueries({ queryKey: queryKeys.properties.listings(propertyId) });
+      toast.success("Listing status updated");
     },
     onError: (e: Error) => { toast.error(e.message); },
   });

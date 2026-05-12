@@ -100,7 +100,7 @@ export function AgentForm({ defaultValues, isPending, submitLabel, onSubmit, onC
                 </Select>
               )}
             />
-            <Input className="flex-1" {...register("default_commission_value")} placeholder="0" />
+            <Input className="flex-1" {...register("default_commission_value")} placeholder="0" step="0.01" />
           </div>
           {errors.default_commission_value && (
             <p className="text-xs text-destructive">{errors.default_commission_value.message}</p>

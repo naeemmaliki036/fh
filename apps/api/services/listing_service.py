@@ -5,11 +5,12 @@ from uuid import UUID
 from sqlalchemy import func, select, text
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from apps.api.models.enums import ListingPurpose, ListingStatus, TenantRole
+from apps.api.models.enums import AuditAction, ListingPurpose, ListingStatus, TenantRole
 from apps.api.models.listing import Listing
 from apps.api.models.media import Media
+from apps.api.services.audit_service import AuditService
 from apps.api.services.base import BaseService
-from packages.common.utils.error_handlers import bad_request, forbidden, not_found
+from packages.common.utils.error_handlers import bad_request, conflict, forbidden, not_found
 
 _MANAGER_ROLES = {
     TenantRole.COMPANY_OWNER.value,
@@ -20,9 +21,19 @@ _MANAGER_ROLES = {
 _RENT_PURPOSES = {ListingPurpose.RENT_SHORT, ListingPurpose.RENT_LONG}
 
 
+_LISTING_ALLOWED_TRANSITIONS: dict[ListingStatus, set[ListingStatus]] = {
+    ListingStatus.DRAFT: {ListingStatus.ACTIVE, ListingStatus.ARCHIVED},
+    ListingStatus.ACTIVE: {ListingStatus.PAUSED, ListingStatus.ARCHIVED},
+    ListingStatus.PAUSED: {ListingStatus.ACTIVE, ListingStatus.ARCHIVED},
+    ListingStatus.ARCHIVED: {ListingStatus.ACTIVE},
+    ListingStatus.EXPIRED: {ListingStatus.ARCHIVED},
+}
+
+
 class ListingService(BaseService):
     def __init__(self, session: AsyncSession) -> None:
         super().__init__(session)
+        self._audit = AuditService(session)
 
     async def _set_rls(self, tenant_id: UUID) -> None:
         await self.session.execute(text(f"SET LOCAL app.tenant_id = '{tenant_id}'"))
@@ -140,3 +151,54 @@ class ListingService(BaseService):
 
     async def archive(self, listing_id: UUID, tenant_id: UUID, current_user: dict) -> Listing:
         return await self.archive_listing(listing_id, tenant_id, current_user)
+
+    async def change_status(
+        self,
+        listing_id: UUID,
+        tenant_id: UUID,
+        current_user: dict,
+        new_status: ListingStatus,
+        reason_code: str,
+        reason_note: str | None = None,
+        ip_address: str | None = None,
+        user_agent: str | None = None,
+    ) -> Listing:
+        self._require_manager(current_user["role"])
+        listing = await self.get_listing(listing_id, tenant_id)
+
+        if new_status == ListingStatus.EXPIRED:
+            raise bad_request("expired is a system-set status and cannot be set manually")
+
+        if listing.status == new_status:
+            raise conflict(f"Listing is already {new_status.value}")
+
+        allowed = _LISTING_ALLOWED_TRANSITIONS.get(listing.status, set())
+        if new_status not in allowed:
+            raise bad_request(
+                f"Transition {listing.status.value} → {new_status.value} is not allowed"
+            )
+
+        if new_status == ListingStatus.ACTIVE and not await self._media_exists(listing.property_id):
+            raise bad_request("Property must have at least one media item before activating")
+
+        old_status = listing.status
+        listing.status = new_status
+        await self.session.flush()
+
+        await self._audit.record(
+            AuditAction.LISTING_STATUS_CHANGED,
+            tenant_id=tenant_id,
+            actor_user_id=UUID(current_user["id"]),
+            entity_type="listing",
+            entity_id=listing.id,
+            after={
+                "from": old_status.value,
+                "to": new_status.value,
+                "reason_code": reason_code,
+                "reason_note": reason_note,
+            },
+            ip_address=ip_address,
+            user_agent=user_agent,
+        )
+        await self.session.refresh(listing)
+        return listing

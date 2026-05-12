@@ -44,3 +44,9 @@ export interface UserListResponse {
   items: User[];
   total: number;
 }
+
+export interface UserStatusChangeRequest {
+  status: UserStatus;
+  reason_code: string;
+  reason_note: string | null;
+}

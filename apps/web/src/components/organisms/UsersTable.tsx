@@ -2,21 +2,29 @@
 
 import { useState } from "react";
 import { useUsers } from "@/hooks/queries/useUsers";
-import { useDeleteUser } from "@/hooks/mutations/useUserMutations";
+import { useChangeUserStatus } from "@/hooks/mutations/useUserMutations";
 import { useAuth } from "@/contexts/AuthContext";
 import { UserRow } from "@/components/molecules/UserRow";
 import { UserFormDialog } from "@/components/organisms/UserFormDialog";
+import { StatusChangeDialog } from "@/components/molecules/StatusChangeDialog";
 import { Button } from "@/components/ui/button";
-import type { User } from "@/lib/types";
+import { USER_DISABLED_REASONS, USER_ACTIVE_REASONS } from "@/lib/constants/status-reasons";
+import type { User, UserStatus } from "@/lib/types";
 
 const MANAGE_ROLES = new Set(["company_owner", "company_admin"]);
 
+type PendingTransition = {
+  user: User;
+  targetStatus: UserStatus;
+};
+
 export function UsersTable(): React.ReactElement {
   const { data, isLoading, error } = useUsers();
-  const { mutate: disableUser } = useDeleteUser();
+  const { mutateAsync: changeStatus } = useChangeUserStatus();
   const { currentUser } = useAuth();
   const [editTarget, setEditTarget] = useState<User | null>(null);
   const [showCreate, setShowCreate] = useState(false);
+  const [pending, setPending] = useState<PendingTransition | null>(null);
 
   const canManage = !!(currentUser && MANAGE_ROLES.has(currentUser.role));
 
@@ -51,7 +59,7 @@ export function UsersTable(): React.ReactElement {
                 user={user}
                 canManage={canManage}
                 onEdit={setEditTarget}
-                onDisable={disableUser}
+                onStatusChange={(u, targetStatus) => setPending({ user: u, targetStatus })}
               />
             ))}
           </tbody>
@@ -66,6 +74,35 @@ export function UsersTable(): React.ReactElement {
           mode="edit"
           user={editTarget}
           onClose={() => setEditTarget(null)}
+        />
+      )}
+
+      {pending && (
+        <StatusChangeDialog
+          open
+          onOpenChange={(o) => { if (!o) setPending(null); }}
+          title={
+            pending.targetStatus === "disabled"
+              ? `Disable ${pending.user.full_name}?`
+              : `Enable ${pending.user.full_name}?`
+          }
+          description={
+            pending.targetStatus === "disabled"
+              ? "This user will no longer be able to log in."
+              : "This user will be restored and can log in again."
+          }
+          reasonOptions={
+            pending.targetStatus === "disabled" ? USER_DISABLED_REASONS : USER_ACTIVE_REASONS
+          }
+          destructive={pending.targetStatus === "disabled"}
+          onConfirm={async (reason_code, reason_note) => {
+            await changeStatus({
+              id: pending.user.id,
+              status: pending.targetStatus,
+              reason_code,
+              reason_note,
+            });
+          }}
         />
       )}
     </div>

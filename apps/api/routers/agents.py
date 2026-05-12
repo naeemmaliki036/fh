@@ -17,6 +17,7 @@ from apps.api.schemas.agent import (
     AgentUpdateRequest,
     PhotoUploadResponse,
 )
+from apps.api.schemas.status_change import AgentStatusChangeRequest
 from apps.api.schemas.private_document import (
     DownloadUrlResponse,
     PrivateDocumentListResponse,
@@ -117,6 +118,26 @@ async def deactivate_agent(
     svc: AgentService = Depends(_agent_svc),
 ) -> None:
     await svc.deactivate_agent(agent_id, tenant_id, current_user)
+
+
+@router.patch("/{agent_id}/status", response_model=AgentResponse)
+async def change_agent_status(
+    agent_id: UUID,
+    body: AgentStatusChangeRequest,
+    current_user: CurrentUser,
+    tenant_id: TenantContext,
+    ctx: ReqCtx,
+    svc: AgentService = Depends(_agent_svc),
+) -> AgentResponse:
+    agent = await svc.change_status(
+        agent_id, tenant_id, current_user,
+        new_status=body.status,
+        reason_code=body.reason_code,
+        reason_note=body.reason_note,
+        ip_address=ctx.ip_address,
+        user_agent=ctx.user_agent,
+    )
+    return _to_response(agent)
 
 
 # ------------------------------------------------------------------

@@ -4,7 +4,7 @@ from uuid import UUID
 
 from fastapi import APIRouter, Depends, Query
 
-from apps.api.dependencies import CurrentUser, DbSession, TenantContext
+from apps.api.dependencies import CurrentUser, DbSession, ReqCtx, TenantContext
 from apps.api.models.enums import PropertyStatus, PropertyType
 from apps.api.schemas.property import (
     PropertyAgentAssignRequest,
@@ -15,6 +15,7 @@ from apps.api.schemas.property import (
     PropertyResponse,
     PropertyUpdateRequest,
 )
+from apps.api.schemas.status_change import PropertyStatusChangeRequest
 from apps.api.services.property_agent_service import PropertyAgentService
 from apps.api.services.property_service import PropertyService
 
@@ -104,6 +105,27 @@ async def deactivate_property(
     svc: PropertyService = Depends(_prop_svc),
 ) -> None:
     await svc.deactivate_property(property_id, tenant_id, current_user)
+
+
+@router.patch("/{property_id}/status", response_model=PropertyResponse)
+async def change_property_status(
+    property_id: UUID,
+    body: PropertyStatusChangeRequest,
+    current_user: CurrentUser,
+    tenant_id: TenantContext,
+    ctx: ReqCtx,
+    svc: PropertyService = Depends(_prop_svc),
+) -> PropertyResponse:
+    return _to_response(
+        await svc.change_status(
+            property_id, tenant_id, current_user,
+            new_status=body.status,
+            reason_code=body.reason_code,
+            reason_note=body.reason_note,
+            ip_address=ctx.ip_address,
+            user_agent=ctx.user_agent,
+        )
+    )
 
 
 # ------------------------------------------------------------------

@@ -8,6 +8,7 @@ import type {
   PropertyAgentAssignment,
   PropertyAgentAssignRequest,
   PropertyAgentPatchRequest,
+  PropertyStatusChangeRequest,
 } from "@/lib/types/property";
 import type { Media, MediaListResponse, MediaKind } from "@/lib/types/media";
 
@@ -69,6 +70,11 @@ export class PropertyRepository extends BaseRepository<
       { ordered_ids: orderedIds },
     );
     return res.data.items;
+  }
+
+  async changeStatus(id: string, body: PropertyStatusChangeRequest): Promise<Property> {
+    const res = await this.client.patch<Property>(`${this.basePath}/${id}/status`, body);
+    return res.data;
   }
 }
 

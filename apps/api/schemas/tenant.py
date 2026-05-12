@@ -5,7 +5,7 @@ from datetime import datetime
 
 from pydantic import BaseModel, ConfigDict
 
-from apps.api.models.enums import TenantStatus
+from apps.api.models.enums import PropertiesViewMode, TenantStatus
 
 
 class TenantResponse(BaseModel):
@@ -18,6 +18,7 @@ class TenantResponse(BaseModel):
     currency: str
     timezone: str
     locale: str
+    default_properties_view: PropertiesViewMode
     approved_at: datetime | None = None
     approved_by_id: uuid.UUID | None = None
     created_at: datetime
@@ -31,6 +32,7 @@ class TenantUpdateRequest(BaseModel):
     currency: str | None = None
     timezone: str | None = None
     locale: str | None = None
+    default_properties_view: PropertiesViewMode | None = None
 
 
 class TenantListResponse(BaseModel):

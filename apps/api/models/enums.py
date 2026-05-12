@@ -38,6 +38,11 @@ class UserStatus(str, enum.Enum):
     DISABLED = "disabled"
 
 
+class PropertiesViewMode(str, enum.Enum):
+    CARD = "card"
+    LIST = "list"
+
+
 class AuditAction(str, enum.Enum):
     """Every auditable event in the platform.
 
@@ -55,6 +60,7 @@ class AuditAction(str, enum.Enum):
     USER_CREATED = "user_created"
     USER_ROLE_CHANGED = "user_role_changed"
     USER_DISABLED = "user_disabled"
+    USER_ENABLED = "user_enabled"
     USER_PASSWORD_CHANGED = "user_password_changed"
 
     # Document events
@@ -75,6 +81,11 @@ class AuditAction(str, enum.Enum):
 
     # Lead events
     LEAD_CREATED = "lead_created"
+
+    # Status change events
+    AGENT_STATUS_CHANGED = "agent_status_changed"
+    LISTING_STATUS_CHANGED = "listing_status_changed"
+    PROPERTY_STATUS_CHANGED = "property_status_changed"
 
     # Catch-all for ad-hoc events
     OTHER = "other"

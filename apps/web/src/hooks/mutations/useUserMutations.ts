@@ -8,6 +8,7 @@ import type {
   UserCreateRequest,
   UserUpdateRequest,
   UserMeUpdateRequest,
+  UserStatusChangeRequest,
 } from "@/lib/types";
 import { queryKeys } from "../queryKeys";
 
@@ -52,6 +53,23 @@ export function useDeleteUser() {
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: queryKeys.users.list });
       toast.success("User disabled");
+    },
+    onError: (error: Error) => {
+      toast.error(error.message);
+    },
+  });
+}
+
+export function useChangeUserStatus() {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: ({ id, ...body }: { id: string } & UserStatusChangeRequest): Promise<User> =>
+      userRepository.changeStatus(id, body),
+    onSuccess: (data) => {
+      queryClient.invalidateQueries({ queryKey: queryKeys.users.list });
+      queryClient.setQueryData(queryKeys.users.detail(data.id), data);
+      toast.success("User status updated");
     },
     onError: (error: Error) => {
       toast.error(error.message);

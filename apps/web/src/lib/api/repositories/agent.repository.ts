@@ -6,6 +6,7 @@ import type {
   AgentListResponse,
   AgentListParams,
   PhotoUploadResponse,
+  AgentStatusChangeRequest,
 } from "@/lib/types/agent";
 import type {
   PrivateDocument,
@@ -63,6 +64,11 @@ export class AgentRepository extends BaseRepository<Agent, AgentCreateRequest, A
 
   async deleteDocument(id: string, docId: string): Promise<void> {
     await this.client.delete(`${this.basePath}/${id}/documents/${docId}`);
+  }
+
+  async changeStatus(id: string, body: AgentStatusChangeRequest): Promise<Agent> {
+    const res = await this.client.patch<Agent>(`${this.basePath}/${id}/status`, body);
+    return res.data;
   }
 }
 

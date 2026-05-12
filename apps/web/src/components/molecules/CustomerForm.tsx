@@ -13,6 +13,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
+import { NATIONALITIES, LANGUAGES } from "@/lib/constants/regions";
 import type { Customer, CustomerCreateRequest, CustomerUpdateRequest, CustomerSource } from "@/lib/types";
 import type { Agent } from "@/lib/types";
 
@@ -99,11 +100,35 @@ export function CustomerForm({ defaultValues, agents, isPending, submitLabel, on
         </div>
         <div className="space-y-1.5">
           <Label>Nationality</Label>
-          <Input {...register("nationality")} placeholder="e.g. AE" />
+          <Controller
+            name="nationality"
+            control={control}
+            render={({ field }) => (
+              <Select value={field.value ?? ""} onValueChange={field.onChange}>
+                <SelectTrigger><SelectValue placeholder="Select nationality" /></SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="">— None —</SelectItem>
+                  {NATIONALITIES.map((n) => <SelectItem key={n.value} value={n.value}>{n.label}</SelectItem>)}
+                </SelectContent>
+              </Select>
+            )}
+          />
         </div>
         <div className="space-y-1.5">
           <Label>Language</Label>
-          <Input {...register("language")} placeholder="e.g. en" />
+          <Controller
+            name="language"
+            control={control}
+            render={({ field }) => (
+              <Select value={field.value ?? ""} onValueChange={field.onChange}>
+                <SelectTrigger><SelectValue placeholder="Select language" /></SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="">— None —</SelectItem>
+                  {LANGUAGES.map((l) => <SelectItem key={l.value} value={l.value}>{l.label}</SelectItem>)}
+                </SelectContent>
+              </Select>
+            )}
+          />
         </div>
         <div className="space-y-1.5">
           <Label>Preferred Currency</Label>

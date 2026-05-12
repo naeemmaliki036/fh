@@ -3,7 +3,7 @@
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { toast } from "sonner";
 import { agentRepository } from "@/lib/api/repositories";
-import type { Agent, AgentCreateRequest, AgentUpdateRequest, PhotoUploadResponse } from "@/lib/types";
+import type { Agent, AgentCreateRequest, AgentUpdateRequest, PhotoUploadResponse, AgentStatusChangeRequest } from "@/lib/types";
 import type { PrivateDocument, PrivateDocumentKind } from "@/lib/types/private-document";
 import { queryKeys } from "../queryKeys";
 
@@ -39,6 +39,20 @@ export function useDeleteAgent() {
     onSuccess: () => {
       qc.invalidateQueries({ queryKey: queryKeys.agents.all });
       toast.success("Agent disabled");
+    },
+    onError: (e: Error) => { toast.error(e.message); },
+  });
+}
+
+export function useChangeAgentStatus() {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: ({ id, ...body }: { id: string } & AgentStatusChangeRequest): Promise<Agent> =>
+      agentRepository.changeStatus(id, body),
+    onSuccess: (data) => {
+      qc.setQueryData(queryKeys.agents.detail(data.id), data);
+      qc.invalidateQueries({ queryKey: queryKeys.agents.all });
+      toast.success("Agent status updated");
     },
     onError: (e: Error) => { toast.error(e.message); },
   });

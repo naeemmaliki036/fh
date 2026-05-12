@@ -7,6 +7,7 @@ import { useAgents } from "@/hooks/queries/useAgents";
 import { useDeleteCustomer } from "@/hooks/mutations/useCustomerMutations";
 import { CustomerStatusBadge } from "@/components/atoms/CustomerStatusBadge";
 import { SourceBadge } from "@/components/atoms/SourceBadge";
+import { ConfirmDialog } from "@/components/molecules/ConfirmDialog";
 import { CustomerCreateDialog } from "@/components/organisms/CustomerCreateDialog";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -114,9 +115,14 @@ export function CustomersTable(): React.ReactElement {
                           <Link href={`/customers/${c.id}`}>Edit</Link>
                         </Button>
                         {c.status !== "inactive" && (
-                          <Button size="sm" variant="destructive" onClick={() => disable(c.id)}>
-                            Disable
-                          </Button>
+                          <ConfirmDialog
+                            trigger={<Button size="sm" variant="destructive">Disable</Button>}
+                            title="Disable customer?"
+                            description="This customer will be hidden from new deals and listings. You can re-enable later."
+                            confirmLabel="Disable"
+                            variant="destructive"
+                            onConfirm={() => disable(c.id)}
+                          />
                         )}
                       </div>
                     </td>

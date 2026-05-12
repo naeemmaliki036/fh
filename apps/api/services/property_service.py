@@ -5,13 +5,14 @@ from uuid import UUID
 from sqlalchemy import func, or_, select, text
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from apps.api.models.enums import PropertyStatus, PropertyType, TenantRole
+from apps.api.models.enums import AuditAction, PropertyStatus, PropertyType, TenantRole
 from apps.api.models.listing import Listing
 from apps.api.models.media import Media
 from apps.api.models.property import Property
 from apps.api.models.property_agent import PropertyAgent
+from apps.api.services.audit_service import AuditService
 from apps.api.services.base import BaseService
-from packages.common.utils.error_handlers import forbidden, not_found
+from packages.common.utils.error_handlers import bad_request, conflict, forbidden, not_found
 
 _MANAGER_ROLES = {
     TenantRole.COMPANY_OWNER.value,
@@ -20,9 +21,16 @@ _MANAGER_ROLES = {
 }
 
 
+_PROPERTY_ALLOWED_TRANSITIONS: dict[PropertyStatus, set[PropertyStatus]] = {
+    PropertyStatus.AVAILABLE: {PropertyStatus.OFF_MARKET},
+    PropertyStatus.OFF_MARKET: {PropertyStatus.AVAILABLE},
+}
+
+
 class PropertyService(BaseService):
     def __init__(self, session: AsyncSession) -> None:
         super().__init__(session)
+        self._audit = AuditService(session)
 
     async def _set_rls(self, tenant_id: UUID) -> None:
         await self.session.execute(text(f"SET LOCAL app.tenant_id = '{tenant_id}'"))
@@ -166,3 +174,61 @@ class PropertyService(BaseService):
         data = await self.get_property(property_id, tenant_id)
         data["property"].status = PropertyStatus.OFF_MARKET
         await self.session.flush()
+
+    async def change_status(
+        self,
+        property_id: UUID,
+        tenant_id: UUID,
+        current_user: dict,
+        new_status: PropertyStatus,
+        reason_code: str,
+        reason_note: str | None = None,
+        ip_address: str | None = None,
+        user_agent: str | None = None,
+    ) -> dict:
+        _manual_only = {PropertyStatus.AVAILABLE, PropertyStatus.OFF_MARKET}
+        if new_status not in _manual_only:
+            raise bad_request(
+                f"Status '{new_status.value}' cannot be set manually; "
+                "reserved/sold/rented/draft are deal-flow transitions"
+            )
+        self._require_manager(current_user["role"])
+        data = await self.get_property(property_id, tenant_id)
+        prop = data["property"]
+
+        if prop.status == new_status:
+            raise conflict(f"Property is already {new_status.value}")
+
+        allowed = _PROPERTY_ALLOWED_TRANSITIONS.get(prop.status, set())
+        if new_status not in allowed:
+            raise bad_request(
+                f"Transition {prop.status.value} → {new_status.value} is not allowed"
+            )
+
+        old_status = prop.status
+        prop.status = new_status
+        await self.session.flush()
+
+        await self._audit.record(
+            AuditAction.PROPERTY_STATUS_CHANGED,
+            tenant_id=tenant_id,
+            actor_user_id=UUID(current_user["id"]),
+            entity_type="property",
+            entity_id=prop.id,
+            after={
+                "from": old_status.value,
+                "to": new_status.value,
+                "reason_code": reason_code,
+                "reason_note": reason_note,
+            },
+            ip_address=ip_address,
+            user_agent=user_agent,
+        )
+        await self.session.refresh(prop)
+        agents = await self._get_agents(property_id)
+        return {
+            "property": prop,
+            "assigned_agents": agents,
+            "media_count": await self._media_count(property_id),
+            "listing_count": await self._listing_count(property_id),
+        }

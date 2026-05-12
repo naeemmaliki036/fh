@@ -5,6 +5,7 @@ import type {
   UserUpdateRequest,
   UserListResponse,
   UserMeUpdateRequest,
+  UserStatusChangeRequest,
 } from "@/lib/types";
 
 export class UserRepository extends BaseRepository<User, UserCreateRequest, UserUpdateRequest> {
@@ -27,6 +28,11 @@ export class UserRepository extends BaseRepository<User, UserCreateRequest, User
 
   async disableUser(id: string): Promise<void> {
     await this.client.delete(`${this.basePath}/${id}`);
+  }
+
+  async changeStatus(id: string, body: UserStatusChangeRequest): Promise<User> {
+    const res = await this.client.patch<User>(`${this.basePath}/${id}/status`, body);
+    return res.data;
   }
 }
 

@@ -57,3 +57,9 @@ export interface PhotoUploadResponse {
   photo_key: string;
   url: string;
 }
+
+export interface AgentStatusChangeRequest {
+  status: AgentStatus;
+  reason_code: string;
+  reason_note: string | null;
+}

@@ -1,4 +1,5 @@
 export type TenantStatus = "pending_approval" | "active" | "suspended";
+export type PropertiesViewMode = "card" | "list";
 
 export interface Tenant {
   id: string;
@@ -8,6 +9,7 @@ export interface Tenant {
   currency: string;
   timezone: string;
   locale: string;
+  default_properties_view: PropertiesViewMode;
   approved_at: string | null;
   approved_by_id: string | null;
   created_at: string;
@@ -19,6 +21,7 @@ export interface TenantUpdateRequest {
   currency?: string;
   timezone?: string;
   locale?: string;
+  default_properties_view?: PropertiesViewMode;
 }
 
 export interface TenantListResponse {

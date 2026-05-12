@@ -57,6 +57,7 @@ async def update_my_tenant(
         currency=updates.get("currency"),
         timezone_=updates.get("timezone"),
         locale=updates.get("locale"),
+        default_properties_view=updates.get("default_properties_view"),
         ip_address=ctx.ip_address,
         user_agent=ctx.user_agent,
     )

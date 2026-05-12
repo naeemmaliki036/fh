@@ -14,7 +14,7 @@ from sqlalchemy.orm import Mapped, mapped_column
 
 from packages.common.db.base import Base, TimestampMixin, UUIDMixin
 
-from .enums import TenantStatus
+from .enums import PropertiesViewMode, TenantStatus
 
 
 class Tenant(Base, UUIDMixin, TimestampMixin):
@@ -74,6 +74,15 @@ class Tenant(Base, UUIDMixin, TimestampMixin):
     public_site_tagline: Mapped[str | None] = mapped_column(
         String(200),
         nullable=True,
+    )
+
+    # UI preferences — default view mode for the properties list.
+    default_properties_view: Mapped[PropertiesViewMode] = mapped_column(
+        Enum(PropertiesViewMode, name="properties_view_mode", create_type=False,
+             values_callable=lambda x: [e.value for e in x]),
+        nullable=False,
+        default=PropertiesViewMode.CARD,
+        server_default=PropertiesViewMode.CARD.value,
     )
 
     # Approval trail — nullable until a platform admin approves.

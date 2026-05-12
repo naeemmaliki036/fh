@@ -45,7 +45,7 @@ export function CommissionForm({ isPending, onSubmit, onCancel }: CommissionForm
         </div>
         <div className="space-y-1.5">
           <Label>Value</Label>
-          <Input {...register("commission_value")} placeholder="0" />
+          <Input {...register("commission_value")} placeholder="0" step="0.01" />
           {errors.commission_value && <p className="text-xs text-destructive">{errors.commission_value.message}</p>}
         </div>
       </div>
