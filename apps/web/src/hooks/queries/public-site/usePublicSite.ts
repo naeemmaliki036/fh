@@ -2,7 +2,12 @@
 
 import { useQuery } from "@tanstack/react-query";
 import { publicSiteRepository } from "@/lib/api/repositories";
-import type { PublicTenantProfile, PublicListingListResponse, PublicListingsParams } from "@/lib/types/public-site";
+import type {
+  PublicTenantProfile,
+  PublicListingListResponse,
+  PublicListingsParams,
+  PublicAgentSnippet,
+} from "@/lib/types/public-site";
 import { queryKeys } from "../../queryKeys";
 
 export function usePublicSiteProfile(slug: string) {
@@ -23,5 +28,15 @@ export function usePublicSiteListings(slug: string, params: PublicListingsParams
       publicSiteRepository.getListings(slug, params),
     enabled: !!slug,
     staleTime: 30_000,
+  });
+}
+
+export function usePublicSiteAgents(slug: string) {
+  return useQuery({
+    queryKey: queryKeys.publicSite.agents(slug),
+    queryFn: (): Promise<PublicAgentSnippet[]> =>
+      publicSiteRepository.getAgents(slug),
+    enabled: !!slug,
+    staleTime: 60_000,
   });
 }

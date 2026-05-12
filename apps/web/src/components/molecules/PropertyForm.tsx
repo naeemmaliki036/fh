@@ -70,12 +70,12 @@ export function PropertyForm({ defaultValues, showStatus, isPending, submitLabel
     <form onSubmit={handleSubmit(handleFormSubmit)} className="space-y-4">
       <div className="grid grid-cols-2 gap-4">
         <div className="space-y-1.5 col-span-2">
-          <Label>Title</Label>
+          <Label>Title *</Label>
           <Input {...register("title")} />
           {errors.title && <p className="text-xs text-destructive">{errors.title.message}</p>}
         </div>
         <div className="space-y-1.5">
-          <Label>Type</Label>
+          <Label>Type *</Label>
           <Controller name="property_type" control={control} render={({ field }) => (
             <Select value={field.value} onValueChange={field.onChange}>
               <SelectTrigger><SelectValue /></SelectTrigger>
@@ -94,12 +94,12 @@ export function PropertyForm({ defaultValues, showStatus, isPending, submitLabel
             )} />
           </div>
         )}
-        <div className="space-y-1.5"><Label>Bedrooms</Label><Input type="number" {...register("bedrooms")} /></div>
-        <div className="space-y-1.5"><Label>Bathrooms</Label><Input type="number" {...register("bathrooms")} /></div>
-        <div className="space-y-1.5"><Label>Size (sqft)</Label><Input {...register("size_sqft")} /></div>
-        <div className="space-y-1.5"><Label>Price</Label><Input {...register("price")} /></div>
+        <div className="space-y-1.5"><Label>Bedrooms <span className="text-xs text-muted-foreground">(optional)</span></Label><Input type="number" {...register("bedrooms")} /></div>
+        <div className="space-y-1.5"><Label>Bathrooms <span className="text-xs text-muted-foreground">(optional)</span></Label><Input type="number" {...register("bathrooms")} /></div>
+        <div className="space-y-1.5"><Label>Size (sqft) <span className="text-xs text-muted-foreground">(optional)</span></Label><Input {...register("size_sqft")} /></div>
+        <div className="space-y-1.5"><Label>Price <span className="text-xs text-muted-foreground">(optional)</span></Label><Input {...register("price")} /></div>
         <div className="space-y-1.5">
-          <Label>Currency</Label>
+          <Label>Currency <span className="text-xs text-muted-foreground">(optional)</span></Label>
           <Controller name="currency" control={control} render={({ field }) => (
             <Select value={field.value ?? ""} onValueChange={field.onChange}>
               <SelectTrigger><SelectValue placeholder="Select currency" /></SelectTrigger>
@@ -107,12 +107,12 @@ export function PropertyForm({ defaultValues, showStatus, isPending, submitLabel
             </Select>
           )} />
         </div>
-        <div className="space-y-1.5"><Label>Internal Ref</Label><Input {...register("internal_reference")} /></div>
-        <div className="space-y-1.5"><Label>Address</Label><Input {...register("address_line")} /></div>
-        <div className="space-y-1.5"><Label>City</Label><Input {...register("city")} /></div>
-        <div className="space-y-1.5"><Label>Area</Label><Input {...register("area")} /></div>
+        <div className="space-y-1.5"><Label>Internal Ref <span className="text-xs text-muted-foreground">(optional)</span></Label><Input {...register("internal_reference")} /></div>
+        <div className="space-y-1.5"><Label>Address <span className="text-xs text-muted-foreground">(optional)</span></Label><Input {...register("address_line")} /></div>
+        <div className="space-y-1.5"><Label>City <span className="text-xs text-muted-foreground">(optional)</span></Label><Input {...register("city")} /></div>
+        <div className="space-y-1.5"><Label>Area <span className="text-xs text-muted-foreground">(optional)</span></Label><Input {...register("area")} /></div>
         <div className="space-y-1.5">
-          <Label>Country</Label>
+          <Label>Country <span className="text-xs text-muted-foreground">(optional)</span></Label>
           <Controller name="country" control={control} render={({ field }) => (
             <Select value={field.value ?? ""} onValueChange={field.onChange}>
               <SelectTrigger><SelectValue placeholder="Select country" /></SelectTrigger>
@@ -121,7 +121,7 @@ export function PropertyForm({ defaultValues, showStatus, isPending, submitLabel
           )} />
         </div>
         <div className="space-y-1.5 col-span-2">
-          <Label>Description</Label>
+          <Label>Description <span className="text-xs text-muted-foreground">(optional)</span></Label>
           <textarea {...register("description")} rows={3} className="flex w-full rounded-md border border-input bg-transparent px-3 py-2 text-sm shadow-sm focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring resize-none" />
         </div>
       </div>

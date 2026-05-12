@@ -9,9 +9,10 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { CustomerPicker } from "@/components/molecules/CustomerPicker";
+import { PropertyPicker } from "@/components/molecules/PropertyPicker";
 import { CURRENCIES } from "@/lib/constants/regions";
 import type { CustomerSummary } from "@/lib/types/lead";
-import type { Agent, Property } from "@/lib/types";
+import type { Agent } from "@/lib/types";
 import type { DealCreateRequest, DealType } from "@/lib/types/deal";
 
 const DEAL_TYPES: DealType[] = ["sale", "rent_short", "rent_long"];
@@ -33,15 +34,14 @@ type FormValues = z.infer<typeof schema>;
 
 interface DealFormProps {
   agents: Agent[];
-  properties: Property[];
   isPending: boolean;
   onSubmit: (data: DealCreateRequest) => void;
   onCancel?: () => void;
 }
 
-export function DealForm({ agents, properties, isPending, onSubmit, onCancel }: DealFormProps): React.ReactElement {
+export function DealForm({ agents, isPending, onSubmit, onCancel }: DealFormProps): React.ReactElement {
   const [customer, setCustomer] = useState<CustomerSummary | null>(null);
-  const { register, handleSubmit, control, watch } = useForm<FormValues>({
+  const { register, handleSubmit, control, watch, formState: { errors } } = useForm<FormValues>({
     resolver: zodResolver(schema),
     defaultValues: { deal_type: "sale", transaction_currency: "AED", commission_override: false },
   });
@@ -84,13 +84,10 @@ export function DealForm({ agents, properties, isPending, onSubmit, onCancel }: 
             </Select>
           )} />
         </div>
-        <div className="space-y-1.5">
+        <div className="space-y-1.5 col-span-2">
           <Label>Property *</Label>
           <Controller name="property_id" control={control} render={({ field }) => (
-            <Select value={field.value ?? ""} onValueChange={field.onChange}>
-              <SelectTrigger><SelectValue placeholder="Select property" /></SelectTrigger>
-              <SelectContent>{properties.map(p => <SelectItem key={p.id} value={p.id}>{p.title}</SelectItem>)}</SelectContent>
-            </Select>
+            <PropertyPicker value={field.value ?? null} onChange={(id) => field.onChange(id ?? "")} />
           )} />
         </div>
         <div className="space-y-1.5">
@@ -144,6 +141,9 @@ export function DealForm({ agents, properties, isPending, onSubmit, onCancel }: 
           <div className="space-y-1.5 col-span-2">
             <Label>Override Reason (min 5 chars)</Label>
             <Input {...register("commission_override_reason")} placeholder="Reason for override" />
+            {errors.commission_override_reason && (
+              <p className="text-xs text-destructive">{errors.commission_override_reason.message}</p>
+            )}
           </div>
         </div>
       )}

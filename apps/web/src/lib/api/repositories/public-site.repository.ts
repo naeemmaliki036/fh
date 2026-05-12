@@ -6,6 +6,7 @@ import type {
   PublicLeadCreate,
   PublicLeadResponse,
   PublicListingsParams,
+  PublicAgentSnippet,
 } from "@/lib/types/public-site";
 
 const API_BASE = process.env.NEXT_PUBLIC_API_URL ?? "http://localhost:8000";
@@ -44,6 +45,13 @@ export const publicSiteRepository = {
   async getListing(slug: string, listingId: string): Promise<PublicListingDetail> {
     const res = await publicHttp.get<PublicListingDetail>(
       `/api/public/sites/${slug}/listings/${listingId}`,
+    );
+    return res.data;
+  },
+
+  async getAgents(slug: string): Promise<PublicAgentSnippet[]> {
+    const res = await publicHttp.get<PublicAgentSnippet[]>(
+      `/api/public/sites/${slug}/agents`,
     );
     return res.data;
   },

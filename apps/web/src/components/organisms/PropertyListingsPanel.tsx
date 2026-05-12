@@ -99,8 +99,10 @@ export function PropertyListingsPanel({ propertyId }: PropertyListingsPanelProps
       {isLoading && <p className="text-sm text-muted-foreground">Loading listings...</p>}
 
       {!isLoading && listings.length === 0 && (
-        <div className="flex flex-col items-center justify-center py-10 border rounded-md bg-muted/20 text-muted-foreground">
+        <div className="flex flex-col items-center justify-center gap-3 py-10 border rounded-md bg-muted/20 text-muted-foreground">
           <p className="text-sm font-medium">No listings yet</p>
+          <p className="text-xs">Create a listing to publish this property to the market.</p>
+          <Button size="sm" onClick={() => setShowCreate(true)}>+ New Listing</Button>
         </div>
       )}
 

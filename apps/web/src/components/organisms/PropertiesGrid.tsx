@@ -15,6 +15,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { cn } from "@/lib/utils/cn";
+import { formatListingPrice } from "@/lib/utils/format-listing-price";
 import { PROPERTY_OFF_MARKET_REASONS, PROPERTY_AVAILABLE_REASONS } from "@/lib/constants/status-reasons";
 import type { PropertyStatus, PropertyType, Property } from "@/lib/types/property";
 import type { PropertiesViewMode } from "@/lib/types/tenant";
@@ -128,7 +129,7 @@ export function PropertiesGrid(): React.ReactElement {
                 </div>
                 <div className="flex items-center justify-between text-xs text-muted-foreground">
                   <span>{p.bedrooms != null ? `${p.bedrooms} bed` : ""}{p.bathrooms != null ? ` · ${p.bathrooms} bath` : ""}</span>
-                  <span>{p.price ? `${p.currency ?? ""} ${p.price}` : ""}</span>
+                  <span>{p.price ? formatListingPrice(p.price, p.currency ?? undefined) : ""}</span>
                 </div>
                 <div className="flex items-center justify-between">
                   <div className="flex gap-3 text-xs text-muted-foreground">

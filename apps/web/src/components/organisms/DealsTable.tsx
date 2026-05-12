@@ -4,6 +4,7 @@ import { useState } from "react";
 import Link from "next/link";
 import { useDeals } from "@/hooks/queries/useDeals";
 import { useAgents } from "@/hooks/queries/useAgents";
+import { Handshake } from "lucide-react";
 import { DealStageBadge } from "@/components/atoms/DealStageBadge";
 import { DealTypeBadge } from "@/components/atoms/DealTypeBadge";
 import { PayoutStatusBadge } from "@/components/atoms/PayoutStatusBadge";
@@ -11,17 +12,14 @@ import { DealCreateDialog } from "@/components/organisms/DealCreateDialog";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { STAGE_LABELS, DEAL_TYPE_LABELS } from "@/lib/constants/deal-labels";
+import { formatListingPrice } from "@/lib/utils/format-listing-price";
 import type { DealStage, DealType } from "@/lib/types/deal";
 
 const PAGE_SIZE = 20;
 const STAGES: DealStage[] = ["initiated","documents_pending","deposit_pending","closed_won","closed_lost","canceled"];
 const TYPES: DealType[] = ["sale","rent_short","rent_long"];
 
-function fmt(value: string, currency: string): string {
-  try {
-    return new Intl.NumberFormat("en-AE", { style: "currency", currency, maximumFractionDigits: 0 }).format(Number(value));
-  } catch { return `${currency} ${value}`; }
-}
 
 function relDate(d: string | null): string {
   if (!d) return "—";
@@ -62,14 +60,14 @@ export function DealsTable(): React.ReactElement {
           <SelectTrigger className="w-44"><SelectValue /></SelectTrigger>
           <SelectContent>
             <SelectItem value="all">All stages</SelectItem>
-            {STAGES.map(s => <SelectItem key={s} value={s}>{s.replace(/_/g," ")}</SelectItem>)}
+            {STAGES.map(s => <SelectItem key={s} value={s}>{STAGE_LABELS[s]}</SelectItem>)}
           </SelectContent>
         </Select>
         <Select value={dealType} onValueChange={v => { setDealType(v as DealType | "all"); setSkip(0); }}>
           <SelectTrigger className="w-36"><SelectValue /></SelectTrigger>
           <SelectContent>
             <SelectItem value="all">All types</SelectItem>
-            {TYPES.map(t => <SelectItem key={t} value={t}>{t.replace(/_/g," ")}</SelectItem>)}
+            {TYPES.map(t => <SelectItem key={t} value={t}>{DEAL_TYPE_LABELS[t]}</SelectItem>)}
           </SelectContent>
         </Select>
         <Select value={agentFilter || "all"} onValueChange={v => { setAgentFilter(v === "all" ? "" : v); setSkip(0); }}>
@@ -113,10 +111,10 @@ export function DealsTable(): React.ReactElement {
                 </td>
                 <td className="px-3 py-2.5"><DealTypeBadge type={d.deal_type} /></td>
                 <td className="px-3 py-2.5"><DealStageBadge stage={d.stage} /></td>
-                <td className="px-3 py-2.5 text-sm">{fmt(d.transaction_value, d.transaction_currency)}</td>
+                <td className="px-3 py-2.5 text-sm">{formatListingPrice(d.transaction_value, d.transaction_currency)}</td>
                 <td className="px-3 py-2.5">
                   <div className="flex flex-col gap-0.5">
-                    <span className="text-sm">{fmt(d.commission_amount, d.transaction_currency)}</span>
+                    <span className="text-sm">{formatListingPrice(d.commission_amount, d.transaction_currency)}</span>
                     <PayoutStatusBadge status={d.commission_payout_status} />
                   </div>
                 </td>
@@ -128,7 +126,18 @@ export function DealsTable(): React.ReactElement {
             ))}
           </tbody>
         </table>
-        {!isLoading && deals.length === 0 && <p className="py-8 text-center text-sm text-muted-foreground">No deals found</p>}
+        {!isLoading && deals.length === 0 && (
+          <div className="py-12 text-center">
+            <div className="flex flex-col items-center gap-3">
+              <Handshake className="h-8 w-8 text-muted-foreground/50" />
+              <div>
+                <p className="text-sm font-medium">No deals found</p>
+                <p className="text-xs text-muted-foreground mt-0.5">Create your first deal to start tracking commissions.</p>
+              </div>
+              <Button size="sm" onClick={() => setShowCreate(true)}>+ New Deal</Button>
+            </div>
+          </div>
+        )}
       </div>
 
       {total > PAGE_SIZE && (

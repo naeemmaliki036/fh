@@ -64,6 +64,7 @@ export const queryKeys = {
     listings: (slug: string, params?: Record<string, unknown>) =>
       ["public-site", slug, "listings", params] as const,
     listing: (slug: string, id: string) => ["public-site", slug, "listing", id] as const,
+    agents: (slug: string) => ["public-site", slug, "agents"] as const,
   },
   tenantPublicSite: {
     settings: ["tenant-public-site", "settings"] as const,

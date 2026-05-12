@@ -1,11 +1,19 @@
 // Public-facing site types — mirrors apps/api/schemas/public_site.py
 
+export interface PublicSiteStats {
+  listings_count: number;
+  agents_count: number;
+  featured_area: string | null;
+  inventory_value_aed: number | null;
+}
+
 export interface PublicTenantProfile {
   name: string;
   logo_url: string | null;
   tagline: string | null;
   contact_email: string;
   contact_phone: string;
+  stats?: PublicSiteStats;
 }
 
 export interface PublicListingItem {
@@ -20,6 +28,8 @@ export interface PublicListingItem {
   property_type: string;
   primary_photo_url: string | null;
   purpose: string;
+  listing_tier?: string | null;
+  created_at?: string | null;
 }
 
 export interface PublicListingListResponse {
@@ -35,6 +45,7 @@ export interface PublicAgentSnippet {
   photo_url: string | null;
   phone: string | null;
   email: string;
+  license_id?: string | null;
 }
 
 export interface PublicListingDetail {

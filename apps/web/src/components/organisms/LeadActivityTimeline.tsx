@@ -44,7 +44,9 @@ export function LeadActivityTimeline({ leadId }: LeadActivityTimelineProps): Rea
   const { mutate: add, isPending: adding } = useAddLeadActivity(leadId);
   const { mutate: remove, isPending: removing } = useDeleteLeadActivity(leadId);
 
-  const canManage = !!(currentUser && ADMIN_ROLES.has(currentUser.role));
+  const canManageAll = !!(currentUser && ADMIN_ROLES.has(currentUser.role));
+  const canDelete = (actorUserId: string | null): boolean =>
+    canManageAll || (!!currentUser && actorUserId === currentUser.id);
 
   const handleAdd = (): void => {
     if (!description.trim()) return;
@@ -97,7 +99,7 @@ export function LeadActivityTimeline({ leadId }: LeadActivityTimelineProps): Rea
                 <p className="text-xs text-muted-foreground mt-0.5">by {a.actor_full_name}</p>
               )}
             </div>
-            {canManage && a.kind === "note" && (
+            {canDelete(a.actor_user_id) && a.kind === "note" && (
               <Button
                 size="icon" variant="ghost" className="h-7 w-7 flex-shrink-0"
                 onClick={() => remove(a.id)} disabled={removing}

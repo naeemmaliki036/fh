@@ -10,8 +10,8 @@ export function ListingsGrid({ listings, slug }: ListingsGridProps): React.React
   if (listings.length === 0) {
     return (
       <div className="flex flex-col items-center justify-center py-24 text-center">
-        <p className="text-lg font-medium text-foreground">No listings found</p>
-        <p className="mt-1 text-sm text-muted-foreground">
+        <p className="text-lg font-black text-slate-950">No listings found</p>
+        <p className="mt-1 text-sm text-slate-500">
           Try adjusting your filters to see more results.
         </p>
       </div>
@@ -19,7 +19,7 @@ export function ListingsGrid({ listings, slug }: ListingsGridProps): React.React
   }
 
   return (
-    <div className="grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-3">
+    <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
       {listings.map((listing) => (
         <ListingCard key={listing.id} listing={listing} slug={slug} />
       ))}

@@ -20,7 +20,7 @@ export default async function SlugLayout({ children, params }: SlugLayoutProps):
   }
 
   return (
-    <div className="flex min-h-screen flex-col bg-background">
+    <div className="flex min-h-screen flex-col bg-[#f7f5ef]">
       <PublicSiteHeader profile={profile} />
       <main className="flex-1">
         {children}

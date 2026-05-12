@@ -5,9 +5,19 @@ interface AgentCardProps {
 }
 
 export function AgentCard({ agent }: AgentCardProps): React.ReactElement {
+  const initials = agent.full_name
+    .split(" ")
+    .map((n) => n[0])
+    .slice(0, 2)
+    .join("")
+    .toUpperCase();
+
+  const subtitle = agent.license_id ? `License: ${agent.license_id}` : "Property Advisor";
+
   return (
-    <div className="flex items-start gap-4 rounded-xl border bg-card p-4">
-      <div className="h-14 w-14 flex-shrink-0 overflow-hidden rounded-full bg-muted">
+    <article className="rounded-[2rem] bg-white p-6 text-center shadow-sm">
+      {/* Photo */}
+      <div className="mx-auto h-24 w-24 overflow-hidden rounded-full ring-4 ring-[#f7f5ef]">
         {agent.photo_url ? (
           <img
             src={agent.photo_url}
@@ -15,31 +25,31 @@ export function AgentCard({ agent }: AgentCardProps): React.ReactElement {
             className="h-full w-full object-cover"
           />
         ) : (
-          <div className="flex h-full items-center justify-center text-lg font-semibold text-muted-foreground">
-            {agent.full_name.charAt(0).toUpperCase()}
+          <div className="flex h-full w-full items-center justify-center bg-slate-200 text-xl font-black text-slate-600">
+            {initials}
           </div>
         )}
       </div>
 
-      <div className="min-w-0 flex-1">
-        <p className="font-semibold text-foreground">{agent.full_name}</p>
-        <div className="mt-1 space-y-1">
-          {agent.phone && (
-            <a
-              href={`tel:${agent.phone}`}
-              className="block text-sm text-muted-foreground hover:text-foreground transition-colors"
-            >
-              {agent.phone}
-            </a>
-          )}
+      <h3 className="mt-4 text-xl font-black text-slate-950">{agent.full_name}</h3>
+      <p className="text-sm leading-6 text-slate-500">{subtitle}</p>
+
+      <div className="mt-5 flex gap-3">
+        {agent.phone && (
           <a
-            href={`mailto:${agent.email}`}
-            className="block truncate text-sm text-muted-foreground hover:text-foreground transition-colors"
+            href={`tel:${agent.phone}`}
+            className="flex-1 inline-flex min-h-11 items-center justify-center rounded-full border border-slate-200 bg-white px-5 py-3 text-sm font-extrabold text-slate-950 transition hover:-translate-y-0.5 hover:bg-slate-50"
           >
-            {agent.email}
+            Call
           </a>
-        </div>
+        )}
+        <a
+          href={`mailto:${agent.email}`}
+          className="flex-1 inline-flex min-h-11 items-center justify-center rounded-full bg-slate-950 px-5 py-3 text-sm font-extrabold text-white transition hover:-translate-y-0.5 hover:bg-slate-800"
+        >
+          Email
+        </a>
       </div>
-    </div>
+    </article>
   );
 }

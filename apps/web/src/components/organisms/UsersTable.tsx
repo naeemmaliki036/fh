@@ -1,7 +1,9 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
+import { UserIcon } from "lucide-react";
 import { useUsers } from "@/hooks/queries/useUsers";
+import { Input } from "@/components/ui/input";
 import { useChangeUserStatus } from "@/hooks/mutations/useUserMutations";
 import { useAuth } from "@/contexts/AuthContext";
 import { UserRow } from "@/components/molecules/UserRow";
@@ -19,12 +21,19 @@ type PendingTransition = {
 };
 
 export function UsersTable(): React.ReactElement {
-  const { data, isLoading, error } = useUsers();
+  const [search, setSearch] = useState("");
+  const [debouncedQ, setDebouncedQ] = useState("");
+  const { data, isLoading, error } = useUsers({ q: debouncedQ || undefined });
   const { mutateAsync: changeStatus } = useChangeUserStatus();
   const { currentUser } = useAuth();
   const [editTarget, setEditTarget] = useState<User | null>(null);
   const [showCreate, setShowCreate] = useState(false);
   const [pending, setPending] = useState<PendingTransition | null>(null);
+
+  useEffect(() => {
+    const t = setTimeout(() => setDebouncedQ(search), 300);
+    return () => clearTimeout(t);
+  }, [search]);
 
   const canManage = !!(currentUser && MANAGE_ROLES.has(currentUser.role));
 
@@ -35,11 +44,17 @@ export function UsersTable(): React.ReactElement {
 
   return (
     <div className="space-y-4">
-      {canManage && (
-        <div className="flex justify-end">
-          <Button onClick={() => setShowCreate(true)}>Add User</Button>
-        </div>
-      )}
+      <div className="flex items-center gap-3">
+        <Input
+          placeholder="Search name or email..."
+          value={search}
+          onChange={(e) => setSearch(e.target.value)}
+          className="w-64"
+        />
+        {canManage && (
+          <Button className="ml-auto" onClick={() => setShowCreate(true)}>Add User</Button>
+        )}
+      </div>
 
       <div className="overflow-x-auto rounded-md border">
         <table className="w-full text-sm">
@@ -62,6 +77,22 @@ export function UsersTable(): React.ReactElement {
                 onStatusChange={(u, targetStatus) => setPending({ user: u, targetStatus })}
               />
             ))}
+            {users.length === 0 && (
+              <tr>
+                <td colSpan={canManage ? 5 : 4} className="py-12 text-center">
+                  <div className="flex flex-col items-center gap-3">
+                    <UserIcon className="h-8 w-8 text-muted-foreground/50" />
+                    <div>
+                      <p className="text-sm font-medium">No users yet</p>
+                      <p className="text-xs text-muted-foreground mt-0.5">Invite a user to give them access to this workspace.</p>
+                    </div>
+                    {canManage && (
+                      <Button size="sm" onClick={() => setShowCreate(true)}>+ New User</Button>
+                    )}
+                  </div>
+                </td>
+              </tr>
+            )}
           </tbody>
         </table>
       </div>

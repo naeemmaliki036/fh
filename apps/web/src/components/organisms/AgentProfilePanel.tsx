@@ -35,6 +35,7 @@ export function AgentProfilePanel({ agent }: AgentProfilePanelProps): React.Reac
         isPending={isPending}
         submitLabel="Save changes"
         onSubmit={handleSubmit}
+        onCancel={() => { /* reset happens inside AgentForm */ }}
       />
     </div>
   );

@@ -6,6 +6,7 @@ import { z } from "zod";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import { formatListingPrice } from "@/lib/utils/format-listing-price";
 import type { DealCommissionPayoutRequest } from "@/lib/types/deal";
 
 const schema = z.object({
@@ -38,7 +39,7 @@ export function PayoutForm({ remaining, currency, isPending, onSubmit, onCancel 
         <Input {...register("amount")} placeholder="0" />
         {errors.amount && <p className="text-xs text-destructive">{errors.amount.message}</p>}
         <p className="text-xs text-muted-foreground">
-          Remaining: {currency} {remaining}
+          Remaining: {formatListingPrice(remaining, currency)}
         </p>
       </div>
       <div className="space-y-1.5">

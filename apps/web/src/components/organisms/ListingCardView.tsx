@@ -5,6 +5,7 @@ import { ListingStatusBadge } from "@/components/atoms/ListingStatusBadge";
 import { ConfirmDialog } from "@/components/molecules/ConfirmDialog";
 import { Button } from "@/components/ui/button";
 import { getListingTransitions } from "@/components/organisms/ListingListView";
+import { formatListingPrice } from "@/lib/utils/format-listing-price";
 import type { Listing, ListingStatus } from "@/lib/types/listing";
 
 interface ListingCardViewProps {
@@ -29,7 +30,7 @@ export function ListingCardView({ listings, onEdit, onDelete, onStatusChange }: 
               <ListingPurposeBadge purpose={l.purpose} />
               <span className="text-xs text-muted-foreground capitalize">{l.listing_tier}</span>
             </div>
-            <p className="text-sm font-medium">{l.currency} {l.price}</p>
+            <p className="text-sm font-medium">{formatListingPrice(l.price, l.currency ?? undefined)}</p>
             <div className="flex flex-wrap gap-1">
               <Button size="sm" variant="outline" onClick={() => onEdit(l)}>Edit</Button>
               {transitions.map((t) => (

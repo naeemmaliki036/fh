@@ -4,6 +4,7 @@ import { ListingPurposeBadge } from "@/components/atoms/ListingPurposeBadge";
 import { ListingStatusBadge } from "@/components/atoms/ListingStatusBadge";
 import { ConfirmDialog } from "@/components/molecules/ConfirmDialog";
 import { Button } from "@/components/ui/button";
+import { formatListingPrice } from "@/lib/utils/format-listing-price";
 import type { Listing, ListingStatus } from "@/lib/types/listing";
 
 type TransitionDef = { label: string; status: ListingStatus; destructive: boolean };
@@ -63,7 +64,7 @@ export function ListingListView({ listings, onEdit, onDelete, onStatusChange }: 
               <tr key={l.id} className="border-b hover:bg-muted/30">
                 <td className="px-3 py-2.5 font-medium max-w-[160px] truncate">{l.title}</td>
                 <td className="px-3 py-2.5"><ListingPurposeBadge purpose={l.purpose} /></td>
-                <td className="px-3 py-2.5 text-muted-foreground">{l.currency} {l.price}</td>
+                <td className="px-3 py-2.5 text-muted-foreground">{formatListingPrice(l.price, l.currency ?? undefined)}</td>
                 <td className="px-3 py-2.5"><ListingStatusBadge status={l.status} /></td>
                 <td className="px-3 py-2.5 capitalize text-muted-foreground">{l.listing_tier}</td>
                 <td className="px-3 py-2.5">

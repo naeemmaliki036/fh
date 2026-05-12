@@ -169,6 +169,7 @@ export type {
 } from "./notification";
 
 export type {
+  PublicSiteStats,
   PublicTenantProfile,
   PublicListingItem,
   PublicListingListResponse,

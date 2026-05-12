@@ -4,7 +4,6 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/u
 import { DealForm } from "@/components/molecules/DealForm";
 import { useCreateDeal } from "@/hooks/mutations/useDealMutations";
 import { useAgents } from "@/hooks/queries/useAgents";
-import { useProperties } from "@/hooks/queries/useProperties";
 import type { DealCreateRequest } from "@/lib/types/deal";
 
 interface DealCreateDialogProps {
@@ -14,11 +13,9 @@ interface DealCreateDialogProps {
 
 export function DealCreateDialog({ open, onClose }: DealCreateDialogProps): React.ReactElement {
   const { data: agentsData } = useAgents();
-  const { data: propertiesData } = useProperties();
   const { mutate: create, isPending } = useCreateDeal();
 
   const agents = agentsData?.items ?? [];
-  const properties = propertiesData?.items ?? [];
 
   const handleSubmit = (data: DealCreateRequest): void => {
     create(data, { onSuccess: onClose });
@@ -30,7 +27,6 @@ export function DealCreateDialog({ open, onClose }: DealCreateDialogProps): Reac
         <DialogHeader><DialogTitle>New Deal</DialogTitle></DialogHeader>
         <DealForm
           agents={agents}
-          properties={properties}
           isPending={isPending}
           onSubmit={handleSubmit}
           onCancel={onClose}

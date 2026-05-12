@@ -19,89 +19,112 @@ function purposeLabel(p: string): string {
 }
 
 export function ListingDetailShell({ listing, slug }: ListingDetailShellProps): React.ReactElement {
+  const amenities = Array.isArray(listing.amenities)
+    ? listing.amenities.filter((a): a is string => typeof a === "string")
+    : [];
+
   return (
-    <div className="mx-auto max-w-6xl px-4 py-8 sm:px-6">
-      {/* Breadcrumb */}
-      <nav className="mb-6 text-sm text-muted-foreground">
-        <Link href={`/p/${slug}`} className="hover:text-foreground transition-colors">
-          All Properties
-        </Link>
-        <span className="mx-2">/</span>
-        <span className="text-foreground">{listing.title}</span>
-      </nav>
+    <div className="bg-[#f7f5ef] py-10">
+      <div className="mx-auto w-[min(100%-40px,1280px)]">
+        {/* Breadcrumb */}
+        <nav className="mb-6 text-sm text-slate-500">
+          <Link href={`/p/${slug}`} className="transition hover:text-slate-950">
+            All Properties
+          </Link>
+          <span className="mx-2">/</span>
+          <span className="text-slate-950">{listing.title}</span>
+        </nav>
 
-      {/* Desktop: side-by-side; Mobile: stacked */}
-      <div className="grid grid-cols-1 gap-8 lg:grid-cols-[1fr_360px]">
-        {/* Left: gallery + details */}
-        <div className="space-y-6">
-          <ListingGallery urls={listing.media_urls} title={listing.title} />
+        {/* Full-width gallery */}
+        <ListingGallery urls={listing.media_urls} title={listing.title} />
 
-          {/* Title + price */}
-          <div className="space-y-2">
-            <div className="flex flex-wrap items-start justify-between gap-3">
-              <h1 className="text-2xl font-bold leading-snug">{listing.title}</h1>
-              <span className="rounded-full bg-primary/10 px-3 py-1 text-sm font-medium text-primary">
-                {purposeLabel(listing.purpose)}
-              </span>
+        {/* 2-column below gallery */}
+        <div className="mt-8 grid grid-cols-1 gap-8 lg:grid-cols-[1fr_360px]">
+          {/* Left: details */}
+          <div className="space-y-6">
+            <div>
+              <div className="flex flex-wrap items-start justify-between gap-3">
+                <h1 className="text-4xl font-black leading-snug tracking-tight text-slate-950 md:text-5xl">
+                  {listing.title}
+                </h1>
+                <span className="rounded-full bg-amber-100 px-4 py-2 text-sm font-black text-amber-700">
+                  {purposeLabel(listing.purpose)}
+                </span>
+              </div>
+              <p className="mt-2 text-3xl font-black text-slate-950">{formatAed(listing.price)}</p>
+              {listing.address && (
+                <p className="mt-2 text-sm text-slate-500">{listing.address}</p>
+              )}
             </div>
-            <p className="text-3xl font-bold">{formatAed(listing.price)}</p>
-          </div>
 
-          {/* Stats */}
-          <div className="flex flex-wrap gap-4 rounded-xl border bg-card p-4">
-            {listing.beds != null && (
+            {/* Stat strip */}
+            <div className="flex flex-wrap gap-6 rounded-[2rem] bg-white p-6 shadow-sm">
+              {listing.beds != null && (
+                <div className="text-center">
+                  <p className="text-2xl font-black text-slate-950">{listing.beds}</p>
+                  <p className="mt-0.5 text-xs text-slate-500">Bedrooms</p>
+                </div>
+              )}
+              {listing.baths != null && (
+                <div className="text-center">
+                  <p className="text-2xl font-black text-slate-950">{listing.baths}</p>
+                  <p className="mt-0.5 text-xs text-slate-500">Bathrooms</p>
+                </div>
+              )}
+              {listing.area_sqft != null && (
+                <div className="text-center">
+                  <p className="text-2xl font-black text-slate-950">
+                    {listing.area_sqft.toLocaleString()}
+                  </p>
+                  <p className="mt-0.5 text-xs text-slate-500">Sq ft</p>
+                </div>
+              )}
               <div className="text-center">
-                <p className="text-xl font-semibold">{listing.beds}</p>
-                <p className="text-xs text-muted-foreground">Bedrooms</p>
-              </div>
-            )}
-            {listing.baths != null && (
-              <div className="text-center">
-                <p className="text-xl font-semibold">{listing.baths}</p>
-                <p className="text-xs text-muted-foreground">Bathrooms</p>
-              </div>
-            )}
-            {listing.area_sqft != null && (
-              <div className="text-center">
-                <p className="text-xl font-semibold">
-                  {listing.area_sqft.toLocaleString()}
+                <p className="text-2xl font-black capitalize text-slate-950">
+                  {listing.property_type.replace(/_/g, " ")}
                 </p>
-                <p className="text-xs text-muted-foreground">Sq Ft</p>
+                <p className="mt-0.5 text-xs text-slate-500">Type</p>
+              </div>
+            </div>
+
+            {listing.description && (
+              <div className="rounded-[2rem] bg-white p-6 shadow-sm">
+                <h2 className="text-lg font-black text-slate-950">Description</h2>
+                <p className="mt-3 whitespace-pre-wrap text-sm leading-relaxed text-slate-500">
+                  {listing.description}
+                </p>
               </div>
             )}
-            <div className="text-center">
-              <p className="text-xl font-semibold capitalize">
-                {listing.property_type.replace(/_/g, " ")}
-              </p>
-              <p className="text-xs text-muted-foreground">Type</p>
+
+            {amenities.length > 0 && (
+              <div className="rounded-[2rem] bg-white p-6 shadow-sm">
+                <h2 className="text-lg font-black text-slate-950">Amenities</h2>
+                <div className="mt-3 flex flex-wrap gap-2">
+                  {amenities.map((a) => (
+                    <span
+                      key={a}
+                      className="rounded-full border border-slate-200 bg-slate-50 px-3 py-1 text-xs font-bold text-slate-700"
+                    >
+                      {a}
+                    </span>
+                  ))}
+                </div>
+              </div>
+            )}
+
+            {/* Mobile: agent + form */}
+            <div className="space-y-4 lg:hidden">
+              {listing.agent && <AgentCard agent={listing.agent} />}
+              <ContactForm slug={slug} listingId={listing.id} compact />
             </div>
           </div>
 
-          {listing.address && (
-            <p className="text-sm text-muted-foreground">{listing.address}</p>
-          )}
-
-          {listing.description && (
-            <div className="space-y-2">
-              <h2 className="text-base font-semibold">Description</h2>
-              <p className="whitespace-pre-wrap text-sm leading-relaxed text-muted-foreground">
-                {listing.description}
-              </p>
+          {/* Right: sticky agent + form (desktop) */}
+          <div className="hidden lg:block">
+            <div className="sticky top-24 space-y-4">
+              {listing.agent && <AgentCard agent={listing.agent} />}
+              <ContactForm slug={slug} listingId={listing.id} compact />
             </div>
-          )}
-
-          {/* Mobile agent + form */}
-          <div className="space-y-4 lg:hidden">
-            {listing.agent && <AgentCard agent={listing.agent} />}
-            <ContactForm slug={slug} listingId={listing.id} />
-          </div>
-        </div>
-
-        {/* Right: sticky agent card + form (desktop only) */}
-        <div className="hidden space-y-4 lg:block">
-          <div className="sticky top-24 space-y-4">
-            {listing.agent && <AgentCard agent={listing.agent} />}
-            <ContactForm slug={slug} listingId={listing.id} />
           </div>
         </div>
       </div>

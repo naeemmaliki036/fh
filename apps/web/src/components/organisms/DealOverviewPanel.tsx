@@ -16,12 +16,8 @@ import { DealStageBadge } from "@/components/atoms/DealStageBadge";
 import { DealTypeBadge } from "@/components/atoms/DealTypeBadge";
 import { useUpdateDeal, useTransitionDeal } from "@/hooks/mutations/useDealMutations";
 import { DEAL_STAGE_TRANSITIONS, DEAL_TERMINAL_STAGES } from "@/lib/types/deal";
+import { STAGE_LABELS } from "@/lib/constants/deal-labels";
 import type { Deal, DealStage } from "@/lib/types/deal";
-
-const STAGE_LABELS: Record<DealStage, string> = {
-  initiated: "Initiated", documents_pending: "Docs Pending", deposit_pending: "Deposit Pending",
-  closed_won: "Closed Won", closed_lost: "Closed Lost", canceled: "Canceled",
-};
 
 interface DealOverviewPanelProps { deal: Deal; }
 
@@ -97,8 +93,8 @@ export function DealOverviewPanel({ deal }: DealOverviewPanelProps): React.React
       {/* Editable fields */}
       <div className="grid grid-cols-2 gap-4">
         <div className="space-y-1.5">
-          <Label>Transaction Value</Label>
-          <Input value={txValue} onChange={e => setTxValue(e.target.value)} />
+          <Label>Transaction Value ({deal.transaction_currency})</Label>
+          <Input type="number" min="0" step="0.01" value={txValue} onChange={e => setTxValue(e.target.value)} />
         </div>
         <div className="space-y-1.5">
           <Label>Expected Close</Label>
@@ -110,7 +106,14 @@ export function DealOverviewPanel({ deal }: DealOverviewPanelProps): React.React
             className="flex w-full rounded-md border border-input bg-transparent px-3 py-2 text-sm shadow-sm focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring resize-none" />
         </div>
       </div>
-      <Button onClick={handleSave} disabled={updating}>{updating ? "Saving…" : "Save"}</Button>
+      <div className="flex gap-2">
+        <Button variant="outline" onClick={() => {
+          setTxValue(deal.transaction_value);
+          setNotes(deal.notes ?? "");
+          setCloseAt(deal.expected_close_at?.slice(0, 10) ?? "");
+        }}>Cancel</Button>
+        <Button onClick={handleSave} disabled={updating}>{updating ? "Saving…" : "Save"}</Button>
+      </div>
 
       {/* Terminal confirm dialog */}
       {pendingStage && (

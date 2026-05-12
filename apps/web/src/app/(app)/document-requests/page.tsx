@@ -11,6 +11,7 @@ import {
   Dialog, DialogContent, DialogHeader, DialogTitle,
 } from "@/components/ui/dialog";
 import { DocRequestForm } from "@/components/molecules/DocRequestForm";
+import { ConfirmDialog } from "@/components/molecules/ConfirmDialog";
 import { useCreateDocumentRequest } from "@/hooks/mutations/useDocumentRequestMutations";
 import type { DocumentRequestStatus, DocumentRequestCreate } from "@/lib/types/document-request";
 
@@ -86,7 +87,14 @@ export default function DocumentRequestsPage(): React.ReactElement {
                       <Link href={`/document-requests/${r.id}`}>Open</Link>
                     </Button>
                     {r.status === "pending" || r.status === "partial" ? (
-                      <Button size="sm" variant="destructive" onClick={() => cancel(r.id)}>Cancel</Button>
+                      <ConfirmDialog
+                        trigger={<Button size="sm" variant="destructive">Cancel</Button>}
+                        title="Cancel document request?"
+                        description="The customer will not be able to upload any more documents. This cannot be undone."
+                        confirmLabel="Cancel request"
+                        variant="destructive"
+                        onConfirm={() => cancel(r.id)}
+                      />
                     ) : null}
                   </div>
                 </td>

@@ -2,6 +2,7 @@
 
 import { useState } from "react";
 import Link from "next/link";
+import { Users } from "lucide-react";
 import { useAgents } from "@/hooks/queries/useAgents";
 import { useChangeAgentStatus } from "@/hooks/mutations/useAgentMutations";
 import { StatusBadge } from "@/components/atoms/StatusBadge";
@@ -188,7 +189,18 @@ export function AgentsTable(): React.ReactElement {
             </tbody>
           </table>
           {agents.length === 0 && (
-            <p className="py-8 text-center text-sm text-muted-foreground">No agents found</p>
+            <tr>
+              <td colSpan={6} className="py-12 text-center">
+                <div className="flex flex-col items-center gap-3">
+                  <Users className="h-8 w-8 text-muted-foreground/50" />
+                  <div>
+                    <p className="text-sm font-medium">No agents yet</p>
+                    <p className="text-xs text-muted-foreground mt-0.5">Add your first agent to start assigning deals.</p>
+                  </div>
+                  <Button size="sm" onClick={() => setShowCreate(true)}>+ New Agent</Button>
+                </div>
+              </td>
+            </tr>
           )}
         </div>
       )}
