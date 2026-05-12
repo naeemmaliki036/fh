@@ -59,4 +59,13 @@ export const queryKeys = {
     list: (params?: Record<string, unknown>) => ["notifications", "list", params] as const,
     unreadCount: ["notifications", "unread-count"] as const,
   },
+  publicSite: {
+    profile: (slug: string) => ["public-site", slug, "profile"] as const,
+    listings: (slug: string, params?: Record<string, unknown>) =>
+      ["public-site", slug, "listings", params] as const,
+    listing: (slug: string, id: string) => ["public-site", slug, "listing", id] as const,
+  },
+  tenantPublicSite: {
+    settings: ["tenant-public-site", "settings"] as const,
+  },
 } as const;

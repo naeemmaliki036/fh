@@ -42,3 +42,8 @@ def conflict(message: str) -> HTTPException:
 def locked(message: str) -> HTTPException:
     """423 Locked."""
     return HTTPException(status_code=423, detail=message)
+
+
+def too_many_requests(message: str) -> HTTPException:
+    """429 Too Many Requests."""
+    return HTTPException(status_code=status.HTTP_429_TOO_MANY_REQUESTS, detail=message)

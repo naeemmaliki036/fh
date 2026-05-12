@@ -29,6 +29,7 @@ from apps.api.routers import (
     users,
 )
 from apps.api.routers.public import document_requests as public_document_requests
+from apps.api.routers import public_site, tenant_public_site
 
 logging.basicConfig(level=logging.INFO)
 
@@ -110,6 +111,8 @@ app.include_router(listings.router, prefix="", tags=["listings"])
 app.include_router(media.router, prefix="", tags=["media"])
 app.include_router(document_requests.router, prefix="/document-requests", tags=["document-requests"])
 app.include_router(public_document_requests.router, prefix="/public/document-requests", tags=["public"])
+app.include_router(public_site.router, prefix="/public/sites", tags=["public"])
+app.include_router(tenant_public_site.router, prefix="/tenants/me/public-site", tags=["tenants"])
 app.include_router(notifications.router, prefix="/platform/notifications", tags=["notifications"])
 
 

@@ -164,6 +164,8 @@ async def tenant_factory(db: AsyncSession):
             name=f"Test Co {slug}",
             slug=slug,
             status=TenantStatus.ACTIVE,
+            contact_email=owner_email or f"contact-{slug}@example.com",
+            contact_phone="+971500000000",
         )
         db.add(tenant)
         await db.flush()

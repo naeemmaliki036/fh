@@ -12,3 +12,5 @@ export { DocumentRequestRepository, documentRequestRepository } from "./document
 export { publicDocumentRequestRepository } from "./public-document-request.repository";
 export { DealRepository, dealRepository } from "./deal.repository";
 export { NotificationRepository, notificationRepository } from "./notification.repository";
+export { publicSiteRepository } from "./public-site.repository";
+export { tenantPublicSiteRepository } from "./tenant-public-site.repository";

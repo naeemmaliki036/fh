@@ -9,6 +9,7 @@ const PUBLIC_PATHS = [
   "/api",
   "/account-status",
   "/contact",
+  "/p",
 ];
 
 const PLATFORM_PATHS = ["/tenants", "/notifications"];

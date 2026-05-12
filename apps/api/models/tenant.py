@@ -8,7 +8,7 @@ circular dependency in migration ordering — the service layer enforces this).
 import uuid
 from datetime import datetime
 
-from sqlalchemy import Enum, String
+from sqlalchemy import Boolean, Enum, String, Text
 from sqlalchemy.dialects.postgresql import UUID
 from sqlalchemy.orm import Mapped, mapped_column
 
@@ -58,6 +58,22 @@ class Tenant(Base, UUIDMixin, TimestampMixin):
     contact_phone: Mapped[str] = mapped_column(
         String(32),
         nullable=False,
+    )
+
+    # Public site settings — master toggle + branding.
+    public_site_enabled: Mapped[bool] = mapped_column(
+        Boolean,
+        nullable=False,
+        default=False,
+        server_default="false",
+    )
+    public_site_logo_url: Mapped[str | None] = mapped_column(
+        Text,
+        nullable=True,
+    )
+    public_site_tagline: Mapped[str | None] = mapped_column(
+        String(200),
+        nullable=True,
     )
 
     # Approval trail — nullable until a platform admin approves.

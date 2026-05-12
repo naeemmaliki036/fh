@@ -73,6 +73,9 @@ class AuditAction(str, enum.Enum):
     LOGIN_SUCCEEDED = "login_succeeded"
     LOGIN_FAILED = "login_failed"
 
+    # Lead events
+    LEAD_CREATED = "lead_created"
+
     # Catch-all for ad-hoc events
     OTHER = "other"
 

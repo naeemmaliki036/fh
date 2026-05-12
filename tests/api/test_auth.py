@@ -59,6 +59,8 @@ async def test_login_pending_tenant_returns_403(client, db) -> None:
         name="Pending Co",
         slug="pending-co-test",
         status=TenantStatus.PENDING_APPROVAL,
+        contact_email="contact@pendingco.example.com",
+        contact_phone="+971500000000",
     )
     db.add(tenant)
     await db.flush()
