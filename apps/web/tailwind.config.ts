@@ -11,6 +11,7 @@ const config: Config = {
   theme: {
     extend: {
       colors: {
+        cream: "#faf9f6",
         background: "hsl(var(--background))",
         foreground: "hsl(var(--foreground))",
         card: {
@@ -61,6 +62,10 @@ const config: Config = {
           border: "hsl(var(--sidebar-border))",
           ring: "hsl(var(--sidebar-ring))",
         },
+      },
+      boxShadow: {
+        card: "0 1px 2px rgba(0,0,0,0.06)",
+        "card-md": "0 2px 8px rgba(0,0,0,0.08)",
       },
       borderRadius: {
         lg: "var(--radius)",

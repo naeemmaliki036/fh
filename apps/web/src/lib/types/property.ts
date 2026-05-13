@@ -30,6 +30,7 @@ export interface Property {
   latitude: string | null;
   longitude: string | null;
   amenities: string[] | null;
+  tags: string[] | null;
   internal_reference: string | null;
   status: PropertyStatus;
   assigned_agents: PropertyAgentAssignment[];
@@ -53,6 +54,8 @@ export interface PropertyCreateRequest {
   area?: string | null;
   country?: string | null;
   internal_reference?: string | null;
+  tags?: string[] | null;
+  amenities?: Record<string, unknown> | null;
   agent_ids?: string[] | null;
 }
 
@@ -71,6 +74,8 @@ export interface PropertyUpdateRequest {
   country?: string | null;
   status?: PropertyStatus | null;
   internal_reference?: string | null;
+  tags?: string[] | null;
+  amenities?: Record<string, unknown> | null;
 }
 
 export interface PropertyListResponse {
@@ -81,9 +86,26 @@ export interface PropertyListResponse {
 export interface PropertyListParams {
   status?: PropertyStatus;
   property_type?: PropertyType;
+  country?: string;
   city?: string;
   area?: string;
+  assigned_agent_id?: string;
+  min_price?: string;
+  max_price?: string;
+  currency?: string;
+  min_bedrooms?: number;
+  max_bedrooms?: number;
+  min_bathrooms?: number;
+  max_bathrooms?: number;
+  min_size_sqft?: string;
+  max_size_sqft?: string;
+  tags?: string;
+  created_from?: string;
+  created_to?: string;
+  has_listing?: boolean;
   q?: string;
+  sort_by?: string;
+  sort_dir?: "asc" | "desc";
   skip?: number;
   limit?: number;
 }

@@ -19,7 +19,7 @@ export function ListingsGrid({ listings, slug }: ListingsGridProps): React.React
   }
 
   return (
-    <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
+    <div className="grid gap-6 sm:grid-cols-2 lg:grid-cols-3">
       {listings.map((listing) => (
         <ListingCard key={listing.id} listing={listing} slug={slug} />
       ))}

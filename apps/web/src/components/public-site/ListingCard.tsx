@@ -1,4 +1,5 @@
 import Link from "next/link";
+import { ArrowRight } from "lucide-react";
 import type { PublicListingItem } from "@/lib/types/public-site";
 import { formatAed } from "@/lib/utils/format-currency";
 
@@ -13,26 +14,33 @@ function purposeLabel(purpose: string): string {
   return "For Rent";
 }
 
-function deriveTag(listing: PublicListingItem): string | null {
-  if (listing.listing_tier === "featured") return "Featured";
-  if (listing.purpose === "rent_short") return "Short-term";
+/** Derive up to 3 tag strings from listing metadata */
+function deriveTags(listing: PublicListingItem): string[] {
+  const tags: string[] = [];
+  if (listing.listing_tier === "featured") tags.push("Featured");
+  if (listing.listing_tier === "premium") tags.push("Premium");
+  if (listing.purpose === "rent_short") tags.push("Short-term");
   if (listing.created_at) {
     const age = Date.now() - new Date(listing.created_at).getTime();
-    if (age < 14 * 24 * 60 * 60 * 1000) return "New";
+    if (age < 14 * 24 * 60 * 60 * 1000) tags.push("New");
   }
-  return null;
+  return tags.slice(0, 3);
 }
 
+const MAX_VISIBLE_TAGS = 3;
+
 export function ListingCard({ listing, slug }: ListingCardProps): React.ReactElement {
-  const tag = deriveTag(listing);
+  const tags = deriveTags(listing);
+  const visibleTags = tags.slice(0, MAX_VISIBLE_TAGS);
+  const overflow = tags.length - visibleTags.length;
 
   return (
     <Link
       href={`/p/${slug}/listings/${listing.id}`}
-      className="group overflow-hidden rounded-[2rem] bg-white shadow-sm transition hover:-translate-y-1 hover:shadow-2xl hover:shadow-slate-900/10"
+      className="group flex flex-col overflow-hidden rounded-[2rem] bg-white shadow-card transition hover:-translate-y-1 hover:shadow-card-md"
     >
-      {/* Image */}
-      <div className="relative h-64 overflow-hidden">
+      {/* Hero image */}
+      <div className="relative h-60 overflow-hidden rounded-t-[2rem]">
         {listing.primary_photo_url ? (
           <img
             src={listing.primary_photo_url}
@@ -44,37 +52,60 @@ export function ListingCard({ listing, slug }: ListingCardProps): React.ReactEle
             No photo
           </div>
         )}
-        {tag && (
-          <span className="absolute left-4 top-4 rounded-full bg-white/90 px-3 py-1 text-xs font-black text-slate-800 backdrop-blur">
-            {tag}
-          </span>
+
+        {/* Tags overlay — top right of image */}
+        {tags.length > 0 && (
+          <div className="absolute right-3 top-3 flex flex-wrap justify-end gap-1.5">
+            {visibleTags.map((tag) => (
+              <span
+                key={tag}
+                className="rounded-full bg-white/95 px-2.5 py-0.5 text-xs font-bold text-slate-800 shadow-sm backdrop-blur-sm"
+              >
+                {tag}
+              </span>
+            ))}
+            {overflow > 0 && (
+              <span className="rounded-full bg-white/95 px-2.5 py-0.5 text-xs font-bold text-slate-500 shadow-sm backdrop-blur-sm">
+                +{overflow}
+              </span>
+            )}
+          </div>
         )}
       </div>
 
       {/* Body */}
-      <div className="p-5">
-        <div className="mb-3 flex items-center justify-between gap-3">
-          <strong className="text-2xl font-black">{formatAed(listing.price)}</strong>
-          <span className="rounded-full bg-amber-100 px-3 py-1 text-xs font-black" style={{ color: "var(--accent)" }}>
+      <div className="flex flex-1 flex-col p-5">
+        {/* Title */}
+        <h3 className="line-clamp-2 text-lg font-black text-slate-950 leading-snug">
+          {listing.title}
+        </h3>
+
+        {listing.address && (
+          <p className="mt-1 truncate text-sm text-slate-500">{listing.address}</p>
+        )}
+
+        {/* Price + purpose */}
+        <div className="mt-3 flex items-center justify-between gap-2">
+          <strong className="text-xl font-black text-slate-950">
+            {formatAed(listing.price)}
+          </strong>
+          <span className="rounded-full bg-amber-100 px-3 py-1 text-xs font-bold text-amber-800">
             {purposeLabel(listing.purpose)}
           </span>
         </div>
 
-        <h3 className="mt-4 text-xl font-black text-slate-950 line-clamp-1">{listing.title}</h3>
-
-        {listing.address && (
-          <p className="mt-2 truncate text-sm font-medium text-slate-500">{listing.address}</p>
-        )}
-
-        <div className="mt-5 grid grid-cols-3 gap-3 border-t border-slate-100 pt-4 text-sm text-slate-600">
-          <span>{listing.beds != null ? `${listing.beds} beds` : "—"}</span>
-          <span>{listing.baths != null ? `${listing.baths} baths` : "—"}</span>
+        {/* Stats */}
+        <div className="mt-4 grid grid-cols-3 gap-2 border-t border-slate-100 pt-4 text-sm text-slate-500">
+          <span>{listing.beds != null ? `${listing.beds} bed${listing.beds !== 1 ? "s" : ""}` : "—"}</span>
+          <span>{listing.baths != null ? `${listing.baths} bath${listing.baths !== 1 ? "s" : ""}` : "—"}</span>
           <span>{listing.area_sqft != null ? `${listing.area_sqft.toLocaleString()} sqft` : "—"}</span>
         </div>
 
-        <span className="mt-5 inline-flex min-h-11 w-full items-center justify-center rounded-full border border-slate-200 bg-white px-5 py-3 text-sm font-extrabold text-slate-950 transition hover:bg-slate-50">
+        {/* CTA text link */}
+        <div className="mt-4 flex items-center gap-1 text-sm font-bold text-slate-700 transition group-hover:text-slate-950">
           View details
-        </span>
+          <ArrowRight className="h-3.5 w-3.5 transition-transform group-hover:translate-x-0.5" />
+        </div>
       </div>
     </Link>
   );

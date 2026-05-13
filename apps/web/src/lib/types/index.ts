@@ -18,6 +18,12 @@ export type {
   Tenant,
   TenantUpdateRequest,
   TenantListResponse,
+  TenantListParams,
+  TenantSubscriptionInfo,
+  TenantActivityEntry,
+  TenantCounts,
+  TenantDetailResponse,
+  TenantLifecycleRequest,
 } from "./tenant";
 
 export type {
@@ -31,7 +37,15 @@ export type {
   UserStatusChangeRequest,
 } from "./user";
 
-export type { PlatformRole, PlatformUser } from "./platform-user";
+export type {
+  PlatformRole,
+  PlatformUserStatus,
+  PlatformUser,
+  PlatformUserCreateRequest,
+  PlatformUserUpdateRequest,
+  PlatformUserResetPasswordRequest,
+  PlatformUserListResponse,
+} from "./platform-user";
 
 export type {
   AgentStatus,
@@ -87,8 +101,30 @@ export type {
   ListingCreateRequest,
   ListingUpdateRequest,
   ListingListResponse,
+  ListingListParams,
   ListingStatusChangeRequest,
 } from "./listing";
+
+export type {
+  ListingPriceChangeRequest,
+  ListingPriceHistoryEntry,
+  ListingPriceHistoryResponse,
+  ListingHeroMediaRequest,
+} from "./listing-price";
+
+export type {
+  ListingDocumentKind,
+  ListingDocument,
+  ListingDocumentListResponse,
+  ListingDocumentUploadRequest,
+} from "./listing-document";
+
+export type {
+  AuditAction,
+  AuditLog,
+  AuditLogListResponse,
+  AuditLogListParams,
+} from "./audit-log";
 
 export type {
   MediaKind,
@@ -167,6 +203,22 @@ export type {
   UnreadCountResponse,
   NotificationListParams,
 } from "./notification";
+
+export type {
+  EmailTemplateScope,
+  EmailTemplate,
+  EmailTemplateCreateRequest,
+  EmailTemplateUpdateRequest,
+  EmailTemplateListParams,
+  EmailTemplateListResponse,
+  TestSendRequest,
+  TestSendResponse,
+  EmailOutboxStatus,
+  EmailOutboxItem,
+  EmailOutboxListParams,
+  EmailOutboxListResponse,
+  ProcessOutboxResponse,
+} from "./email";
 
 export type {
   PublicSiteStats,

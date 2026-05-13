@@ -33,6 +33,8 @@ export function getListingTransitions(l: Listing): TransitionDef[] {
       ];
     case "archived":
       return [{ label: "Re-list", status: "active", destructive: false }];
+    default:
+      return [];
   }
 }
 

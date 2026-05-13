@@ -6,8 +6,14 @@ export const queryKeys = {
   tenants: {
     all: ["tenants"] as const,
     list: (status?: string) => ["tenants", "list", status] as const,
+    adminList: (params?: Record<string, unknown>) => ["tenants", "admin-list", params] as const,
     detail: (id: string) => ["tenants", id] as const,
+    adminDetail: (id: string) => ["tenants", "admin", id] as const,
     my: ["tenants", "me"] as const,
+  },
+  platformUsers: {
+    all: ["platform-users"] as const,
+    list: ["platform-users", "list"] as const,
   },
   users: {
     all: ["users"] as const,
@@ -36,7 +42,14 @@ export const queryKeys = {
   },
   listings: {
     all: ["listings"] as const,
+    list: (params?: Record<string, unknown>) => ["listings", "list", params] as const,
     detail: (id: string) => ["listings", id] as const,
+    priceHistory: (id: string) => ["listings", id, "price-history"] as const,
+    documents: (id: string) => ["listings", id, "documents"] as const,
+  },
+  auditLogs: {
+    forEntity: (entityType: string, entityId: string) =>
+      ["audit-logs", entityType, entityId] as const,
   },
   leads: {
     all: ["leads"] as const,
@@ -68,5 +81,15 @@ export const queryKeys = {
   },
   tenantPublicSite: {
     settings: ["tenant-public-site", "settings"] as const,
+  },
+  emailTemplates: {
+    all: ["email-templates"] as const,
+    list: (params?: Record<string, unknown>) => ["email-templates", "list", params] as const,
+    detail: (id: string) => ["email-templates", id] as const,
+  },
+  emailOutbox: {
+    all: ["email-outbox"] as const,
+    list: (params?: Record<string, unknown>) => ["email-outbox", "list", params] as const,
+    detail: (id: string) => ["email-outbox", id] as const,
   },
 } as const;

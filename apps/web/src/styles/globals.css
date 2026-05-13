@@ -77,4 +77,9 @@
   body {
     @apply bg-background text-foreground;
   }
+
+  /* App shell routes use cream background */
+  [data-shell="app"] {
+    background-color: #faf9f6;
+  }
 }

@@ -73,3 +73,22 @@ export const PROPERTY_AVAILABLE_REASONS: ReasonOption[] = [
   { value: "price_update", label: "Price update" },
   { value: "other", label: "Other" },
 ];
+
+export const LISTING_SOLD_REASONS: ReasonOption[] = [
+  { value: "sale_completed", label: "Sale completed" },
+  { value: "sold_off_platform", label: "Sold off-platform" },
+  { value: "other", label: "Other" },
+];
+
+export const LISTING_RENTED_REASONS: ReasonOption[] = [
+  { value: "rental_agreed", label: "Rental agreed" },
+  { value: "rented_off_platform", label: "Rented off-platform" },
+  { value: "other", label: "Other" },
+];
+
+export const LISTING_OFF_MARKET_REASONS: ReasonOption[] = [
+  { value: "owner_request", label: "Owner request" },
+  { value: "maintenance", label: "Maintenance" },
+  { value: "market_conditions", label: "Market conditions" },
+  { value: "other", label: "Other" },
+];

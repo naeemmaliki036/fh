@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { Bell, Building2, LogOut } from "lucide-react";
+import { Bell, Building2, Inbox, LogOut, Mail, Users } from "lucide-react";
 import { cn } from "@/lib/utils/cn";
 import { usePlatformLogout } from "@/hooks/mutations/useAuthMutations";
 import { Button } from "@/components/ui/button";
@@ -12,10 +12,14 @@ interface NavItem {
   href: string;
   label: string;
   icon: React.ComponentType<{ className?: string }>;
+  superAdminOnly?: boolean;
 }
 
 const NAV_ITEMS: NavItem[] = [
   { href: "/tenants", label: "Tenants", icon: Building2 },
+  { href: "/users", label: "Platform Users", icon: Users, superAdminOnly: true },
+  { href: "/email-templates", label: "Email Templates", icon: Mail },
+  { href: "/email-outbox", label: "Email Outbox", icon: Inbox },
   { href: "/notifications", label: "Notifications", icon: Bell },
 ];
 
@@ -27,6 +31,9 @@ export function PlatformSidebar(): React.ReactElement {
   const pathname = usePathname();
   const { mutate: logout, isPending } = usePlatformLogout();
   const { currentPlatformUser } = useAuth();
+  const isSuperAdmin = currentPlatformUser?.role === "super_admin";
+
+  const visibleItems = NAV_ITEMS.filter((item) => !item.superAdminOnly || isSuperAdmin);
 
   return (
     <aside className="flex h-full w-64 flex-col bg-sidebar text-sidebar-foreground">
@@ -36,7 +43,7 @@ export function PlatformSidebar(): React.ReactElement {
       </div>
 
       <nav className="flex-1 overflow-y-auto px-3 py-4 space-y-1">
-        {NAV_ITEMS.map((item) => {
+        {visibleItems.map((item) => {
           const Icon = item.icon;
           const isActive = pathname.startsWith(item.href);
           return (

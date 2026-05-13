@@ -18,6 +18,8 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { CURRENCIES } from "@/lib/constants/regions";
+import { OPERATING_COUNTRIES } from "@/lib/constants/operating-countries";
+import { cn } from "@/lib/utils/cn";
 
 const OWNER_ROLES = new Set(["company_owner", "company_admin"]);
 const TIMEZONES = [
@@ -45,6 +47,7 @@ const schema = z.object({
   timezone: z.string().min(1),
   locale: z.string().min(2),
   default_properties_view: z.enum(["card", "list"]),
+  operating_countries: z.array(z.string()).min(1, "Select at least 1 country").max(20),
 });
 
 type FormValues = z.infer<typeof schema>;
@@ -64,6 +67,7 @@ export default function CompanyPage(): React.ReactElement {
       timezone: tenant?.timezone ?? "Asia/Dubai",
       locale: tenant?.locale ?? "en",
       default_properties_view: tenant?.default_properties_view ?? "card",
+      operating_countries: tenant?.operating_countries ?? [],
     },
   });
 
@@ -164,6 +168,19 @@ export default function CompanyPage(): React.ReactElement {
               />
             </div>
 
+            <Controller
+              name="operating_countries"
+              control={control}
+              render={({ field }) => (
+                <OperatingCountriesField
+                  value={field.value}
+                  onChange={field.onChange}
+                  disabled={!canEdit}
+                  error={errors.operating_countries?.message}
+                />
+              )}
+            />
+
             {canEdit && (
               <Button type="submit" disabled={isPending}>
                 {isPending ? "Saving..." : "Save changes"}
@@ -172,6 +189,59 @@ export default function CompanyPage(): React.ReactElement {
           </form>
         </CardContent>
       </Card>
+    </div>
+  );
+}
+
+interface OperatingCountriesFieldProps {
+  value: string[];
+  onChange: (v: string[]) => void;
+  disabled: boolean;
+  error?: string;
+}
+
+function OperatingCountriesField({
+  value,
+  onChange,
+  disabled,
+  error,
+}: OperatingCountriesFieldProps): React.ReactElement {
+  function toggle(code: string): void {
+    if (disabled) return;
+    if (value.includes(code)) {
+      onChange(value.filter((c) => c !== code));
+    } else if (value.length < 20) {
+      onChange([...value, code]);
+    }
+  }
+
+  return (
+    <div className="space-y-1.5">
+      <Label>Countries we operate in</Label>
+      <p className="text-xs text-muted-foreground">Select 1–20 countries</p>
+      <div className="flex flex-wrap gap-2">
+        {OPERATING_COUNTRIES.map((c) => {
+          const selected = value.includes(c.code);
+          return (
+            <button
+              key={c.code}
+              type="button"
+              disabled={disabled}
+              onClick={() => toggle(c.code)}
+              className={cn(
+                "rounded-md border px-2.5 py-1 text-xs font-medium transition-colors",
+                selected
+                  ? "bg-primary text-primary-foreground border-primary"
+                  : "bg-background text-foreground border-input hover:bg-muted",
+                disabled && "opacity-50 cursor-not-allowed",
+              )}
+            >
+              {c.label} ({c.code})
+            </button>
+          );
+        })}
+      </div>
+      {error && <p className="text-xs text-destructive">{error}</p>}
     </div>
   );
 }

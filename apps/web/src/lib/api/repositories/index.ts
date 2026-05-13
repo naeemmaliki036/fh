@@ -1,6 +1,8 @@
 export { BaseRepository } from "./base.repository";
 export { AuthRepository, authRepository } from "./auth.repository";
 export { TenantRepository, tenantRepository } from "./tenant.repository";
+export { tenantAdminRepository } from "./tenant-admin.repository";
+export { platformUsersRepository } from "./platform-users.repository";
 export { UserRepository, userRepository } from "./user.repository";
 export { AgentRepository, agentRepository } from "./agent.repository";
 export { CustomerRepository, customerRepository } from "./customer.repository";
@@ -14,3 +16,8 @@ export { DealRepository, dealRepository } from "./deal.repository";
 export { NotificationRepository, notificationRepository } from "./notification.repository";
 export { publicSiteRepository } from "./public-site.repository";
 export { tenantPublicSiteRepository } from "./tenant-public-site.repository";
+export { EmailTemplatesRepository, emailTemplatesRepository } from "./email-templates.repository";
+export { EmailOutboxRepository, emailOutboxRepository } from "./email-outbox.repository";
+export { ListingPriceRepository, listingPriceRepository } from "./listing-price.repository";
+export { ListingDocumentRepository, listingDocumentRepository } from "./listing-document.repository";
+export { AuditLogRepository, auditLogRepository } from "./audit-log.repository";

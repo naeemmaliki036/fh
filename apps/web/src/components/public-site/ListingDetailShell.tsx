@@ -1,6 +1,7 @@
 "use client";
 
 import Link from "next/link";
+import { BedDouble, Bath, Square, Building2 } from "lucide-react";
 import type { PublicListingDetail } from "@/lib/types/public-site";
 import { ListingGallery } from "./ListingGallery";
 import { AgentCard } from "./AgentCard";
@@ -18,92 +19,117 @@ function purposeLabel(p: string): string {
   return "For Rent";
 }
 
+interface StatTileProps {
+  icon: React.ComponentType<{ className?: string }>;
+  value: string | number;
+  label: string;
+}
+
+function StatTile({ icon: Icon, value, label }: StatTileProps): React.ReactElement {
+  return (
+    <div className="flex flex-col items-center gap-1 rounded-xl border border-slate-100 bg-slate-50 px-4 py-3 text-center">
+      <Icon className="h-4 w-4 text-slate-400" />
+      <p className="text-lg font-black text-slate-950 leading-none">{value}</p>
+      <p className="text-xs text-slate-500">{label}</p>
+    </div>
+  );
+}
+
 export function ListingDetailShell({ listing, slug }: ListingDetailShellProps): React.ReactElement {
   const amenities = Array.isArray(listing.amenities)
     ? listing.amenities.filter((a): a is string => typeof a === "string")
     : [];
 
   return (
-    <div className="bg-[#f7f5ef] py-10">
-      <div className="mx-auto w-[min(100%-40px,1280px)]">
-        {/* Breadcrumb */}
-        <nav className="mb-6 text-sm text-slate-500">
-          <Link href={`/p/${slug}`} className="transition hover:text-slate-950">
-            All Properties
-          </Link>
-          <span className="mx-2">/</span>
-          <span className="text-slate-950">{listing.title}</span>
-        </nav>
+    <div className="bg-[#f7f5ef] min-h-screen">
+      {/* Sticky breadcrumb */}
+      <div className="sticky top-[61px] z-10 border-b border-slate-200/60 bg-[#f7f5ef]/90 backdrop-blur-md">
+        <div className="mx-auto w-[min(100%-40px,1280px)] py-2.5">
+          <nav className="flex items-center gap-2 text-xs text-slate-400">
+            <Link href={`/p/${slug}`} className="hover:text-slate-700 transition-colors font-medium">
+              All Properties
+            </Link>
+            <span>/</span>
+            <span className="truncate text-slate-700 font-medium max-w-xs">{listing.title}</span>
+          </nav>
+        </div>
+      </div>
 
-        {/* Full-width gallery */}
+      <div className="mx-auto w-[min(100%-40px,1280px)] py-8">
+        {/* Gallery */}
         <ListingGallery urls={listing.media_urls} title={listing.title} />
 
-        {/* 2-column below gallery */}
+        {/* 2-column layout */}
         <div className="mt-8 grid grid-cols-1 gap-8 lg:grid-cols-[1fr_360px]">
-          {/* Left: details */}
+          {/* LEFT: details */}
           <div className="space-y-6">
+            {/* Title + tag chips */}
             <div>
-              <div className="flex flex-wrap items-start justify-between gap-3">
-                <h1 className="text-4xl font-black leading-snug tracking-tight text-slate-950 md:text-5xl">
-                  {listing.title}
-                </h1>
-                <span className="rounded-full bg-amber-100 px-4 py-2 text-sm font-black" style={{ color: "var(--accent)" }}>
+              <h1 className="text-4xl font-black leading-tight tracking-tight text-slate-950 md:text-5xl">
+                {listing.title}
+              </h1>
+
+              {/* Tag chips row */}
+              <div className="mt-3 flex flex-wrap items-center gap-2">
+                <span className="rounded-full border border-amber-200 bg-amber-100 px-3 py-1 text-xs font-bold text-amber-800">
                   {purposeLabel(listing.purpose)}
                 </span>
+                <span className="rounded-full border border-slate-200 bg-white px-3 py-1 text-xs font-bold text-slate-600 capitalize">
+                  {listing.property_type.replace(/_/g, " ")}
+                </span>
               </div>
-              <p className="mt-2 text-3xl font-black text-slate-950">{formatAed(listing.price)}</p>
+
               {listing.address && (
-                <p className="mt-2 text-sm text-slate-500">{listing.address}</p>
+                <p className="mt-3 text-sm text-slate-500">{listing.address}</p>
               )}
             </div>
 
-            {/* Stat strip */}
-            <div className="flex flex-wrap gap-6 rounded-[2rem] bg-white p-6 shadow-sm">
+            {/* Price — shown on mobile below title, hidden on desktop (shown in right col) */}
+            <div className="lg:hidden rounded-2xl border border-slate-200 bg-white p-5 shadow-card">
+              <p className="text-3xl font-black text-slate-950">{formatAed(listing.price)}</p>
+            </div>
+
+            {/* Stat tiles */}
+            <div className="grid grid-cols-2 gap-3 sm:grid-cols-4">
               {listing.beds != null && (
-                <div className="text-center">
-                  <p className="text-2xl font-black text-slate-950">{listing.beds}</p>
-                  <p className="mt-0.5 text-xs text-slate-500">Bedrooms</p>
-                </div>
+                <StatTile icon={BedDouble} value={listing.beds} label="Bedrooms" />
               )}
               {listing.baths != null && (
-                <div className="text-center">
-                  <p className="text-2xl font-black text-slate-950">{listing.baths}</p>
-                  <p className="mt-0.5 text-xs text-slate-500">Bathrooms</p>
-                </div>
+                <StatTile icon={Bath} value={listing.baths} label="Bathrooms" />
               )}
               {listing.area_sqft != null && (
-                <div className="text-center">
-                  <p className="text-2xl font-black text-slate-950">
-                    {listing.area_sqft.toLocaleString()}
-                  </p>
-                  <p className="mt-0.5 text-xs text-slate-500">Sq ft</p>
-                </div>
+                <StatTile
+                  icon={Square}
+                  value={`${listing.area_sqft.toLocaleString()} sqft`}
+                  label="Area"
+                />
               )}
-              <div className="text-center">
-                <p className="text-2xl font-black capitalize text-slate-950">
-                  {listing.property_type.replace(/_/g, " ")}
-                </p>
-                <p className="mt-0.5 text-xs text-slate-500">Type</p>
-              </div>
+              <StatTile
+                icon={Building2}
+                value={listing.property_type.replace(/_/g, " ")}
+                label="Type"
+              />
             </div>
 
+            {/* Description */}
             {listing.description && (
-              <div className="rounded-[2rem] bg-white p-6 shadow-sm">
-                <h2 className="text-lg font-black text-slate-950">Description</h2>
+              <div className="rounded-2xl bg-white p-6 shadow-card">
+                <h2 className="text-base font-black text-slate-950">Description</h2>
                 <p className="mt-3 whitespace-pre-wrap text-sm leading-relaxed text-slate-500">
                   {listing.description}
                 </p>
               </div>
             )}
 
+            {/* Amenities */}
             {amenities.length > 0 && (
-              <div className="rounded-[2rem] bg-white p-6 shadow-sm">
-                <h2 className="text-lg font-black text-slate-950">Amenities</h2>
+              <div className="rounded-2xl bg-white p-6 shadow-card">
+                <h2 className="text-base font-black text-slate-950">Amenities</h2>
                 <div className="mt-3 flex flex-wrap gap-2">
                   {amenities.map((a) => (
                     <span
                       key={a}
-                      className="rounded-full border border-slate-200 bg-slate-50 px-3 py-1 text-xs font-bold text-slate-700"
+                      className="rounded-full border border-slate-200 bg-slate-50 px-3 py-1 text-xs font-semibold text-slate-700"
                     >
                       {a}
                     </span>
@@ -112,16 +138,28 @@ export function ListingDetailShell({ listing, slug }: ListingDetailShellProps): 
               </div>
             )}
 
-            {/* Mobile: agent + form */}
+            {/* Mobile: agent + contact form */}
             <div className="space-y-4 lg:hidden">
               {listing.agent && <AgentCard agent={listing.agent} />}
               <ContactForm slug={slug} listingId={listing.id} compact />
             </div>
           </div>
 
-          {/* Right: sticky agent + form (desktop) */}
+          {/* RIGHT: price card + agent + form (desktop) */}
           <div className="hidden lg:block">
-            <div className="sticky top-24 space-y-4">
+            <div className="sticky top-[110px] space-y-4">
+              {/* Price card */}
+              <div className="rounded-2xl border border-slate-200 bg-white p-6 shadow-card">
+                <p className="text-3xl font-black text-slate-950">{formatAed(listing.price)}</p>
+                <div className="mt-2 flex flex-wrap gap-2">
+                  <span className="rounded-full border border-amber-200 bg-amber-100 px-3 py-1 text-xs font-bold text-amber-800">
+                    {purposeLabel(listing.purpose)}
+                  </span>
+                </div>
+                {listing.address && (
+                  <p className="mt-3 text-xs text-slate-400">{listing.address}</p>
+                )}
+              </div>
               {listing.agent && <AgentCard agent={listing.agent} />}
               <ContactForm slug={slug} listingId={listing.id} compact />
             </div>

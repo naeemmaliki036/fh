@@ -6,99 +6,123 @@ import { useAgents } from "@/hooks/queries/useAgents";
 import { useLeads } from "@/hooks/queries/useLeads";
 import { useProperties } from "@/hooks/queries/useProperties";
 import { useDeals } from "@/hooks/queries/useDeals";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { useListings } from "@/hooks/queries/useListings";
 import { StatusBadge } from "@/components/atoms/StatusBadge";
-import { Users, Briefcase, Home, Handshake } from "lucide-react";
+import { KpiCard } from "@/components/molecules/KpiCard";
+import { Users, Home, Target, Handshake, LayoutList, TrendingUp } from "lucide-react";
+import { DashboardActionRequired } from "@/components/organisms/DashboardActionRequired";
+import { DashboardRecentActivity } from "@/components/organisms/DashboardRecentActivity";
+import { DashboardPipeline } from "@/components/organisms/DashboardPipeline";
 
 export default function DashboardPage(): React.ReactElement {
   const { currentUser } = useAuth();
-  const { data: tenant, isLoading } = useMyTenant();
+  const { data: tenant, isLoading: tenantLoading } = useMyTenant();
 
-  const { data: agentsData } = useAgents({ status: "active", limit: 1 });
-  const { data: leadsData } = useLeads({ limit: 1 });
-  const { data: propertiesData } = useProperties({ status: "available", limit: 1 });
-  const { data: dealsData } = useDeals({ limit: 1 });
+  const { data: agentsData, isLoading: agentsLoading } = useAgents({ status: "active", limit: 1 });
+  const { data: leadsData, isLoading: leadsLoading } = useLeads({ limit: 1 });
+  const { data: propertiesData, isLoading: propsLoading } = useProperties({ limit: 1 });
+  const { data: dealsData, isLoading: dealsLoading } = useDeals({ limit: 1 });
+  const { data: listingsData, isLoading: listingsLoading } = useListings({ status: "active", limit: 1 });
+  const { data: newLeadsData, isLoading: newLeadsLoading } = useLeads({ limit: 1 });
 
-  const openLeadsTotal = (leadsData?.total ?? 0);
-  const dealsInProgress = (dealsData?.total ?? 0);
+  const firstName = currentUser?.full_name?.split(" ")[0] ?? "there";
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-8">
+      {/* Page header */}
       <div>
-        <h1 className="text-2xl font-semibold tracking-tight">
-          Welcome, {currentUser?.full_name ?? "..."}
+        <h1 className="text-2xl font-bold tracking-tight text-slate-900">
+          Good morning, {firstName}
         </h1>
-        <p className="text-sm text-muted-foreground mt-1">
-          Here is an overview of your account
+        <p className="mt-1 text-sm text-slate-500">
+          {tenant?.name ?? "Your company"} — here is today&apos;s overview
         </p>
       </div>
 
-      <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
-        <Card>
-          <CardContent className="pt-5 flex items-center gap-3">
-            <Users className="h-8 w-8 text-muted-foreground/60 flex-shrink-0" />
-            <div>
-              <p className="text-2xl font-bold">{agentsData?.total ?? "—"}</p>
-              <p className="text-xs text-muted-foreground">Active agents</p>
-            </div>
-          </CardContent>
-        </Card>
-        <Card>
-          <CardContent className="pt-5 flex items-center gap-3">
-            <Briefcase className="h-8 w-8 text-muted-foreground/60 flex-shrink-0" />
-            <div>
-              <p className="text-2xl font-bold">{openLeadsTotal}</p>
-              <p className="text-xs text-muted-foreground">Open leads</p>
-            </div>
-          </CardContent>
-        </Card>
-        <Card>
-          <CardContent className="pt-5 flex items-center gap-3">
-            <Home className="h-8 w-8 text-muted-foreground/60 flex-shrink-0" />
-            <div>
-              <p className="text-2xl font-bold">{propertiesData?.total ?? "—"}</p>
-              <p className="text-xs text-muted-foreground">Properties available</p>
-            </div>
-          </CardContent>
-        </Card>
-        <Card>
-          <CardContent className="pt-5 flex items-center gap-3">
-            <Handshake className="h-8 w-8 text-muted-foreground/60 flex-shrink-0" />
-            <div>
-              <p className="text-2xl font-bold">{dealsInProgress}</p>
-              <p className="text-xs text-muted-foreground">Deals in progress</p>
-            </div>
-          </CardContent>
-        </Card>
+      {/* KPI row */}
+      <div className="grid grid-cols-2 gap-4 lg:grid-cols-3 xl:grid-cols-6">
+        <KpiCard
+          label="Total Listings"
+          sublabel="All time"
+          value={listingsData?.total}
+          isLoading={listingsLoading}
+          icon={LayoutList}
+          iconVariant="info"
+        />
+        <KpiCard
+          label="Active Listings"
+          sublabel="Currently live"
+          value={listingsData?.total}
+          isLoading={listingsLoading}
+          icon={Home}
+          iconVariant="success"
+        />
+        <KpiCard
+          label="Open Leads"
+          sublabel="Awaiting action"
+          value={leadsData?.total}
+          isLoading={leadsLoading}
+          icon={Target}
+          iconVariant="warning"
+        />
+        <KpiCard
+          label="New This Week"
+          sublabel="Leads"
+          value={newLeadsData?.total}
+          isLoading={newLeadsLoading}
+          icon={TrendingUp}
+          iconVariant="info"
+        />
+        <KpiCard
+          label="Active Agents"
+          sublabel="Online now"
+          value={agentsData?.total}
+          isLoading={agentsLoading}
+          icon={Users}
+          iconVariant="success"
+        />
+        <KpiCard
+          label="Pending Deals"
+          sublabel="In pipeline"
+          value={dealsData?.total}
+          isLoading={dealsLoading}
+          icon={Handshake}
+          iconVariant="warning"
+        />
       </div>
 
-      {isLoading ? (
-        <p className="text-sm text-muted-foreground">Loading company info...</p>
-      ) : tenant ? (
-        <Card className="max-w-md">
-          <CardHeader>
-            <CardTitle>Company Info</CardTitle>
-          </CardHeader>
-          <CardContent className="space-y-3">
-            <div className="flex items-center justify-between text-sm">
-              <span className="text-muted-foreground">Name</span>
-              <span className="font-medium">{tenant.name}</span>
-            </div>
-            <div className="flex items-center justify-between text-sm">
-              <span className="text-muted-foreground">Status</span>
-              <StatusBadge status={tenant.status} />
-            </div>
-            <div className="flex items-center justify-between text-sm">
-              <span className="text-muted-foreground">Currency</span>
-              <span className="font-medium">{tenant.currency}</span>
-            </div>
-            <div className="flex items-center justify-between text-sm">
-              <span className="text-muted-foreground">Timezone</span>
-              <span className="font-medium">{tenant.timezone}</span>
-            </div>
-          </CardContent>
-        </Card>
-      ) : null}
+      {/* 3-column content grid */}
+      <div className="grid grid-cols-1 gap-6 lg:grid-cols-3">
+        <DashboardActionRequired />
+        <DashboardRecentActivity />
+        <DashboardPipeline leadsTotal={leadsData?.total ?? 0} dealsTotal={dealsData?.total ?? 0} />
+      </div>
+
+      {/* Company info strip */}
+      {!tenantLoading && tenant && (
+        <div className="flex flex-wrap items-center gap-4 rounded-2xl border border-slate-200 bg-white px-5 py-4 shadow-card">
+          <div className="flex items-center gap-2 text-sm">
+            <span className="text-slate-400">Company</span>
+            <span className="font-semibold text-slate-800">{tenant.name}</span>
+          </div>
+          <div className="flex items-center gap-2 text-sm">
+            <span className="text-slate-400">Status</span>
+            <StatusBadge status={tenant.status} />
+          </div>
+          <div className="flex items-center gap-2 text-sm">
+            <span className="text-slate-400">Currency</span>
+            <span className="font-semibold text-slate-800">{tenant.currency}</span>
+          </div>
+          <div className="flex items-center gap-2 text-sm">
+            <span className="text-slate-400">Timezone</span>
+            <span className="font-semibold text-slate-800">{tenant.timezone}</span>
+          </div>
+          <div className="flex items-center gap-2 text-sm">
+            <span className="text-slate-400">Properties</span>
+            <span className="font-semibold text-slate-800">{propertiesData?.total ?? "—"}</span>
+          </div>
+        </div>
+      )}
     </div>
   );
 }

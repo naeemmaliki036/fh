@@ -4,6 +4,7 @@ import type {
   ListingCreateRequest,
   ListingUpdateRequest,
   ListingListResponse,
+  ListingListParams,
   ListingStatusChangeRequest,
 } from "@/lib/types/listing";
 
@@ -13,6 +14,11 @@ export class ListingRepository extends BaseRepository<
   ListingUpdateRequest
 > {
   protected readonly basePath = "/listings";
+
+  async listListings(params?: ListingListParams): Promise<ListingListResponse> {
+    const res = await this.client.get<ListingListResponse>(this.basePath, { params });
+    return res.data;
+  }
 
   async listForProperty(propertyId: string): Promise<ListingListResponse> {
     const res = await this.client.get<ListingListResponse>(

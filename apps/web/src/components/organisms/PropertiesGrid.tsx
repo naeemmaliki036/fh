@@ -32,7 +32,12 @@ const PROPERTY_STATUS_DIALOG_TITLE: Record<string, string> = {
   off_market: "Mark Off-Market",
 };
 
-export function PropertiesGrid(): React.ReactElement {
+interface PropertiesGridProps {
+  filterParams?: import("@/lib/types/property").PropertyListParams;
+}
+
+export function PropertiesGrid({ filterParams }: PropertiesGridProps = {}): React.ReactElement {
+  // Internal filter state used only when filterParams not provided externally
   const [search, setSearch] = useState("");
   const [status, setStatus] = useState<PropertyStatus | "all">("all");
   const [type, setType] = useState<PropertyType | "all">("all");
@@ -42,11 +47,13 @@ export function PropertiesGrid(): React.ReactElement {
 
   const { data: tenant } = useMyTenant();
   const { data: publicSite } = usePublicSiteSettings();
-  const params = {
+
+  const internalParams = {
     q: search || undefined,
     status: status === "all" ? undefined : status,
     property_type: type === "all" ? undefined : type,
   };
+  const params = filterParams ?? internalParams;
   const { data, isLoading, error } = useProperties(params);
   const { mutateAsync: changeStatus } = useChangePropertyStatus();
   const items = data?.items ?? [];
@@ -70,21 +77,26 @@ export function PropertiesGrid(): React.ReactElement {
   return (
     <div className="space-y-4">
       <div className="flex flex-wrap gap-3 items-center">
-        <Input placeholder="Search properties..." value={search} onChange={(e) => setSearch(e.target.value)} className="w-60" />
-        <Select value={status} onValueChange={(v) => setStatus(v as PropertyStatus | "all")}>
-          <SelectTrigger className="w-40"><SelectValue /></SelectTrigger>
-          <SelectContent>
-            <SelectItem value="all">All statuses</SelectItem>
-            {STATUSES.map((s) => <SelectItem key={s} value={s}>{s.replace("_", " ")}</SelectItem>)}
-          </SelectContent>
-        </Select>
-        <Select value={type} onValueChange={(v) => setType(v as PropertyType | "all")}>
-          <SelectTrigger className="w-44"><SelectValue /></SelectTrigger>
-          <SelectContent>
-            <SelectItem value="all">All types</SelectItem>
-            {TYPES.map((t) => <SelectItem key={t} value={t}>{t.charAt(0).toUpperCase() + t.slice(1)}</SelectItem>)}
-          </SelectContent>
-        </Select>
+        {/* Only show internal search/type/status filters when not driven by URL params */}
+        {!filterParams && (
+          <>
+            <Input placeholder="Search properties..." value={search} onChange={(e) => setSearch(e.target.value)} className="w-60" />
+            <Select value={status} onValueChange={(v) => setStatus(v as PropertyStatus | "all")}>
+              <SelectTrigger className="w-40"><SelectValue /></SelectTrigger>
+              <SelectContent>
+                <SelectItem value="all">All statuses</SelectItem>
+                {STATUSES.map((s) => <SelectItem key={s} value={s}>{s.replace("_", " ")}</SelectItem>)}
+              </SelectContent>
+            </Select>
+            <Select value={type} onValueChange={(v) => setType(v as PropertyType | "all")}>
+              <SelectTrigger className="w-44"><SelectValue /></SelectTrigger>
+              <SelectContent>
+                <SelectItem value="all">All types</SelectItem>
+                {TYPES.map((t) => <SelectItem key={t} value={t}>{t.charAt(0).toUpperCase() + t.slice(1)}</SelectItem>)}
+              </SelectContent>
+            </Select>
+          </>
+        )}
         <span className="text-sm text-muted-foreground ml-auto">{data?.total ?? 0} properties</span>
 
         <div className="flex items-center rounded-md border">
@@ -119,7 +131,9 @@ export function PropertiesGrid(): React.ReactElement {
             </a>
           </Button>
         )}
-        <Button onClick={() => setShowCreate(true)}><Plus className="mr-1.5 h-4 w-4" />New Property</Button>
+        {!filterParams && (
+          <Button onClick={() => setShowCreate(true)}><Plus className="mr-1.5 h-4 w-4" />New Property</Button>
+        )}
       </div>
 
       {error && <p className="text-sm text-destructive">Failed to load properties.</p>}
@@ -183,7 +197,9 @@ export function PropertiesGrid(): React.ReactElement {
         <p className="py-10 text-center text-sm text-muted-foreground">No properties found</p>
       )}
 
-      <PropertyCreateDialog open={showCreate} onClose={() => setShowCreate(false)} />
+      {!filterParams && (
+        <PropertyCreateDialog open={showCreate} onClose={() => setShowCreate(false)} />
+      )}
 
       {pending && (
         <StatusChangeDialog
