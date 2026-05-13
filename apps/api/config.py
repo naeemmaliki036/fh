@@ -57,6 +57,10 @@ class Settings(BaseSettings):
     # Transactional email via Resend
     resend_api_key: str = ""
     email_from: str = "fh <onboarding@resend.dev>"
+    # Where marketing-form inbound + send-tenant-message copies land for
+    # platform admins. If unset, falls back to the bare address parsed
+    # out of email_from — useful in dev but unlikely to deliver via Resend.
+    platform_inbox_email: str = ""
 
     model_config = {
         "env_file": ".env",

@@ -28,6 +28,11 @@ def _extract_email(s: str) -> str:
     return (m.group(1) if m else s).strip()
 
 
+def _platform_inbox() -> str:
+    """Where inbound marketing notifications land."""
+    return settings.platform_inbox_email or _extract_email(settings.email_from)
+
+
 class DemoRequestPayload(BaseModel):
     full_name: str = Field(..., min_length=1, max_length=120)
     company_name: str = Field(..., min_length=1, max_length=200)
@@ -54,7 +59,7 @@ async def submit_demo_request(
     """
     await _try_queue(
         session,
-        recipient=_extract_email(settings.email_from),
+        recipient=_platform_inbox(),
         template_key="marketing_demo_request",
         variables=payload.model_dump(),
     )
@@ -69,7 +74,7 @@ async def join_waitlist(
     """Inbound waitlist signup from the pricing teaser section."""
     await _try_queue(
         session,
-        recipient=_extract_email(settings.email_from),
+        recipient=_platform_inbox(),
         template_key="marketing_waitlist",
         variables={"email": payload.email},
     )
