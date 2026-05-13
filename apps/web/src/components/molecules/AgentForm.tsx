@@ -49,7 +49,7 @@ interface AgentFormProps {
 }
 
 export function AgentForm({ defaultValues, isPending, submitLabel, onSubmit, onCancel }: AgentFormProps): React.ReactElement {
-  const { register, handleSubmit, control, reset, formState: { errors } } = useForm<FormValues>({
+  const { register, handleSubmit, control, reset, watch, formState: { errors } } = useForm<FormValues>({
     resolver: zodResolver(schema),
     defaultValues: {
       full_name: defaultValues?.full_name ?? "",
@@ -61,6 +61,10 @@ export function AgentForm({ defaultValues, isPending, submitLabel, onSubmit, onC
       default_commission_value: defaultValues?.default_commission_value ?? "0",
     },
   });
+
+  const commissionType = watch("default_commission_type");
+  const commissionValue = watch("default_commission_value");
+  const showZeroWarning = commissionType === "percentage" && commissionValue === "0";
 
   const handleFormSubmit = (values: FormValues): void => {
     onSubmit({
@@ -75,29 +79,29 @@ export function AgentForm({ defaultValues, isPending, submitLabel, onSubmit, onC
     <form onSubmit={handleSubmit(handleFormSubmit)} className="space-y-4">
       <div className="grid grid-cols-2 gap-4">
         <div className="space-y-1.5">
-          <Label>Full Name</Label>
-          <Input {...register("full_name")} />
+          <Label htmlFor="form-full_name">Full Name</Label>
+          <Input id="form-full_name" {...register("full_name")} />
           {errors.full_name && <p className="text-xs text-destructive">{errors.full_name.message}</p>}
         </div>
         <div className="space-y-1.5">
-          <Label>Email</Label>
-          <Input type="email" {...register("email")} />
+          <Label htmlFor="form-email">Email</Label>
+          <Input id="form-email" type="email" {...register("email")} />
           {errors.email && <p className="text-xs text-destructive">{errors.email.message}</p>}
         </div>
         <div className="space-y-1.5">
-          <Label>Phone</Label>
-          <Input {...register("phone")} placeholder="+971 50 123 4567" />
+          <Label htmlFor="form-phone">Phone</Label>
+          <Input id="form-phone" {...register("phone")} placeholder="+971 50 123 4567" />
         </div>
         <div className="space-y-1.5">
-          <Label>License ID</Label>
-          <Input {...register("license_id")} />
+          <Label htmlFor="form-license_id">License ID</Label>
+          <Input id="form-license_id" {...register("license_id")} />
         </div>
         <div className="space-y-1.5">
-          <Label>License Expiry</Label>
-          <Input type="date" min={defaultValues ? undefined : new Date().toISOString().slice(0, 10)} {...register("license_expiry_at")} />
+          <Label htmlFor="form-license_expiry_at">License Expiry</Label>
+          <Input id="form-license_expiry_at" type="date" min={defaultValues ? undefined : new Date().toISOString().slice(0, 10)} {...register("license_expiry_at")} />
         </div>
         <div className="space-y-1.5">
-          <Label>Commission</Label>
+          <Label htmlFor="form-commission_value">Commission</Label>
           <div className="flex gap-2">
             <Controller
               name="default_commission_type"
@@ -112,10 +116,13 @@ export function AgentForm({ defaultValues, isPending, submitLabel, onSubmit, onC
                 </Select>
               )}
             />
-            <Input className="flex-1" {...register("default_commission_value")} placeholder="0" step="0.01" />
+            <Input id="form-commission_value" className="flex-1" {...register("default_commission_value")} placeholder="0" step="0.01" />
           </div>
           {errors.default_commission_value && (
             <p className="text-xs text-destructive">{errors.default_commission_value.message}</p>
+          )}
+          {showZeroWarning && (
+            <p className="text-xs text-amber-600">0% commission is unusual — confirm this is intentional.</p>
           )}
         </div>
       </div>

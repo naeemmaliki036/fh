@@ -24,6 +24,17 @@ import type { PropertiesViewMode } from "@/lib/types/tenant";
 
 const STORAGE_KEY = "listings_view_mode";
 
+const LISTING_TRANSITION_TITLES: Record<string, string> = {
+  draft: "Save as Draft",
+  active: "Activate",
+  paused: "Pause",
+  sold: "Mark as Sold",
+  rented: "Mark as Rented",
+  expired: "Mark Expired",
+  archived: "Archive",
+  off_market: "Mark Off Market",
+};
+
 type PendingTransition = { listing: Listing; targetStatus: ListingStatus };
 
 function reasonOptions(targetStatus: ListingStatus, fromStatus: ListingStatus) {
@@ -149,7 +160,7 @@ export function PropertyListingsPanel({ propertyId }: PropertyListingsPanelProps
         <StatusChangeDialog
           open
           onOpenChange={(o) => { if (!o) setPending(null); }}
-          title={`${pending.targetStatus === "archived" ? "Archive" : pending.targetStatus === "paused" ? "Pause" : "Activate"} listing?`}
+          title={`${LISTING_TRANSITION_TITLES[pending.targetStatus] ?? "Change Status"} listing?`}
           description={
             pending.targetStatus === "archived"
               ? "This listing will be archived and no longer visible."

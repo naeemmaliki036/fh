@@ -9,6 +9,7 @@ import { useDeleteCustomer } from "@/hooks/mutations/useCustomerMutations";
 import { CustomerStatusBadge } from "@/components/atoms/CustomerStatusBadge";
 import { SourceBadge } from "@/components/atoms/SourceBadge";
 import { ConfirmDialog } from "@/components/molecules/ConfirmDialog";
+import { TableSkeleton } from "@/components/molecules/TableSkeleton";
 import { CustomerCreateDialog } from "@/components/organisms/CustomerCreateDialog";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -82,11 +83,7 @@ export function CustomersTable(): React.ReactElement {
         <Button onClick={() => setShowCreate(true)}><Plus className="mr-1.5 h-4 w-4" />New Customer</Button>
       </div>
 
-      {isLoading ? (
-        <p className="text-sm text-muted-foreground">Loading customers...</p>
-      ) : (
-        <>
-          <div className="overflow-x-auto rounded-md border">
+      <div className="overflow-x-auto rounded-md border">
             <table className="w-full text-sm">
               <thead className="bg-muted/50">
                 <tr>
@@ -99,6 +96,7 @@ export function CustomersTable(): React.ReactElement {
                   <th className="px-3 py-3 text-left font-medium">Actions</th>
                 </tr>
               </thead>
+              {isLoading ? <TableSkeleton rows={5} cols={7} /> : (
               <tbody>
                 {customers.map((c) => (
                   <tr key={c.id} className="border-b">
@@ -130,26 +128,25 @@ export function CustomersTable(): React.ReactElement {
                   </tr>
                 ))}
               </tbody>
+              )}
             </table>
-            {customers.length === 0 && (
+            {!isLoading && customers.length === 0 && (
               <p className="py-8 text-center text-sm text-muted-foreground">No customers found</p>
             )}
           </div>
 
-          {total > PAGE_SIZE && (
-            <div className="flex items-center gap-3 justify-end">
-              <Button variant="outline" size="sm" onClick={() => setSkip(Math.max(0, skip - PAGE_SIZE))} disabled={skip === 0}>
-                Previous
-              </Button>
-              <span className="text-sm text-muted-foreground">
-                {skip + 1}–{Math.min(skip + PAGE_SIZE, total)} of {total}
-              </span>
-              <Button variant="outline" size="sm" onClick={() => setSkip(skip + PAGE_SIZE)} disabled={skip + PAGE_SIZE >= total}>
-                Next
-              </Button>
-            </div>
-          )}
-        </>
+      {total > PAGE_SIZE && (
+        <div className="flex items-center gap-3 justify-end">
+          <Button variant="outline" size="sm" onClick={() => setSkip(Math.max(0, skip - PAGE_SIZE))} disabled={skip === 0}>
+            Previous
+          </Button>
+          <span className="text-sm text-muted-foreground">
+            {skip + 1}–{Math.min(skip + PAGE_SIZE, total)} of {total}
+          </span>
+          <Button variant="outline" size="sm" onClick={() => setSkip(skip + PAGE_SIZE)} disabled={skip + PAGE_SIZE >= total}>
+            Next
+          </Button>
+        </div>
       )}
 
       <CustomerCreateDialog open={showCreate} onClose={() => setShowCreate(false)} agents={agents} />

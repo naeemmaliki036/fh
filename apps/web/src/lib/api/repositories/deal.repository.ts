@@ -33,8 +33,11 @@ export class DealRepository extends BaseRepository<Deal, DealCreateRequest, Deal
     return res.data;
   }
 
-  async cancelCommissionPayout(id: string): Promise<Deal> {
-    const res = await this.client.post<Deal>(`${this.basePath}/${id}/commission/payout/cancel`);
+  async cancelCommissionPayout(id: string, reason_note: string): Promise<Deal> {
+    const res = await this.client.post<Deal>(
+      `${this.basePath}/${id}/commission/payout/cancel`,
+      { reason_note },
+    );
     return res.data;
   }
 }

@@ -7,6 +7,7 @@ import { useAgents } from "@/hooks/queries/useAgents";
 import { LeadStageBadge } from "@/components/atoms/LeadStageBadge";
 import { SourceBadge } from "@/components/atoms/SourceBadge";
 import { LeadCreateDialog } from "@/components/organisms/LeadCreateDialog";
+import { TableSkeleton } from "@/components/molecules/TableSkeleton";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
@@ -72,8 +73,6 @@ export function LeadsTable(): React.ReactElement {
         <Button onClick={() => setShowCreate(true)}><Plus className="mr-1.5 h-4 w-4" />New Lead</Button>
       </div>
 
-      {isLoading && <p className="text-sm text-muted-foreground">Loading…</p>}
-
       <div className="overflow-x-auto rounded-md border">
         <table className="w-full text-sm">
           <thead className="bg-muted/50">
@@ -87,6 +86,7 @@ export function LeadsTable(): React.ReactElement {
               <th className="px-3 py-2" />
             </tr>
           </thead>
+          {isLoading ? <TableSkeleton rows={5} cols={7} /> : (
           <tbody>
             {leads.map(l => {
               const nextAction = l.next_action_at;
@@ -117,6 +117,7 @@ export function LeadsTable(): React.ReactElement {
               );
             })}
           </tbody>
+          )}
         </table>
         {!isLoading && leads.length === 0 && (
           <p className="py-8 text-center text-sm text-muted-foreground">No leads found</p>

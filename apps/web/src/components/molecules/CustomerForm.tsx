@@ -14,6 +14,7 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { NATIONALITIES, LANGUAGES } from "@/lib/constants/regions";
+import { Textarea } from "@/components/atoms/Textarea";
 import type { Customer, CustomerCreateRequest, CustomerUpdateRequest, CustomerSource } from "@/lib/types";
 import type { Agent } from "@/lib/types";
 
@@ -85,18 +86,18 @@ export function CustomerForm({ defaultValues, agents, isPending, submitLabel, on
     <form onSubmit={handleSubmit(handleFormSubmit)} className="space-y-4">
       <div className="grid grid-cols-2 gap-4">
         <div className="space-y-1.5 col-span-2">
-          <Label>Full Name</Label>
-          <Input {...register("full_name")} />
+          <Label htmlFor="form-full_name">Full Name</Label>
+          <Input id="form-full_name" {...register("full_name")} />
           {errors.full_name && <p className="text-xs text-destructive">{errors.full_name.message}</p>}
         </div>
         <div className="space-y-1.5">
-          <Label>Email</Label>
-          <Input type="email" {...register("email")} />
+          <Label htmlFor="form-email">Email</Label>
+          <Input id="form-email" type="email" {...register("email")} />
           {errors.email && <p className="text-xs text-destructive">{errors.email.message}</p>}
         </div>
         <div className="space-y-1.5">
-          <Label>Phone</Label>
-          <Input {...register("phone")} placeholder="+971 50 123 4567" />
+          <Label htmlFor="form-phone">Phone</Label>
+          <Input id="form-phone" {...register("phone")} placeholder="+971 50 123 4567" />
         </div>
         <div className="space-y-1.5">
           <Label>Nationality</Label>
@@ -171,11 +172,7 @@ export function CustomerForm({ defaultValues, agents, isPending, submitLabel, on
         )}
         <div className="space-y-1.5 col-span-2">
           <Label>Notes</Label>
-          <textarea
-            {...register("notes")}
-            rows={3}
-            className="flex w-full rounded-md border border-input bg-transparent px-3 py-2 text-sm shadow-sm placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring disabled:cursor-not-allowed disabled:opacity-50 resize-none"
-          />
+          <Textarea {...register("notes")} rows={3} />
         </div>
       </div>
       <div className="flex gap-2 justify-end pt-2">

@@ -17,10 +17,10 @@ interface DealDocumentsPanelProps {
 
 export function DealDocumentsPanel({ dealId, customerId }: DealDocumentsPanelProps): React.ReactElement {
   const [showCreate, setShowCreate] = useState(false);
-  const { data, isLoading } = useDocumentRequests({ customer_id: customerId });
+  const { data, isLoading } = useDocumentRequests({ customer_id: customerId, deal_id: dealId });
   const { mutate: create, isPending } = useCreateDocumentRequest();
 
-  const requests = (data?.items ?? []).filter(r => r.lead_id === dealId || r.deal_id === dealId);
+  const requests = data?.items ?? [];
 
   const handleCreate = (d: DocumentRequestCreate): void => {
     create({ ...d, deal_id: dealId, customer_id: customerId }, {

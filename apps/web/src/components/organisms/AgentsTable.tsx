@@ -19,6 +19,8 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
+import { TableSkeleton } from "@/components/molecules/TableSkeleton";
+import { EmptyState } from "@/components/molecules/EmptyState";
 import { cn } from "@/lib/utils/cn";
 import {
   AGENT_INACTIVE_REASONS,
@@ -105,10 +107,7 @@ export function AgentsTable(): React.ReactElement {
         <Button onClick={() => setShowCreate(true)}><Plus className="mr-1.5 h-4 w-4" />New Agent</Button>
       </div>
 
-      {isLoading ? (
-        <p className="text-sm text-muted-foreground">Loading agents...</p>
-      ) : (
-        <div className="overflow-x-auto rounded-md border">
+      <div className="overflow-x-auto rounded-md border">
           <table className="w-full text-sm">
             <thead className="bg-muted/50">
               <tr>
@@ -120,6 +119,7 @@ export function AgentsTable(): React.ReactElement {
                 <th className="px-3 py-3 text-left font-medium">Actions</th>
               </tr>
             </thead>
+            {isLoading ? <TableSkeleton rows={5} cols={6} /> : (
             <tbody>
               {agents.map((agent) => {
                 const expiryWarning = isExpiringWithin30Days(agent.license_expiry_at);
@@ -186,24 +186,22 @@ export function AgentsTable(): React.ReactElement {
                   </tr>
                 );
               })}
+              {agents.length === 0 && (
+                <tr>
+                  <td colSpan={6}>
+                    <EmptyState
+                      icon={Users}
+                      title="No agents yet"
+                      description="Add your first agent to start assigning deals."
+                      cta={<Button size="sm" onClick={() => setShowCreate(true)}><Plus className="mr-1.5 h-4 w-4" />New Agent</Button>}
+                    />
+                  </td>
+                </tr>
+              )}
             </tbody>
+            )}
           </table>
-          {agents.length === 0 && (
-            <tr>
-              <td colSpan={6} className="py-12 text-center">
-                <div className="flex flex-col items-center gap-3">
-                  <Users className="h-8 w-8 text-muted-foreground/50" />
-                  <div>
-                    <p className="text-sm font-medium">No agents yet</p>
-                    <p className="text-xs text-muted-foreground mt-0.5">Add your first agent to start assigning deals.</p>
-                  </div>
-                  <Button size="sm" onClick={() => setShowCreate(true)}><Plus className="mr-1.5 h-4 w-4" />New Agent</Button>
-                </div>
-              </td>
-            </tr>
-          )}
         </div>
-      )}
 
       <AgentCreateDialog open={showCreate} onClose={() => setShowCreate(false)} />
 

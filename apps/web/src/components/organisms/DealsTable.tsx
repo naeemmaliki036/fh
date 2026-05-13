@@ -9,6 +9,8 @@ import { DealStageBadge } from "@/components/atoms/DealStageBadge";
 import { DealTypeBadge } from "@/components/atoms/DealTypeBadge";
 import { PayoutStatusBadge } from "@/components/atoms/PayoutStatusBadge";
 import { DealCreateDialog } from "@/components/organisms/DealCreateDialog";
+import { TableSkeleton } from "@/components/molecules/TableSkeleton";
+import { EmptyState } from "@/components/molecules/EmptyState";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
@@ -84,8 +86,6 @@ export function DealsTable(): React.ReactElement {
         <Button onClick={() => setShowCreate(true)}><Plus className="mr-1.5 h-4 w-4" />New Deal</Button>
       </div>
 
-      {isLoading && <p className="text-sm text-muted-foreground">Loading…</p>}
-
       <div className="overflow-x-auto rounded-md border">
         <table className="w-full text-sm">
           <thead className="bg-muted/50">
@@ -101,6 +101,7 @@ export function DealsTable(): React.ReactElement {
               <th className="px-3 py-2" />
             </tr>
           </thead>
+          {isLoading ? <TableSkeleton rows={5} cols={9} /> : (
           <tbody>
             {deals.map(d => (
               <tr key={d.id} className="border-b">
@@ -130,18 +131,15 @@ export function DealsTable(): React.ReactElement {
               </tr>
             ))}
           </tbody>
+          )}
         </table>
         {!isLoading && deals.length === 0 && (
-          <div className="py-12 text-center">
-            <div className="flex flex-col items-center gap-3">
-              <Handshake className="h-8 w-8 text-muted-foreground/50" />
-              <div>
-                <p className="text-sm font-medium">No deals found</p>
-                <p className="text-xs text-muted-foreground mt-0.5">Create your first deal to start tracking commissions.</p>
-              </div>
-              <Button size="sm" onClick={() => setShowCreate(true)}><Plus className="mr-1.5 h-4 w-4" />New Deal</Button>
-            </div>
-          </div>
+          <EmptyState
+            icon={Handshake}
+            title="No deals found"
+            description="Create your first deal to start tracking commissions."
+            cta={<Button size="sm" onClick={() => setShowCreate(true)}><Plus className="mr-1.5 h-4 w-4" />New Deal</Button>}
+          />
         )}
       </div>
 

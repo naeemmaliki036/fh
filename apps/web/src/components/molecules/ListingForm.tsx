@@ -8,6 +8,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { CURRENCIES } from "@/lib/constants/regions";
+import { Textarea } from "@/components/atoms/Textarea";
 import type { Listing, ListingCreateRequest, ListingUpdateRequest, ListingPurpose, RentPeriod, ListingTier } from "@/lib/types/listing";
 
 const PURPOSES: ListingPurpose[] = ["sale", "rent_short", "rent_long"];
@@ -75,7 +76,7 @@ export function ListingForm({ defaultValues, isPending, submitLabel, onSubmit, o
   return (
     <form onSubmit={handleSubmit(handleFormSubmit)} className="space-y-4">
       <div className="grid grid-cols-2 gap-4">
-        <div className="space-y-1.5 col-span-2"><Label>Title</Label><Input {...register("title")} />
+        <div className="space-y-1.5 col-span-2"><Label htmlFor="form-title">Title</Label><Input id="form-title" {...register("title")} />
           {errors.title && <p className="text-xs text-destructive">{errors.title.message}</p>}
         </div>
         <div className="space-y-1.5">
@@ -96,7 +97,7 @@ export function ListingForm({ defaultValues, isPending, submitLabel, onSubmit, o
             </Select>
           )} />
         </div>
-        <div className="space-y-1.5"><Label>Price</Label><Input {...register("price")} />
+        <div className="space-y-1.5"><Label htmlFor="form-price">Price</Label><Input id="form-price" {...register("price")} />
           {errors.price && <p className="text-xs text-destructive">{errors.price.message}</p>}
         </div>
         <div className="space-y-1.5">
@@ -131,7 +132,7 @@ export function ListingForm({ defaultValues, isPending, submitLabel, onSubmit, o
         </div>
         <div className="space-y-1.5 col-span-2">
           <Label>Description</Label>
-          <textarea {...register("description")} rows={2} className="flex w-full rounded-md border border-input bg-transparent px-3 py-2 text-sm shadow-sm focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring resize-none" />
+          <Textarea {...register("description")} rows={2} />
         </div>
       </div>
       <div className="flex gap-2 justify-end pt-2">

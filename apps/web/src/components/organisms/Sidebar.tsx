@@ -166,6 +166,7 @@ export function Sidebar(): React.ReactElement {
                 href="/settings/profile"
                 className="flex h-6 w-6 items-center justify-center rounded-md text-sidebar-foreground/40 hover:bg-sidebar-accent/50 hover:text-sidebar-foreground transition-colors"
                 title="Settings"
+                aria-label="Settings"
               >
                 <Settings className="h-3.5 w-3.5" />
               </Link>
@@ -174,6 +175,7 @@ export function Sidebar(): React.ReactElement {
                 disabled={loggingOut}
                 className="flex h-6 w-6 items-center justify-center rounded-md text-sidebar-foreground/40 hover:bg-sidebar-accent/50 hover:text-sidebar-foreground transition-colors disabled:opacity-40"
                 title="Sign out"
+                aria-label="Sign out"
               >
                 <LogOut className="h-3.5 w-3.5" />
               </button>

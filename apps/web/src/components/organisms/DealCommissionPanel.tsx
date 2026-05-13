@@ -3,6 +3,8 @@
 import { useState } from "react";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
+import { Label } from "@/components/ui/label";
+import { Textarea } from "@/components/atoms/Textarea";
 import { PayoutStatusBadge } from "@/components/atoms/PayoutStatusBadge";
 import { CommissionForm } from "@/components/molecules/CommissionForm";
 import { PayoutForm } from "@/components/molecules/PayoutForm";
@@ -12,6 +14,8 @@ import {
   useCancelCommissionPayout,
 } from "@/hooks/mutations/useDealMutations";
 import { DEAL_TERMINAL_STAGES } from "@/lib/types/deal";
+import { formatDate } from "@/lib/utils/format-date";
+import { useMyTenant } from "@/hooks/queries/useTenants";
 import type { Deal, DealCommissionOverrideRequest, DealCommissionPayoutRequest } from "@/lib/types/deal";
 import { formatCommission } from "@/lib/utils/format-commission";
 
@@ -26,10 +30,13 @@ export function DealCommissionPanel({ deal }: DealCommissionPanelProps): React.R
   const [showOverride, setShowOverride] = useState(false);
   const [showPayout, setShowPayout] = useState(false);
   const [showCancelConfirm, setShowCancelConfirm] = useState(false);
+  const [cancelReason, setCancelReason] = useState("");
+  const [cancelReasonError, setCancelReasonError] = useState<string | null>(null);
 
+  const { data: tenant } = useMyTenant();
   const { mutate: override, isPending: overriding } = useOverrideCommission(deal.id);
   const { mutate: payout, isPending: payingOut } = usePayoutCommission(deal.id);
-  const { mutate: cancelPayout, isPending: canceling } = useCancelCommissionPayout(deal.id);
+  const { mutateAsync: cancelPayout, isPending: canceling } = useCancelCommissionPayout(deal.id);
 
   const cur = deal.transaction_currency;
   const isTerminal = DEAL_TERMINAL_STAGES.has(deal.stage);
@@ -40,6 +47,22 @@ export function DealCommissionPanel({ deal }: DealCommissionPanelProps): React.R
   };
   const handlePayout = (data: DealCommissionPayoutRequest): void => {
     payout(data, { onSuccess: () => setShowPayout(false) });
+  };
+
+  const handleCancelOpen = (): void => {
+    setCancelReason("");
+    setCancelReasonError(null);
+    setShowCancelConfirm(true);
+  };
+
+  const handleCancelConfirm = async (): Promise<void> => {
+    if (cancelReason.trim().length < 5) {
+      setCancelReasonError("Please provide a reason (at least 5 characters)");
+      return;
+    }
+    await cancelPayout(cancelReason.trim());
+    setShowCancelConfirm(false);
+    setCancelReason("");
   };
 
   return (
@@ -86,7 +109,7 @@ export function DealCommissionPanel({ deal }: DealCommissionPanelProps): React.R
           {deal.commission_paid_at && (
             <>
               <span className="text-muted-foreground">Last paid</span>
-              <span>{new Date(deal.commission_paid_at).toLocaleDateString("en-AE")}</span>
+              <span>{formatDate(deal.commission_paid_at, tenant?.locale)}</span>
             </>
           )}
         </div>
@@ -108,7 +131,7 @@ export function DealCommissionPanel({ deal }: DealCommissionPanelProps): React.R
           </Button>
         )}
         {deal.commission_payout_status !== "canceled" && deal.commission_payout_status !== "pending" && (
-          <Button variant="destructive" onClick={() => setShowCancelConfirm(true)}>
+          <Button variant="destructive" onClick={handleCancelOpen}>
             Cancel Payout
           </Button>
         )}
@@ -128,13 +151,24 @@ export function DealCommissionPanel({ deal }: DealCommissionPanelProps): React.R
         </DialogContent>
       </Dialog>
 
-      <Dialog open={showCancelConfirm} onOpenChange={setShowCancelConfirm}>
+      <Dialog open={showCancelConfirm} onOpenChange={(o) => { if (!o) setShowCancelConfirm(false); }}>
         <DialogContent>
           <DialogHeader><DialogTitle>Cancel Payout?</DialogTitle></DialogHeader>
-          <p className="text-sm text-muted-foreground">This will mark the payout as canceled. Are you sure?</p>
+          <p className="text-sm text-muted-foreground">This will mark the payout as canceled. Please provide a reason.</p>
+          <div className="space-y-1.5">
+            <Label htmlFor="cancel-reason">Reason *</Label>
+            <Textarea
+              id="cancel-reason"
+              rows={3}
+              value={cancelReason}
+              onChange={(e) => { setCancelReason(e.target.value); setCancelReasonError(null); }}
+              placeholder="Explain why the payout is being canceled…"
+            />
+            {cancelReasonError && <p className="text-xs text-destructive">{cancelReasonError}</p>}
+          </div>
           <DialogFooter>
-            <Button variant="outline" onClick={() => setShowCancelConfirm(false)}>Keep</Button>
-            <Button variant="destructive" disabled={canceling} onClick={() => { cancelPayout(); setShowCancelConfirm(false); }}>
+            <Button variant="outline" onClick={() => setShowCancelConfirm(false)} disabled={canceling}>Keep</Button>
+            <Button variant="destructive" disabled={canceling} onClick={handleCancelConfirm}>
               {canceling ? "Canceling…" : "Cancel payout"}
             </Button>
           </DialogFooter>

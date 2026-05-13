@@ -4,6 +4,8 @@ import { use } from "react";
 import Link from "next/link";
 import { ArrowLeft } from "lucide-react";
 import { useLead } from "@/hooks/queries/useLeads";
+import { useMyTenant } from "@/hooks/queries/useTenants";
+import { formatDate } from "@/lib/utils/format-date";
 import { LeadOverviewPanel } from "@/components/organisms/LeadOverviewPanel";
 import { LeadActivityTimeline } from "@/components/organisms/LeadActivityTimeline";
 import { LeadStageBadge } from "@/components/atoms/LeadStageBadge";
@@ -16,6 +18,7 @@ interface PageProps {
 export default function LeadDetailPage({ params }: PageProps): React.ReactElement {
   const { id } = use(params);
   const { data: lead, isLoading, error } = useLead(id);
+  const { data: tenant } = useMyTenant();
 
   if (isLoading) {
     return <p className="text-sm text-muted-foreground p-6">Loading lead…</p>;
@@ -43,7 +46,7 @@ export default function LeadDetailPage({ params }: PageProps): React.ReactElemen
           <div className="flex items-center gap-2 mt-0.5">
             <LeadStageBadge stage={lead.stage} />
             <span className="text-xs text-muted-foreground">
-              Created {new Date(lead.created_at).toLocaleDateString("en-AE")}
+              Created {formatDate(lead.created_at, tenant?.locale)}
             </span>
           </div>
         </div>

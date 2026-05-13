@@ -11,6 +11,7 @@ from apps.api.schemas.deal import (
     AgentSummary,
     CustomerSummary,
     DealCommissionOverrideRequest,
+    DealCommissionPayoutCancelRequest,
     DealCommissionPayoutRequest,
     DealCreateRequest,
     DealListResponse,
@@ -169,11 +170,12 @@ async def record_payout(
 @router.post("/{deal_id}/commission/payout/cancel", response_model=DealResponse)
 async def cancel_payout(
     deal_id: UUID,
+    body: DealCommissionPayoutCancelRequest,
     current_user: CurrentUser,
     tenant_id: TenantContext,
     svc: DealCommissionService = Depends(_com_svc),
 ) -> DealResponse:
-    deal = await svc.cancel_payout(deal_id, tenant_id, current_user)
+    deal = await svc.cancel_payout(deal_id, tenant_id, current_user, reason_note=body.reason_note)
     commission_amount = compute_commission_amount(
         deal.commission_type, Decimal(str(deal.commission_value)), Decimal(str(deal.transaction_value))
     )

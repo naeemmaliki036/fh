@@ -12,6 +12,7 @@ import { useAssignLead, useUpdateLead } from "@/hooks/mutations/useLeadMutations
 import { useAgents } from "@/hooks/queries/useAgents";
 import { useProperties } from "@/hooks/queries/useProperties";
 import { useState } from "react";
+import { Textarea } from "@/components/atoms/Textarea";
 import type { Lead } from "@/lib/types/lead";
 
 interface LeadOverviewPanelProps {
@@ -114,12 +115,7 @@ export function LeadOverviewPanel({ lead }: LeadOverviewPanelProps): React.React
       {/* Notes */}
       <div className="space-y-1.5">
         <Label>Notes</Label>
-        <textarea
-          rows={4}
-          value={notes}
-          onChange={e => setNotes(e.target.value)}
-          className="flex w-full rounded-md border border-input bg-transparent px-3 py-2 text-sm shadow-sm focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring resize-none"
-        />
+        <Textarea rows={4} value={notes} onChange={e => setNotes(e.target.value)} />
       </div>
 
       <Button onClick={handleSave} disabled={isPending} className="w-full">

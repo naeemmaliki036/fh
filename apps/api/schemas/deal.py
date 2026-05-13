@@ -54,6 +54,10 @@ class DealCommissionPayoutRequest(BaseModel):
     paid_at: datetime | None = None
 
 
+class DealCommissionPayoutCancelRequest(BaseModel):
+    reason_note: str = Field(..., min_length=5, max_length=1000)
+
+
 class CustomerSummary(BaseModel):
     model_config = ConfigDict(from_attributes=True)
     id: uuid.UUID

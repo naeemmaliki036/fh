@@ -14,6 +14,7 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { TagsInput } from "@/components/molecules/TagsInput";
+import { Textarea } from "@/components/atoms/Textarea";
 import { CURRENCIES } from "@/lib/constants/regions";
 import { CITIES_BY_COUNTRY, AREAS_BY_CITY } from "@/lib/constants/locations";
 import { useMyTenant } from "@/hooks/queries/useTenants";
@@ -42,8 +43,10 @@ const schema = z.object({
   property_type: z.enum(TYPES as [PropertyType, ...PropertyType[]]),
   bedrooms: z.coerce.number().int().min(0).optional().nullable(),
   bathrooms: z.coerce.number().int().min(0).optional().nullable(),
-  size_sqft: z.string().optional().nullable(),
-  price: z.string().optional().nullable(),
+  size_sqft: z.string().optional().nullable()
+    .refine((v) => !v || /^\d+(\.\d+)?$/.test(v), "Must be a number"),
+  price: z.string().optional().nullable()
+    .refine((v) => !v || /^\d+(\.\d+)?$/.test(v), "Must be a number"),
   currency: z.string().optional().nullable(),
   internal_reference: z.string().optional().nullable(),
   address_line: z.string().optional().nullable(),
@@ -120,8 +123,8 @@ export function PropertyForm({ defaultValues, showStatus, isPending, submitLabel
     <form onSubmit={handleSubmit(handleFormSubmit)} className="space-y-4">
       <div className="grid grid-cols-2 gap-4">
         <div className="space-y-1.5 col-span-2">
-          <Label>Title *</Label>
-          <Input {...register("title")} />
+          <Label htmlFor="form-title">Title *</Label>
+          <Input id="form-title" {...register("title")} />
           {errors.title && <p className="text-xs text-destructive">{errors.title.message}</p>}
         </div>
 
@@ -191,8 +194,13 @@ export function PropertyForm({ defaultValues, showStatus, isPending, submitLabel
         <div className="space-y-1.5">
           <Label>{isPlot ? "Plot area (sqft)" : "Size (sqft)"} <span className="text-xs text-muted-foreground">(optional)</span></Label>
           <Input {...register("size_sqft")} />
+          {errors.size_sqft && <p className="text-xs text-destructive">{errors.size_sqft.message}</p>}
         </div>
-        <div className="space-y-1.5"><Label>Price <span className="text-xs text-muted-foreground">(optional)</span></Label><Input {...register("price")} /></div>
+        <div className="space-y-1.5">
+          <Label>Price <span className="text-xs text-muted-foreground">(optional)</span></Label>
+          <Input {...register("price")} />
+          {errors.price && <p className="text-xs text-destructive">{errors.price.message}</p>}
+        </div>
         <div className="space-y-1.5">
           <Label>Currency</Label>
           <Controller name="currency" control={control} render={({ field }) => (
@@ -213,7 +221,7 @@ export function PropertyForm({ defaultValues, showStatus, isPending, submitLabel
         </div>
         <div className="space-y-1.5 col-span-2">
           <Label>Description <span className="text-xs text-muted-foreground">(optional)</span></Label>
-          <textarea {...register("description")} rows={3} className="flex w-full rounded-md border border-input bg-transparent px-3 py-2 text-sm shadow-sm focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring resize-none" />
+          <Textarea {...register("description")} rows={3} />
         </div>
       </div>
       <div className="flex gap-2 justify-end pt-2">

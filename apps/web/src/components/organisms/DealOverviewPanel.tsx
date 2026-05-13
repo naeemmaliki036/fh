@@ -17,15 +17,18 @@ import { DealTypeBadge } from "@/components/atoms/DealTypeBadge";
 import { useUpdateDeal, useTransitionDeal } from "@/hooks/mutations/useDealMutations";
 import { DEAL_STAGE_TRANSITIONS, DEAL_TERMINAL_STAGES } from "@/lib/types/deal";
 import { STAGE_LABELS } from "@/lib/constants/deal-labels";
+import { Textarea } from "@/components/atoms/Textarea";
 import type { Deal, DealStage } from "@/lib/types/deal";
 
 interface DealOverviewPanelProps { deal: Deal; }
 
 export function DealOverviewPanel({ deal }: DealOverviewPanelProps): React.ReactElement {
   const [txValue, setTxValue] = useState(deal.transaction_value);
+  const [txValueError, setTxValueError] = useState<string | null>(null);
   const [notes, setNotes] = useState(deal.notes ?? "");
   const [closeAt, setCloseAt] = useState(deal.expected_close_at?.slice(0, 10) ?? "");
   const [pendingStage, setPendingStage] = useState<DealStage | null>(null);
+  const [stageSelectKey, setStageSelectKey] = useState(0);
 
   const { mutate: update, isPending: updating } = useUpdateDeal(deal.id);
   const { mutate: transition, isPending: transitioning } = useTransitionDeal(deal.id);
@@ -34,11 +37,17 @@ export function DealOverviewPanel({ deal }: DealOverviewPanelProps): React.React
   const isTerminal = DEAL_TERMINAL_STAGES.has(deal.stage);
 
   const handleSave = (): void => {
+    const num = Number(txValue);
+    if (isNaN(num) || num <= 0) {
+      setTxValueError("Transaction value must be a positive number");
+      return;
+    }
+    setTxValueError(null);
     update({ notes: notes || null, expected_close_at: closeAt || null, transaction_value: txValue });
   };
 
   const doTransition = (stage: DealStage): void => {
-    transition({ stage }, { onSuccess: () => setPendingStage(null) });
+    transition({ stage }, { onSuccess: () => { setPendingStage(null); setStageSelectKey(k => k + 1); } });
   };
 
   return (
@@ -76,7 +85,7 @@ export function DealOverviewPanel({ deal }: DealOverviewPanelProps): React.React
           <DealTypeBadge type={deal.deal_type} />
         </div>
         {!isTerminal && nextStages.length > 0 && (
-          <Select value="" onValueChange={v => {
+          <Select key={stageSelectKey} onValueChange={v => {
             const s = v as DealStage;
             if (DEAL_TERMINAL_STAGES.has(s)) setPendingStage(s);
             else doTransition(s);
@@ -94,7 +103,14 @@ export function DealOverviewPanel({ deal }: DealOverviewPanelProps): React.React
       <div className="grid grid-cols-2 gap-4">
         <div className="space-y-1.5">
           <Label>Transaction Value ({deal.transaction_currency})</Label>
-          <Input type="number" min="0" step="0.01" value={txValue} onChange={e => setTxValue(e.target.value)} />
+          <Input
+            type="number"
+            min="0"
+            step="0.01"
+            value={txValue}
+            onChange={e => { setTxValue(e.target.value); setTxValueError(null); }}
+          />
+          {txValueError && <p className="text-xs text-destructive">{txValueError}</p>}
         </div>
         <div className="space-y-1.5">
           <Label>Expected Close</Label>
@@ -102,8 +118,7 @@ export function DealOverviewPanel({ deal }: DealOverviewPanelProps): React.React
         </div>
         <div className="space-y-1.5 col-span-2">
           <Label>Notes</Label>
-          <textarea value={notes} onChange={e => setNotes(e.target.value)} rows={3}
-            className="flex w-full rounded-md border border-input bg-transparent px-3 py-2 text-sm shadow-sm focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring resize-none" />
+          <Textarea value={notes} onChange={e => setNotes(e.target.value)} rows={3} />
         </div>
       </div>
       <div className="flex gap-2">

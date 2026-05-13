@@ -215,6 +215,7 @@ export function ListingMediaPanel({
                   className="h-6 w-6"
                   onClick={() => setDeleteTarget(m)}
                   disabled={deleting}
+                  aria-label="Remove media"
                 >
                   <Trash2 className="h-3 w-3 text-destructive" />
                 </Button>

@@ -78,7 +78,7 @@ export function PropertyAgentsPanel({ propertyId, assignedAgents }: PropertyAgen
                 )}
                 <ConfirmDialog
                   trigger={
-                    <Button size="icon" variant="ghost">
+                    <Button size="icon" variant="ghost" aria-label="Remove agent">
                       <Trash2 className="h-4 w-4 text-destructive" />
                     </Button>
                   }

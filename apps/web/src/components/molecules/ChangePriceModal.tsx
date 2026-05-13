@@ -13,6 +13,7 @@ import {
   DialogTitle,
 } from "@/components/ui/dialog";
 import { useChangeListingPrice } from "@/hooks/mutations/useListingPriceMutations";
+import { Textarea } from "@/components/atoms/Textarea";
 
 interface ChangePriceModalProps {
   listingId: string;
@@ -94,12 +95,11 @@ export function ChangePriceModal({
           </div>
           <div className="space-y-1.5">
             <Label htmlFor="reason-note">Reason *</Label>
-            <textarea
+            <Textarea
               id="reason-note"
               rows={3}
               value={reasonNote}
               onChange={(e) => setReasonNote(e.target.value)}
-              className="flex w-full rounded-md border border-input bg-transparent px-3 py-2 text-sm shadow-sm focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring resize-none"
               placeholder="Reason for price change..."
             />
           </div>

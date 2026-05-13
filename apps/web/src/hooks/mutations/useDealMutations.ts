@@ -84,7 +84,8 @@ export function usePayoutCommission(id: string) {
 export function useCancelCommissionPayout(id: string) {
   const qc = useQueryClient();
   return useMutation({
-    mutationFn: (): Promise<Deal> => dealRepository.cancelCommissionPayout(id),
+    mutationFn: (reason_note: string): Promise<Deal> =>
+      dealRepository.cancelCommissionPayout(id, reason_note),
     onSuccess: (data) => {
       qc.setQueryData(queryKeys.deals.detail(id), data);
       toast.success("Payout canceled");

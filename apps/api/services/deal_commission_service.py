@@ -137,6 +137,7 @@ class DealCommissionService(BaseService):
         deal_id: UUID,
         tenant_id: UUID,
         current_user: dict,
+        reason_note: str | None = None,
     ) -> Deal:
         deal = await self._get_deal(deal_id, tenant_id)
         deal.commission_payout_status = CommissionPayoutStatus.CANCELED
@@ -147,7 +148,10 @@ class DealCommissionService(BaseService):
             actor_user_id=UUID(current_user["id"]),
             entity_type="deal",
             entity_id=deal.id,
-            after={"event": "commission_payout_canceled"},
+            after={
+                "event": "commission_payout_canceled",
+                "reason_note": reason_note,
+            },
         )
         await self.session.refresh(deal)
         return deal

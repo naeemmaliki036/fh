@@ -66,6 +66,8 @@ export interface DocumentRequestListResponse {
 export interface DocumentRequestListParams {
   status?: DocumentRequestStatus;
   customer_id?: string;
+  lead_id?: string;
+  deal_id?: string;
   skip?: number;
   limit?: number;
 }
