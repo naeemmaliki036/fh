@@ -14,6 +14,8 @@ import { Input } from "@/components/ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { STAGE_LABELS, DEAL_TYPE_LABELS } from "@/lib/constants/deal-labels";
 import { formatListingPrice } from "@/lib/utils/format-listing-price";
+import { formatDate } from "@/lib/utils/format-date";
+import { useMyTenant } from "@/hooks/queries/useTenants";
 import type { DealStage, DealType } from "@/lib/types/deal";
 
 const PAGE_SIZE = 20;
@@ -46,6 +48,7 @@ export function DealsTable(): React.ReactElement {
     limit: PAGE_SIZE,
   });
   const { data: agentsData } = useAgents();
+  const { data: tenant } = useMyTenant();
   const agents = agentsData?.items ?? [];
   const deals = data?.items ?? [];
   const total = data?.total ?? 0;
@@ -94,6 +97,7 @@ export function DealsTable(): React.ReactElement {
               <th className="px-3 py-2 text-left font-medium">Value</th>
               <th className="px-3 py-2 text-left font-medium">Commission</th>
               <th className="px-3 py-2 text-left font-medium">Close</th>
+              <th className="px-3 py-2 text-left font-medium">Created</th>
               <th className="px-3 py-2" />
             </tr>
           </thead>
@@ -119,6 +123,7 @@ export function DealsTable(): React.ReactElement {
                   </div>
                 </td>
                 <td className="px-3 py-2.5 text-sm text-muted-foreground">{relDate(d.expected_close_at)}</td>
+                <td className="px-3 py-2.5 text-xs text-muted-foreground">{formatDate(d.created_at, tenant?.locale)}</td>
                 <td className="px-3 py-2.5">
                   <Button size="sm" variant="outline" asChild><Link href={`/deals/${d.id}`}>Open</Link></Button>
                 </td>

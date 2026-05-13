@@ -11,6 +11,8 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { cn } from "@/lib/utils/cn";
+import { formatDate } from "@/lib/utils/format-date";
+import { useMyTenant } from "@/hooks/queries/useTenants";
 import type { LeadStage } from "@/lib/types/lead";
 
 const PAGE_SIZE = 20;
@@ -31,6 +33,7 @@ export function LeadsTable(): React.ReactElement {
   const [skip, setSkip] = useState(0);
   const [showCreate, setShowCreate] = useState(false);
 
+  const { data: tenant } = useMyTenant();
   const params = {
     stage: stage === "all" ? undefined : stage,
     assigned_agent_id: agentFilter || undefined,
@@ -102,7 +105,7 @@ export function LeadsTable(): React.ReactElement {
                     {relativeDate(l.next_action_at)}
                   </td>
                   <td className="px-3 py-2.5 text-xs text-muted-foreground">
-                    {new Date(l.created_at).toLocaleDateString("en-AE")}
+                    {formatDate(l.created_at, tenant?.locale)}
                   </td>
                   <td className="px-3 py-2.5">
                     <Button size="sm" variant="outline" asChild>

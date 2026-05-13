@@ -22,6 +22,7 @@ export function PropertyOverviewPanel({ property }: PropertyOverviewPanelProps):
       isPending={isPending}
       submitLabel="Save changes"
       onSubmit={handleSubmit}
+      onCancel={() => { /* reset happens inside PropertyForm */ }}
     />
   );
 }

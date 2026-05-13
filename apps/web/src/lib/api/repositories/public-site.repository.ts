@@ -50,10 +50,10 @@ export const publicSiteRepository = {
   },
 
   async getAgents(slug: string): Promise<PublicAgentSnippet[]> {
-    const res = await publicHttp.get<PublicAgentSnippet[]>(
+    const res = await publicHttp.get<{ items: PublicAgentSnippet[] }>(
       `/public/sites/${slug}/agents`,
     );
-    return res.data;
+    return res.data.items;
   },
 
   async createLead(slug: string, data: PublicLeadCreate): Promise<PublicLeadResponse> {
