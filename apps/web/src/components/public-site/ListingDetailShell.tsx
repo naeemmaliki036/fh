@@ -47,7 +47,7 @@ export function ListingDetailShell({ listing, slug }: ListingDetailShellProps): 
                 <h1 className="text-4xl font-black leading-snug tracking-tight text-slate-950 md:text-5xl">
                   {listing.title}
                 </h1>
-                <span className="rounded-full bg-amber-100 px-4 py-2 text-sm font-black text-amber-700">
+                <span className="rounded-full bg-amber-100 px-4 py-2 text-sm font-black" style={{ color: "var(--accent)" }}>
                   {purposeLabel(listing.purpose)}
                 </span>
               </div>

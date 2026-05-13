@@ -7,6 +7,94 @@ export interface PublicSiteStats {
   inventory_value_aed: number | null;
 }
 
+// ---------------------------------------------------------------------------
+// Config sub-types — mirrors apps/api/schemas/public_site_config.py
+// ---------------------------------------------------------------------------
+
+export interface HeroConfig {
+  headline: string | null;
+  subheadline: string | null;
+  eyebrow: string | null;
+  image_url: string | null;
+}
+
+export interface ThemeConfig {
+  primary_color: string | null;
+  accent_color: string | null;
+}
+
+export interface ServiceCard {
+  title: string;
+  description: string;
+}
+
+export interface ServicesConfig {
+  enabled: boolean;
+  title: string | null;
+  subtitle: string | null;
+  cards: ServiceCard[] | null;
+}
+
+export interface TeamMember {
+  name: string;
+  title: string;
+  photo_url: string | null;
+  phone: string | null;
+  email: string | null;
+  linkedin_url: string | null;
+}
+
+export interface TeamConfig {
+  title: string | null;
+  subtitle: string | null;
+  members: TeamMember[];
+  show_agents: boolean;
+}
+
+export interface FooterConfig {
+  description: string | null;
+  address: string | null;
+  instagram_url: string | null;
+  facebook_url: string | null;
+  linkedin_url: string | null;
+}
+
+export interface SectionsConfig {
+  services_enabled: boolean;
+  team_enabled: boolean;
+  contact_enabled: boolean;
+}
+
+export interface ContactSectionConfig {
+  title: string | null;
+  headline: string | null;
+  whatsapp: string | null;
+}
+
+export interface RawSiteConfig {
+  hero?: Partial<HeroConfig> | null;
+  theme?: Partial<ThemeConfig> | null;
+  services?: Partial<ServicesConfig> | null;
+  team?: Partial<TeamConfig> | null;
+  footer?: Partial<FooterConfig> | null;
+  sections?: Partial<SectionsConfig> | null;
+  contact?: Partial<ContactSectionConfig> | null;
+}
+
+export interface ResolvedSiteConfig {
+  hero: HeroConfig;
+  theme: ThemeConfig;
+  services: ServicesConfig;
+  team: TeamConfig;
+  footer: FooterConfig;
+  sections: SectionsConfig;
+  contact: ContactSectionConfig;
+}
+
+// ---------------------------------------------------------------------------
+// Public profile
+// ---------------------------------------------------------------------------
+
 export interface PublicTenantProfile {
   name: string;
   logo_url: string | null;
@@ -14,6 +102,7 @@ export interface PublicTenantProfile {
   contact_email: string;
   contact_phone: string;
   stats?: PublicSiteStats;
+  config?: RawSiteConfig | null;
 }
 
 export interface PublicListingItem {
@@ -84,12 +173,14 @@ export interface PublicSiteSettings {
   public_site_logo_url: string | null;
   public_site_tagline: string | null;
   public_url_hint: string;
+  config: RawSiteConfig;
 }
 
 export interface PublicSiteSettingsUpdate {
   public_site_enabled?: boolean | null;
   public_site_logo_url?: string | null;
   public_site_tagline?: string | null;
+  config?: RawSiteConfig | null;
 }
 
 export interface PublicListingsParams {

@@ -1,13 +1,14 @@
 "use client";
 
 import { useState } from "react";
-import type { PublicTenantProfile, PublicListingsParams } from "@/lib/types/public-site";
+import type { PublicTenantProfile, PublicListingsParams, ResolvedSiteConfig } from "@/lib/types/public-site";
+import { resolveConfig } from "@/lib/utils/resolve-site-config";
 import { usePublicSiteListings } from "@/hooks/queries/public-site/usePublicSite";
 import { HeroSection } from "./HeroSection";
 import { ServicesGrid } from "./ServicesGrid";
 import { ListingFilters } from "./ListingFilters";
 import { ListingsGrid } from "./ListingsGrid";
-import { AgentsSection } from "./AgentsSection";
+import { TeamSection } from "./TeamSection";
 import { ContactSection } from "./ContactSection";
 
 interface ListingsPageShellProps {
@@ -18,6 +19,8 @@ interface ListingsPageShellProps {
 export function ListingsPageShell({ profile, slug }: ListingsPageShellProps): React.ReactElement {
   const [filterParams, setFilterParams] = useState<PublicListingsParams>({ page: 1, page_size: 12 });
   const [activeType, setActiveType] = useState("");
+
+  const cfg: ResolvedSiteConfig = resolveConfig(profile.config);
 
   const { data, isLoading } = usePublicSiteListings(slug, filterParams);
 
@@ -40,16 +43,16 @@ export function ListingsPageShell({ profile, slug }: ListingsPageShellProps): Re
 
   return (
     <div className="bg-[#f7f5ef]">
-      <HeroSection profile={profile} firstListing={firstListing} onSearch={handleSearch} />
+      <HeroSection profile={profile} firstListing={firstListing} onSearch={handleSearch} cfg={cfg.hero} />
 
-      <ServicesGrid />
+      {cfg.sections.services_enabled && <ServicesGrid cfg={cfg.services} />}
 
       {/* Listings section */}
       <section id="listings" className="py-14">
         <div className="mx-auto w-[min(100%-40px,1280px)]">
           <div className="mb-8 flex flex-col justify-between gap-4 md:flex-row md:items-end">
             <div>
-              <span className="text-sm font-black uppercase tracking-[0.16em] text-amber-700">
+              <span className="text-sm font-black uppercase tracking-[0.16em]" style={{ color: "var(--accent)" }}>
                 Featured listings
               </span>
               <h2 className="mt-3 max-w-3xl text-4xl font-black tracking-tight text-slate-950 md:text-5xl">
@@ -80,7 +83,6 @@ export function ListingsPageShell({ profile, slug }: ListingsPageShellProps): Re
             <ListingsGrid listings={data?.items ?? []} slug={slug} />
           )}
 
-          {/* Pagination */}
           {totalPages > 1 && (
             <div className="mt-8 flex items-center justify-center gap-2">
               <button
@@ -96,9 +98,10 @@ export function ListingsPageShell({ profile, slug }: ListingsPageShellProps): Re
                   onClick={() => goToPage(page)}
                   className={`inline-flex h-11 w-11 items-center justify-center rounded-full text-sm font-bold transition ${
                     page === currentPage
-                      ? "bg-slate-950 text-white"
+                      ? "text-white"
                       : "border border-slate-200 bg-white text-slate-950 hover:bg-slate-50"
                   }`}
+                  style={page === currentPage ? { backgroundColor: "var(--primary)" } : undefined}
                 >
                   {page}
                 </button>
@@ -115,9 +118,9 @@ export function ListingsPageShell({ profile, slug }: ListingsPageShellProps): Re
         </div>
       </section>
 
-      <AgentsSection slug={slug} />
+      {cfg.sections.team_enabled && <TeamSection slug={slug} cfg={cfg.team} />}
 
-      <ContactSection slug={slug} profile={profile} />
+      {cfg.sections.contact_enabled && <ContactSection slug={slug} profile={profile} cfg={cfg.contact} />}
     </div>
   );
 }

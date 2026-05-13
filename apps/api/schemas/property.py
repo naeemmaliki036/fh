@@ -63,7 +63,7 @@ class PropertyUpdateRequest(BaseModel):
     longitude: Decimal | None = None
     amenities: list[str] | None = None
     internal_reference: str | None = None
-    status: PropertyStatus | None = None
+    # status intentionally omitted — use PATCH /{id}/status (audited)
 
 
 class PropertyResponse(BaseModel):

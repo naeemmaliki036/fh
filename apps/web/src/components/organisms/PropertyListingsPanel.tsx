@@ -1,9 +1,10 @@
 "use client";
 
 import { useState, useEffect } from "react";
-import { LayoutGrid, List, Plus } from "lucide-react";
+import { LayoutGrid, List, Plus, ExternalLink } from "lucide-react";
 import { usePropertyListings } from "@/hooks/queries/useProperties";
 import { useMyTenant } from "@/hooks/queries/useTenants";
+import { usePublicSiteSettings } from "@/hooks/queries/tenant-public-site/usePublicSiteSettings";
 import { useDeleteListing, useChangeListingStatus } from "@/hooks/mutations/useListingMutations";
 import { ListingListView } from "@/components/organisms/ListingListView";
 import { ListingCardView } from "@/components/organisms/ListingCardView";
@@ -39,6 +40,7 @@ interface PropertyListingsPanelProps {
 export function PropertyListingsPanel({ propertyId }: PropertyListingsPanelProps): React.ReactElement {
   const { data, isLoading, error } = usePropertyListings(propertyId);
   const { data: tenant } = useMyTenant();
+  const { data: publicSite } = usePublicSiteSettings();
   const [showCreate, setShowCreate] = useState(false);
   const [editTarget, setEditTarget] = useState<Listing | null>(null);
   const [pending, setPending] = useState<PendingTransition | null>(null);
@@ -93,7 +95,16 @@ export function PropertyListingsPanel({ propertyId }: PropertyListingsPanelProps
             <List className="h-4 w-4" />
           </button>
         </div>
-        <Button onClick={() => setShowCreate(true)}><Plus className="mr-1.5 h-4 w-4" />New Listing</Button>
+        <div className="flex items-center gap-2">
+          {publicSite?.public_site_enabled && publicSite.slug && (
+            <Button asChild variant="outline" size="sm">
+              <a href={`/p/${publicSite.slug}`} target="_blank" rel="noopener noreferrer">
+                <ExternalLink className="mr-1.5 h-4 w-4" />View public site
+              </a>
+            </Button>
+          )}
+          <Button onClick={() => setShowCreate(true)}><Plus className="mr-1.5 h-4 w-4" />New Listing</Button>
+        </div>
       </div>
 
       {isLoading && <p className="text-sm text-muted-foreground">Loading listings...</p>}

@@ -1,11 +1,14 @@
-import type { PublicTenantProfile } from "@/lib/types/public-site";
+import { Instagram, Facebook, Linkedin } from "lucide-react";
+import type { PublicTenantProfile, FooterConfig } from "@/lib/types/public-site";
 
 interface PublicSiteFooterProps {
   profile: PublicTenantProfile;
+  cfg: FooterConfig;
 }
 
-export function PublicSiteFooter({ profile }: PublicSiteFooterProps): React.ReactElement {
+export function PublicSiteFooter({ profile, cfg }: PublicSiteFooterProps): React.ReactElement {
   const initials = profile.name.slice(0, 2).toUpperCase();
+  const description = cfg.description ?? (profile.tagline ?? "Verified listings and a smooth process, end to end.");
 
   return (
     <footer className="border-t border-slate-200 bg-slate-950 text-white">
@@ -29,9 +32,29 @@ export function PublicSiteFooter({ profile }: PublicSiteFooterProps): React.Reac
               <small className="mt-0.5 block text-xs text-slate-400">Real Estate</small>
             </span>
           </div>
-          <p className="mt-4 text-sm leading-6 text-slate-400">
-            {profile.tagline ?? "Verified listings and a smooth process, end to end."}
-          </p>
+          <p className="mt-4 text-sm leading-6 text-slate-400">{description}</p>
+          {cfg.address && (
+            <p className="mt-3 text-xs text-slate-500">{cfg.address}</p>
+          )}
+          {(cfg.instagram_url || cfg.facebook_url || cfg.linkedin_url) && (
+            <div className="mt-4 flex gap-3">
+              {cfg.instagram_url && (
+                <a href={cfg.instagram_url} target="_blank" rel="noopener noreferrer" className="text-slate-400 transition hover:text-white" aria-label="Instagram">
+                  <Instagram className="h-5 w-5" />
+                </a>
+              )}
+              {cfg.facebook_url && (
+                <a href={cfg.facebook_url} target="_blank" rel="noopener noreferrer" className="text-slate-400 transition hover:text-white" aria-label="Facebook">
+                  <Facebook className="h-5 w-5" />
+                </a>
+              )}
+              {cfg.linkedin_url && (
+                <a href={cfg.linkedin_url} target="_blank" rel="noopener noreferrer" className="text-slate-400 transition hover:text-white" aria-label="LinkedIn">
+                  <Linkedin className="h-5 w-5" />
+                </a>
+              )}
+            </div>
+          )}
         </div>
 
         {/* Quick links */}
@@ -40,8 +63,8 @@ export function PublicSiteFooter({ profile }: PublicSiteFooterProps): React.Reac
           <a href="#listings" className="mt-3 block text-sm text-slate-400 transition hover:text-white">
             Listings
           </a>
-          <a href="#agents" className="mt-3 block text-sm text-slate-400 transition hover:text-white">
-            Agents
+          <a href="#team" className="mt-3 block text-sm text-slate-400 transition hover:text-white">
+            Team
           </a>
           <a href="#contact" className="mt-3 block text-sm text-slate-400 transition hover:text-white">
             Contact

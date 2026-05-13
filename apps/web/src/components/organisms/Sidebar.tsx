@@ -13,10 +13,12 @@ import {
   Target,
   FileCheck,
   Handshake,
+  ExternalLink,
 } from "lucide-react";
 import { cn } from "@/lib/utils/cn";
 import { LogoutButton } from "@/components/atoms/LogoutButton";
 import { useAuth } from "@/contexts/AuthContext";
+import { usePublicSiteSettings } from "@/hooks/queries/tenant-public-site/usePublicSiteSettings";
 
 interface NavItem {
   href: string;
@@ -43,15 +45,31 @@ const ADMIN_ROLES = new Set(["company_owner", "company_admin"]);
 export function Sidebar(): React.ReactElement {
   const pathname = usePathname();
   const { currentUser } = useAuth();
+  const { data: publicSiteSettings } = usePublicSiteSettings();
 
   const visibleItems = NAV_ITEMS.filter(
     (item) => !item.adminOnly || (currentUser && ADMIN_ROLES.has(currentUser.role)),
   );
 
+  const showPublicSiteLink =
+    publicSiteSettings?.public_site_enabled === true && !!publicSiteSettings.slug;
+
   return (
     <aside className="flex h-full w-64 flex-col bg-sidebar text-sidebar-foreground">
-      <div className="flex h-16 items-center px-6">
+      <div className="flex h-16 items-center gap-3 px-6">
         <span className="text-lg font-bold tracking-tight">AqarFlow</span>
+        {showPublicSiteLink && (
+          <a
+            href={`/p/${publicSiteSettings.slug}`}
+            target="_blank"
+            rel="noopener noreferrer"
+            className="inline-flex items-center gap-1 rounded-md px-2 py-1 text-xs font-medium text-sidebar-foreground/60 transition hover:bg-sidebar-accent/50 hover:text-sidebar-foreground"
+            title="View public site"
+          >
+            <ExternalLink className="h-3 w-3" />
+            Site
+          </a>
+        )}
       </div>
 
       <nav className="flex-1 overflow-y-auto px-3 py-4 space-y-1">

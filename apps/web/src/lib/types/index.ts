@@ -170,6 +170,17 @@ export type {
 
 export type {
   PublicSiteStats,
+  HeroConfig,
+  ThemeConfig,
+  ServiceCard,
+  ServicesConfig,
+  TeamMember,
+  TeamConfig,
+  FooterConfig,
+  SectionsConfig,
+  ContactSectionConfig,
+  RawSiteConfig,
+  ResolvedSiteConfig,
   PublicTenantProfile,
   PublicListingItem,
   PublicListingListResponse,

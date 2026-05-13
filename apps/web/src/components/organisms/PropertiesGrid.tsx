@@ -2,9 +2,10 @@
 
 import { useState, useEffect } from "react";
 import Link from "next/link";
-import { LayoutGrid, List, Plus } from "lucide-react";
+import { LayoutGrid, List, Plus, ExternalLink } from "lucide-react";
 import { useProperties } from "@/hooks/queries/useProperties";
 import { useMyTenant } from "@/hooks/queries/useTenants";
+import { usePublicSiteSettings } from "@/hooks/queries/tenant-public-site/usePublicSiteSettings";
 import { useChangePropertyStatus } from "@/hooks/mutations/usePropertyMutations";
 import { PropertyTypeBadge } from "@/components/atoms/PropertyTypeBadge";
 import { PropertyStatusBadge } from "@/components/atoms/PropertyStatusBadge";
@@ -40,6 +41,7 @@ export function PropertiesGrid(): React.ReactElement {
   const [viewMode, setViewMode] = useState<PropertiesViewMode | null>(null);
 
   const { data: tenant } = useMyTenant();
+  const { data: publicSite } = usePublicSiteSettings();
   const params = {
     q: search || undefined,
     status: status === "all" ? undefined : status,
@@ -110,6 +112,13 @@ export function PropertiesGrid(): React.ReactElement {
           </button>
         </div>
 
+        {publicSite?.public_site_enabled && publicSite.slug && (
+          <Button asChild variant="outline" size="sm">
+            <a href={`/p/${publicSite.slug}`} target="_blank" rel="noopener noreferrer">
+              <ExternalLink className="mr-1.5 h-4 w-4" />View public site
+            </a>
+          </Button>
+        )}
         <Button onClick={() => setShowCreate(true)}><Plus className="mr-1.5 h-4 w-4" />New Property</Button>
       </div>
 

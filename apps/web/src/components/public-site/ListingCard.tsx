@@ -55,7 +55,7 @@ export function ListingCard({ listing, slug }: ListingCardProps): React.ReactEle
       <div className="p-5">
         <div className="mb-3 flex items-center justify-between gap-3">
           <strong className="text-2xl font-black">{formatAed(listing.price)}</strong>
-          <span className="rounded-full bg-amber-100 px-3 py-1 text-xs font-black text-amber-700">
+          <span className="rounded-full bg-amber-100 px-3 py-1 text-xs font-black" style={{ color: "var(--accent)" }}>
             {purposeLabel(listing.purpose)}
           </span>
         </div>

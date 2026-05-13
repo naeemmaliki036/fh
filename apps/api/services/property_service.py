@@ -153,7 +153,8 @@ class PropertyService(BaseService):
         allowed = {
             "title", "description", "property_type", "bedrooms", "bathrooms",
             "size_sqft", "price", "currency", "address_line", "city", "area",
-            "country", "latitude", "longitude", "amenities", "internal_reference", "status",
+            "country", "latitude", "longitude", "amenities", "internal_reference",
+            # "status" excluded — must go through change_status() for audit trail
         }
         for k, v in updates.items():
             if k in allowed:

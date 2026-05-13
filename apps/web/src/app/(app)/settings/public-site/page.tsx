@@ -4,6 +4,7 @@ import { useEffect } from "react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
+import { ExternalLink } from "lucide-react";
 import { useAuth } from "@/contexts/AuthContext";
 import { usePublicSiteSettings } from "@/hooks/queries/tenant-public-site/usePublicSiteSettings";
 import { useUpdatePublicSiteSettings } from "@/hooks/mutations/tenant-public-site/useUpdatePublicSiteSettings";
@@ -13,16 +14,16 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { ToggleSwitch } from "@/components/ui/toggle-switch";
 import { PublicSiteUrlPanel } from "@/components/public-site/PublicSiteUrlPanel";
+import { CustomizeSection } from "./CustomizeSection";
 
 const OWNER_ROLES = new Set(["company_owner", "company_admin"]);
 
-const schema = z.object({
+const baseSchema = z.object({
   public_site_enabled: z.boolean(),
   public_site_logo_url: z.string().url("Must be a valid URL").or(z.literal("")).optional(),
   public_site_tagline: z.string().max(200, "Max 200 characters").optional(),
 });
-
-type FormValues = z.infer<typeof schema>;
+type BaseFormValues = z.infer<typeof baseSchema>;
 
 export default function PublicSiteSettingsPage(): React.ReactElement {
   const { currentUser } = useAuth();
@@ -32,8 +33,8 @@ export default function PublicSiteSettingsPage(): React.ReactElement {
   const { mutate: save, isPending } = useUpdatePublicSiteSettings();
 
   const { register, handleSubmit, setValue, watch, reset, formState: { errors } } =
-    useForm<FormValues>({
-      resolver: zodResolver(schema),
+    useForm<BaseFormValues>({
+      resolver: zodResolver(baseSchema),
       defaultValues: {
         public_site_enabled: false,
         public_site_logo_url: "",
@@ -53,7 +54,7 @@ export default function PublicSiteSettingsPage(): React.ReactElement {
 
   const enabled = watch("public_site_enabled");
 
-  const onSubmit = (data: FormValues): void => {
+  const onSubmit = (data: BaseFormValues): void => {
     save({
       public_site_enabled: data.public_site_enabled,
       public_site_logo_url: data.public_site_logo_url || null,
@@ -61,11 +62,23 @@ export default function PublicSiteSettingsPage(): React.ReactElement {
     });
   };
 
+  const publicUrl = settings ? `/p/${settings.slug}` : null;
+
   if (isLoading) return <p className="text-sm text-muted-foreground">Loading...</p>;
 
   return (
     <div className="space-y-6">
-      <h1 className="text-2xl font-semibold tracking-tight">Public Website</h1>
+      <div className="flex items-center justify-between gap-4">
+        <h1 className="text-2xl font-semibold tracking-tight">Public Website</h1>
+        {settings?.public_site_enabled && publicUrl && (
+          <Button asChild variant="outline" size="sm">
+            <a href={publicUrl} target="_blank" rel="noopener noreferrer">
+              <ExternalLink className="mr-1.5 h-4 w-4" />
+              Open public site
+            </a>
+          </Button>
+        )}
+      </div>
 
       <Card className="max-w-lg">
         <CardHeader>
@@ -78,7 +91,6 @@ export default function PublicSiteSettingsPage(): React.ReactElement {
         </CardHeader>
         <CardContent>
           <form onSubmit={handleSubmit(onSubmit)} className="space-y-6">
-            {/* Enable toggle */}
             <div className="flex items-center justify-between gap-4">
               <div>
                 <Label htmlFor="public_site_enabled">Enable public website</Label>
@@ -93,8 +105,6 @@ export default function PublicSiteSettingsPage(): React.ReactElement {
                 disabled={!canEdit}
               />
             </div>
-
-            {/* Logo URL */}
             <div className="space-y-1.5">
               <Label htmlFor="logo_url">Logo URL</Label>
               <Input
@@ -108,8 +118,6 @@ export default function PublicSiteSettingsPage(): React.ReactElement {
               )}
               <p className="text-xs text-muted-foreground">Direct URL to your logo image (PNG, SVG).</p>
             </div>
-
-            {/* Tagline */}
             <div className="space-y-1.5">
               <Label htmlFor="tagline">Tagline</Label>
               <Input
@@ -123,7 +131,6 @@ export default function PublicSiteSettingsPage(): React.ReactElement {
                 <p className="text-xs text-destructive">{errors.public_site_tagline.message}</p>
               )}
             </div>
-
             {canEdit && (
               <Button type="submit" disabled={isPending}>
                 {isPending ? "Saving..." : "Save changes"}
@@ -133,7 +140,6 @@ export default function PublicSiteSettingsPage(): React.ReactElement {
         </CardContent>
       </Card>
 
-      {/* URL panel */}
       {settings && (
         <Card className="max-w-lg">
           <CardHeader>
@@ -144,6 +150,10 @@ export default function PublicSiteSettingsPage(): React.ReactElement {
             <PublicSiteUrlPanel slug={settings.slug} />
           </CardContent>
         </Card>
+      )}
+
+      {canEdit && settings && (
+        <CustomizeSection settings={settings} />
       )}
     </div>
   );
