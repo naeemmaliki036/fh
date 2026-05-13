@@ -7,6 +7,8 @@ interface ListingGalleryProps {
   title: string;
 }
 
+const VISIBLE_THUMBS = 4;
+
 export function ListingGallery({ urls, title }: ListingGalleryProps): React.ReactElement {
   const [active, setActive] = useState(0);
 
@@ -18,9 +20,12 @@ export function ListingGallery({ urls, title }: ListingGalleryProps): React.Reac
     );
   }
 
+  const thumbs = urls.slice(0, VISIBLE_THUMBS);
+  const hiddenCount = Math.max(0, urls.length - VISIBLE_THUMBS);
+
   return (
-    <div className="space-y-3">
-      <div className="relative overflow-hidden rounded-[2rem] bg-slate-100" style={{ aspectRatio: "16/9" }}>
+    <div className="grid gap-3 lg:grid-cols-[2fr_1fr]">
+      <div className="relative aspect-[16/10] overflow-hidden rounded-[2rem] bg-slate-100">
         <img
           src={urls[active]}
           alt={`${title} — photo ${active + 1}`}
@@ -34,22 +39,30 @@ export function ListingGallery({ urls, title }: ListingGalleryProps): React.Reac
       </div>
 
       {urls.length > 1 && (
-        <div className="flex gap-2 overflow-x-auto pb-1">
-          {urls.map((url, i) => (
-            <button
-              key={i}
-              onClick={() => setActive(i)}
-              className={`h-16 w-24 flex-shrink-0 overflow-hidden rounded-2xl border-2 transition-colors ${
-                i === active ? "border-slate-950" : "border-transparent hover:border-slate-300"
-              }`}
-            >
-              <img
-                src={url}
-                alt={`${title} thumbnail ${i + 1}`}
-                className="h-full w-full object-cover"
-              />
-            </button>
-          ))}
+        <div className="grid grid-cols-2 gap-3 content-start">
+          {thumbs.map((url, i) => {
+            const isMore = i === VISIBLE_THUMBS - 1 && hiddenCount > 0;
+            return (
+              <button
+                key={i}
+                onClick={() => setActive(i)}
+                className={`relative aspect-square overflow-hidden rounded-2xl border-2 transition-colors ${
+                  i === active ? "border-slate-950" : "border-transparent hover:border-slate-300"
+                }`}
+              >
+                <img
+                  src={url}
+                  alt={`${title} thumbnail ${i + 1}`}
+                  className="h-full w-full object-cover"
+                />
+                {isMore && (
+                  <span className="absolute inset-0 flex items-center justify-center bg-black/55 text-lg font-black text-white">
+                    +{hiddenCount}
+                  </span>
+                )}
+              </button>
+            );
+          })}
         </div>
       )}
     </div>

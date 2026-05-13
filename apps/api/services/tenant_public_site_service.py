@@ -46,6 +46,7 @@ class TenantPublicSiteService(BaseService):
             "public_site_logo_url": tenant.public_site_logo_url,
             "public_site_tagline": tenant.public_site_tagline,
             "public_url_hint": f"/p/{tenant.slug}",
+            "config": tenant.public_site_config or {},
         }
 
     # ------------------------------------------------------------------
@@ -61,7 +62,12 @@ class TenantPublicSiteService(BaseService):
         ip_address: str | None = None,
         user_agent: str | None = None,
     ) -> dict:
-        """Partial-update public-site fields; RBAC enforced here."""
+        """Partial-update public-site fields; RBAC enforced here.
+
+        `config` (a PublicSiteConfig instance) replaces the entire blob when
+        present. Audit metadata_after carries a sentinel rather than the full
+        blob to keep audit log rows compact.
+        """
         self._require_admin(current_user.get("role", ""))
 
         tenant = await self._get_tenant(tenant_id)
@@ -73,17 +79,27 @@ class TenantPublicSiteService(BaseService):
         }
 
         _allowed = {"public_site_enabled", "public_site_logo_url", "public_site_tagline"}
+        config_updated = False
+
         for key, val in updates.items():
             if key in _allowed:
                 setattr(tenant, key, val)
+            elif key == "config" and val is not None:
+                # val arrives as a dict (model_dump output from the router).
+                # Validation already ran at the Pydantic request-parse stage;
+                # persist the dict directly as the new blob.
+                tenant.public_site_config = val if isinstance(val, dict) else val.model_dump(exclude_none=False)
+                config_updated = True
 
         await self.session.flush()
 
-        after = {
+        after: dict = {
             "public_site_enabled": tenant.public_site_enabled,
             "public_site_logo_url": tenant.public_site_logo_url,
             "public_site_tagline": tenant.public_site_tagline,
         }
+        if config_updated:
+            after["config_updated"] = True
 
         await self.session.execute(
             text(f"SET LOCAL app.tenant_id = '{tenant_id}'")
@@ -107,4 +123,5 @@ class TenantPublicSiteService(BaseService):
             "public_site_logo_url": tenant.public_site_logo_url,
             "public_site_tagline": tenant.public_site_tagline,
             "public_url_hint": f"/p/{tenant.slug}",
+            "config": tenant.public_site_config or {},
         }

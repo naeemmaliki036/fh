@@ -8,8 +8,8 @@ circular dependency in migration ordering — the service layer enforces this).
 import uuid
 from datetime import datetime
 
-from sqlalchemy import Boolean, Enum, String, Text
-from sqlalchemy.dialects.postgresql import UUID
+from sqlalchemy import Boolean, Enum, String, Text, text
+from sqlalchemy.dialects.postgresql import JSONB, UUID
 from sqlalchemy.orm import Mapped, mapped_column
 
 from packages.common.db.base import Base, TimestampMixin, UUIDMixin
@@ -83,6 +83,13 @@ class Tenant(Base, UUIDMixin, TimestampMixin):
         nullable=False,
         default=PropertiesViewMode.CARD,
         server_default=PropertiesViewMode.CARD.value,
+    )
+
+    # Per-tenant public-site customization blob. Schema validation in Pydantic.
+    public_site_config: Mapped[dict] = mapped_column(
+        JSONB,
+        nullable=False,
+        server_default=text("'{}'::jsonb"),
     )
 
     # Approval trail — nullable until a platform admin approves.

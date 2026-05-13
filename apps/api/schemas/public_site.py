@@ -12,6 +12,8 @@ from typing import Any
 
 from pydantic import BaseModel, ConfigDict, EmailStr, Field, field_validator
 
+from apps.api.schemas.public_site_config import PublicSiteConfig
+
 
 # ---------------------------------------------------------------------------
 # Public: tenant stats (embedded in profile response)
@@ -39,6 +41,7 @@ class PublicTenantProfileResponse(BaseModel):
     contact_email: str
     contact_phone: str
     stats: PublicTenantStats | None = None
+    config: dict | None = None
 
 
 # ---------------------------------------------------------------------------
@@ -147,6 +150,7 @@ class PublicSiteSettingsResponse(BaseModel):
     public_site_logo_url: str | None = None
     public_site_tagline: str | None = None
     public_url_hint: str
+    config: dict = Field(default_factory=dict)
 
 
 class PublicSiteSettingsUpdate(BaseModel):
@@ -155,6 +159,7 @@ class PublicSiteSettingsUpdate(BaseModel):
     public_site_enabled: bool | None = None
     public_site_logo_url: str | None = None
     public_site_tagline: str | None = Field(default=None, max_length=200)
+    config: PublicSiteConfig | None = None
 
     @field_validator("public_site_logo_url", mode="before")
     @classmethod

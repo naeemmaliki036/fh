@@ -63,6 +63,7 @@ async def get_public_profile(
         contact_email=tenant.contact_email,
         contact_phone=tenant.contact_phone,
         stats=PublicTenantStats(**stats_data),
+        config=tenant.public_site_config or {},
     )
 
 
