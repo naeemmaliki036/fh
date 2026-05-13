@@ -69,7 +69,7 @@ export function MediaUploader({ propertyId }: MediaUploaderProps): React.ReactEl
         </div>
         <div className="space-y-1.5 flex-1">
           <Label>File</Label>
-          <input ref={fileRef} type="file" onChange={handleFile}
+          <input ref={fileRef} type="file" accept="image/jpeg,image/png,image/webp,video/mp4,video/webm" onChange={handleFile}
             className="block w-full text-sm file:mr-3 file:py-1 file:px-3 file:rounded file:border file:border-input file:text-sm file:bg-background cursor-pointer" />
           {fileErr && <p className="text-xs text-destructive">{fileErr}</p>}
           {file && <p className="text-xs text-muted-foreground">{file.name}</p>}

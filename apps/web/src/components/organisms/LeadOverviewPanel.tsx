@@ -18,9 +18,17 @@ interface LeadOverviewPanelProps {
   lead: Lead;
 }
 
+function minDateTimeLocal(): string {
+  const now = new Date();
+  now.setSeconds(0, 0);
+  return new Date(now.getTime() - now.getTimezoneOffset() * 60_000).toISOString().slice(0, 16);
+}
+
 export function LeadOverviewPanel({ lead }: LeadOverviewPanelProps): React.ReactElement {
   const [notes, setNotes] = useState(lead.notes ?? "");
   const [nextAction, setNextAction] = useState(lead.next_action_at?.slice(0, 16) ?? "");
+  const [nextActionError, setNextActionError] = useState<string | null>(null);
+  const minDt = minDateTimeLocal();
 
   const { data: agentsData } = useAgents();
   const { data: propertiesData } = useProperties();
@@ -31,6 +39,11 @@ export function LeadOverviewPanel({ lead }: LeadOverviewPanelProps): React.React
   const properties = propertiesData?.items ?? [];
 
   const handleSave = (): void => {
+    if (nextAction && new Date(nextAction).getTime() < Date.now() - 60_000) {
+      setNextActionError("Next action must be in the future");
+      return;
+    }
+    setNextActionError(null);
     update({ notes: notes || null, next_action_at: nextAction || null });
   };
 
@@ -94,7 +107,8 @@ export function LeadOverviewPanel({ lead }: LeadOverviewPanelProps): React.React
       {/* Next action */}
       <div className="space-y-1.5">
         <Label>Next Action</Label>
-        <Input type="datetime-local" value={nextAction} onChange={e => setNextAction(e.target.value)} />
+        <Input type="datetime-local" min={minDt} value={nextAction} onChange={e => { setNextAction(e.target.value); setNextActionError(null); }} />
+        {nextActionError && <p className="text-xs text-destructive">{nextActionError}</p>}
       </div>
 
       {/* Notes */}

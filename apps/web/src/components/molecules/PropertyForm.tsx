@@ -63,7 +63,21 @@ export function PropertyForm({ defaultValues, showStatus, isPending, submitLabel
   });
 
   const handleFormSubmit = (v: FormValues): void => {
-    onSubmit({ ...v, bedrooms: v.bedrooms ?? null, bathrooms: v.bathrooms ?? null });
+    const blank = (s: string | null | undefined): string | null => (s == null || s === "" ? null : s);
+    onSubmit({
+      ...v,
+      bedrooms: v.bedrooms ?? null,
+      bathrooms: v.bathrooms ?? null,
+      size_sqft: blank(v.size_sqft),
+      price: blank(v.price),
+      currency: blank(v.currency),
+      address_line: blank(v.address_line),
+      city: blank(v.city),
+      area: blank(v.area),
+      country: blank(v.country),
+      internal_reference: blank(v.internal_reference),
+      description: v.description?.trim() || null,
+    });
   };
 
   return (

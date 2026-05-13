@@ -18,8 +18,18 @@ const schema = z.object({
   source: z.enum(SOURCE_VALUES),
   assigned_agent_id: z.string().optional(),
   notes: z.string().optional(),
-  next_action_at: z.string().optional(),
+  next_action_at: z.string().optional().refine(
+    (v) => !v || new Date(v).getTime() >= Date.now() - 60 * 1000,
+    { message: "Next action must be in the future" },
+  ),
 });
+
+function minDateTimeLocal(): string {
+  const now = new Date();
+  now.setSeconds(0, 0);
+  const tzOffset = now.getTimezoneOffset() * 60 * 1000;
+  return new Date(now.getTime() - tzOffset).toISOString().slice(0, 16);
+}
 type FormValues = z.infer<typeof schema>;
 
 interface LeadFormProps {
@@ -32,12 +42,13 @@ interface LeadFormProps {
 }
 
 export function LeadForm({ agents, isPending, submitLabel, customer, onSubmit, onCancel }: LeadFormProps): React.ReactElement {
-  const { register, handleSubmit, control } = useForm<FormValues>({
+  const { register, handleSubmit, control, formState: { errors } } = useForm<FormValues>({
     resolver: zodResolver(schema),
     defaultValues: { source: "manual" },
   });
 
   const canSubmit = !!customer;
+  const minDt = minDateTimeLocal();
 
   return (
     <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
@@ -67,7 +78,8 @@ export function LeadForm({ agents, isPending, submitLabel, customer, onSubmit, o
         </div>
         <div className="space-y-1.5">
           <Label>Next Action</Label>
-          <Input type="datetime-local" {...register("next_action_at")} />
+          <Input type="datetime-local" min={minDt} {...register("next_action_at")} />
+          {errors.next_action_at && <p className="text-xs text-destructive">{errors.next_action_at.message}</p>}
         </div>
         <div className="space-y-1.5 col-span-2">
           <Label>Notes</Label>
