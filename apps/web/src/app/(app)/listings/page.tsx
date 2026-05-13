@@ -1,7 +1,10 @@
 "use client";
 
 import { Suspense } from "react";
+import Link from "next/link";
 import { useSearchParams } from "next/navigation";
+import { Plus } from "lucide-react";
+import { Button } from "@/components/ui/button";
 import { useListings } from "@/hooks/queries/useListings";
 import { ListingFiltersBar } from "@/components/organisms/ListingFiltersBar";
 import { ListingsTable } from "@/components/organisms/ListingsTable";
@@ -43,9 +46,17 @@ function ListingsContent(): React.ReactElement {
 export default function ListingsPage(): React.ReactElement {
   return (
     <div className="space-y-6">
-      <div>
-        <h1 className="text-2xl font-semibold tracking-tight">Listings</h1>
-        <p className="text-sm text-muted-foreground mt-1">Browse and filter all listings</p>
+      <div className="flex items-start justify-between">
+        <div>
+          <h1 className="text-2xl font-semibold tracking-tight">Listings</h1>
+          <p className="text-sm text-muted-foreground mt-1">Browse and filter all listings</p>
+        </div>
+        <Button asChild size="sm">
+          <Link href="/listings/new">
+            <Plus className="h-4 w-4 mr-1.5" />
+            New Listing
+          </Link>
+        </Button>
       </div>
       <Suspense fallback={<p className="text-sm text-muted-foreground">Loading...</p>}>
         <ListingsContent />

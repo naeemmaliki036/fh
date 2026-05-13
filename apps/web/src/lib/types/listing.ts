@@ -1,6 +1,17 @@
 export type ListingPurpose = "sale" | "rent_short" | "rent_long";
 export type RentPeriod = "daily" | "weekly" | "monthly" | "quarterly" | "yearly";
-export type ListingStatus = "draft" | "active" | "paused" | "expired" | "archived" | "sold" | "rented" | "off_market";
+export type ListingStatus =
+  | "draft"
+  | "active"
+  | "paused"
+  | "expired"
+  | "archived"
+  | "sold"
+  | "rented"
+  | "off_market"
+  | "pending_review"
+  | "changes_requested"
+  | "approved";
 export type ListingTier = "standard" | "premium" | "featured";
 
 export interface Listing {
@@ -22,8 +33,24 @@ export interface Listing {
   tags: string[] | null;
   valid_from: string | null;
   valid_until: string | null;
+  submitted_for_review_at?: string | null;
+  submitted_for_review_by_user_id?: string | null;
+  assigned_reviewer_id?: string | null;
+  reviewed_at?: string | null;
+  reviewed_by_user_id?: string | null;
+  review_notes?: string | null;
   created_at: string;
   updated_at: string;
+}
+
+export interface SubmitForReviewRequest {
+  reviewer_id: string;
+  note?: string | null;
+}
+
+export interface ReviewDecisionRequest {
+  decision: "approved" | "changes_requested";
+  note?: string | null;
 }
 
 export interface ListingCreateRequest {
@@ -67,6 +94,7 @@ export interface ListingListParams {
   purpose?: ListingPurpose;
   listing_tier?: ListingTier;
   assigned_agent_id?: string;
+  assigned_reviewer_id?: string;
   min_price?: string;
   max_price?: string;
   currency?: string;

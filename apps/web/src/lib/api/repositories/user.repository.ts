@@ -16,6 +16,13 @@ export class UserRepository extends BaseRepository<User, UserCreateRequest, User
     return res.data;
   }
 
+  async listEligibleReviewers(): Promise<UserListResponse> {
+    const res = await this.client.get<UserListResponse>(this.basePath, {
+      params: { role_in: "listing_manager,company_admin,company_owner" },
+    });
+    return res.data;
+  }
+
   async getMe(): Promise<User> {
     const res = await this.client.get<User>(`${this.basePath}/me`);
     return res.data;

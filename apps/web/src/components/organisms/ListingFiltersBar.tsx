@@ -16,7 +16,10 @@ import {
 import { useAgents } from "@/hooks/queries/useAgents";
 import type { ListingStatus, ListingPurpose, ListingTier } from "@/lib/types/listing";
 
-const STATUSES: ListingStatus[] = ["draft", "active", "paused", "sold", "rented", "expired", "archived", "off_market"];
+const STATUSES: ListingStatus[] = [
+  "draft", "pending_review", "changes_requested", "approved",
+  "active", "paused", "sold", "rented", "expired", "archived", "off_market",
+];
 const PURPOSES: ListingPurpose[] = ["sale", "rent_short", "rent_long"];
 const TIERS: ListingTier[] = ["standard", "premium", "featured"];
 

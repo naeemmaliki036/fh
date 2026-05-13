@@ -17,17 +17,21 @@ import {
   LogOut,
   Mail,
   CalendarDays,
+  ListChecks,
+  ClipboardList,
 } from "lucide-react";
 import { cn } from "@/lib/utils/cn";
 import { useAuth } from "@/contexts/AuthContext";
 import { usePublicSiteSettings } from "@/hooks/queries/tenant-public-site/usePublicSiteSettings";
 import { useLogout } from "@/hooks/mutations/useAuthMutations";
+import { useMyPendingReviews } from "@/hooks/queries/useListings";
 
 interface NavItem {
   href: string;
   label: string;
   icon: React.ComponentType<{ className?: string }>;
   adminOnly?: boolean;
+  reviewerOnly?: boolean;
 }
 
 const MAIN_ITEMS: NavItem[] = [
@@ -38,6 +42,8 @@ const MANAGE_ITEMS: NavItem[] = [
   { href: "/agents", label: "Agents", icon: UserCog },
   { href: "/customers", label: "Customers", icon: UsersRound },
   { href: "/properties", label: "Properties", icon: Home },
+  { href: "/listings", label: "Listings", icon: ListChecks },
+  { href: "/listings/pending-reviews", label: "Pending Reviews", icon: ClipboardList, reviewerOnly: true },
   { href: "/leads", label: "Leads", icon: Target },
   { href: "/calendar", label: "Calendar", icon: CalendarDays },
   { href: "/document-requests", label: "Doc Requests", icon: FileCheck },
@@ -52,6 +58,7 @@ const TOOLS_ITEMS: NavItem[] = [
 ];
 
 const ADMIN_ROLES = new Set(["company_owner", "company_admin"]);
+const REVIEWER_ROLES = new Set(["listing_manager", "company_admin", "company_owner"]);
 
 function SectionLabel({ label }: { label: string }): React.ReactElement {
   return (
@@ -61,7 +68,7 @@ function SectionLabel({ label }: { label: string }): React.ReactElement {
   );
 }
 
-function NavLink({ item, isActive }: { item: NavItem; isActive: boolean }): React.ReactElement {
+function NavLink({ item, isActive, badge }: { item: NavItem; isActive: boolean; badge?: number }): React.ReactElement {
   const Icon = item.icon;
   return (
     <Link
@@ -74,7 +81,12 @@ function NavLink({ item, isActive }: { item: NavItem; isActive: boolean }): Reac
       )}
     >
       <Icon className="h-4 w-4 flex-shrink-0" />
-      {item.label}
+      <span className="flex-1">{item.label}</span>
+      {badge != null && badge > 0 && (
+        <span className="inline-flex items-center justify-center rounded-full bg-primary px-1.5 py-0.5 text-[10px] font-bold text-primary-foreground min-w-[1.1rem]">
+          {badge > 99 ? "99+" : badge}
+        </span>
+      )}
     </Link>
   );
 }
@@ -108,12 +120,20 @@ export function Sidebar(): React.ReactElement {
   const { mutate: logout, isPending: loggingOut } = useLogout();
 
   const isAdmin = currentUser && ADMIN_ROLES.has(currentUser.role);
+  const isReviewer = currentUser && REVIEWER_ROLES.has(currentUser.role);
+
+  const { data: pendingReviewsData } = useMyPendingReviews(isReviewer ? (currentUser?.id ?? "") : "");
+  const pendingReviewCount = pendingReviewsData?.total ?? 0;
 
   const showPublicSiteLink =
     publicSiteSettings?.public_site_enabled === true && !!publicSiteSettings.slug;
 
-  function filterAdmin(items: NavItem[]): NavItem[] {
-    return items.filter((item) => !item.adminOnly || isAdmin);
+  function filterNav(items: NavItem[]): NavItem[] {
+    return items.filter((item) => {
+      if (item.adminOnly && !isAdmin) return false;
+      if (item.reviewerOnly && !isReviewer) return false;
+      return true;
+    });
   }
 
   return (
@@ -138,17 +158,22 @@ export function Sidebar(): React.ReactElement {
       {/* Nav groups */}
       <nav className="flex-1 overflow-y-auto px-3 py-2">
         <SectionLabel label="Main" />
-        {filterAdmin(MAIN_ITEMS).map((item) => (
+        {filterNav(MAIN_ITEMS).map((item) => (
           <NavLink key={item.href} item={item} isActive={pathname === item.href} />
         ))}
 
         <SectionLabel label="Manage" />
-        {filterAdmin(MANAGE_ITEMS).map((item) => (
-          <NavLink key={item.href} item={item} isActive={pathname.startsWith(item.href)} />
+        {filterNav(MANAGE_ITEMS).map((item) => (
+          <NavLink
+            key={item.href}
+            item={item}
+            isActive={pathname.startsWith(item.href)}
+            badge={item.href === "/listings/pending-reviews" ? pendingReviewCount : undefined}
+          />
         ))}
 
         <SectionLabel label="Tools" />
-        {filterAdmin(TOOLS_ITEMS).map((item) => (
+        {filterNav(TOOLS_ITEMS).map((item) => (
           <NavLink key={item.href} item={item} isActive={pathname.startsWith(item.href)} />
         ))}
       </nav>

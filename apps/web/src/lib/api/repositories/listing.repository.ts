@@ -6,6 +6,8 @@ import type {
   ListingListResponse,
   ListingListParams,
   ListingStatusChangeRequest,
+  SubmitForReviewRequest,
+  ReviewDecisionRequest,
 } from "@/lib/types/listing";
 
 export class ListingRepository extends BaseRepository<
@@ -52,6 +54,21 @@ export class ListingRepository extends BaseRepository<
 
   async changeStatus(id: string, body: ListingStatusChangeRequest): Promise<Listing> {
     const res = await this.client.patch<Listing>(`${this.basePath}/${id}/status`, body);
+    return res.data;
+  }
+
+  async submitForReview(id: string, body: SubmitForReviewRequest): Promise<Listing> {
+    const res = await this.client.post<Listing>(`${this.basePath}/${id}/submit-for-review`, body);
+    return res.data;
+  }
+
+  async reviewDecision(id: string, body: ReviewDecisionRequest): Promise<Listing> {
+    const res = await this.client.post<Listing>(`${this.basePath}/${id}/review-decision`, body);
+    return res.data;
+  }
+
+  async publishToMarket(id: string): Promise<Listing> {
+    const res = await this.client.post<Listing>(`${this.basePath}/${id}/publish`);
     return res.data;
   }
 }

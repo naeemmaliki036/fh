@@ -54,6 +54,7 @@ export function ListingsTable({ listings }: ListingsTableProps): ReactElement {
             <th className="px-4 py-2.5 text-left font-medium text-muted-foreground">Status</th>
             <th className="px-4 py-2.5 text-left font-medium text-muted-foreground">Tier</th>
             <th className="px-4 py-2.5 text-left font-medium text-muted-foreground">Created</th>
+            <th className="px-4 py-2.5 text-left font-medium text-muted-foreground w-16" />
           </tr>
         </thead>
         <tbody className="divide-y">
@@ -77,6 +78,14 @@ export function ListingsTable({ listings }: ListingsTableProps): ReactElement {
               <td className="px-4 py-2.5"><ListingStatusBadge status={l.status} /></td>
               <td className="px-4 py-2.5 capitalize text-muted-foreground">{l.listing_tier}</td>
               <td className="px-4 py-2.5 text-muted-foreground">{formatDate(l.created_at, "en")}</td>
+              <td className="px-4 py-2.5">
+                <Link
+                  href={`/listings/${l.id}/edit`}
+                  className="text-xs text-primary hover:underline"
+                >
+                  Edit
+                </Link>
+              </td>
             </tr>
           ))}
         </tbody>

@@ -20,6 +20,7 @@ export const queryKeys = {
     list: ["users", "list"] as const,
     detail: (id: string) => ["users", id] as const,
     me: ["users", "me"] as const,
+    eligibleReviewers: ["users", "eligible-reviewers"] as const,
   },
   agents: {
     all: ["agents"] as const,
@@ -46,6 +47,7 @@ export const queryKeys = {
     detail: (id: string) => ["listings", id] as const,
     priceHistory: (id: string) => ["listings", id, "price-history"] as const,
     documents: (id: string) => ["listings", id, "documents"] as const,
+    pendingReviews: (reviewerId: string) => ["listings", "pending-reviews", reviewerId] as const,
   },
   auditLogs: {
     forEntity: (entityType: string, entityId: string) =>

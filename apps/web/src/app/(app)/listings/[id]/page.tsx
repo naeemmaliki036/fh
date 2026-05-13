@@ -2,10 +2,11 @@
 
 import { use, useState } from "react";
 import Link from "next/link";
-import { ArrowLeft, DollarSign } from "lucide-react";
+import { ArrowLeft, DollarSign, Pencil, Rocket, ClipboardCheck } from "lucide-react";
 import { useListing } from "@/hooks/queries/useListings";
 import { useListingPriceHistory } from "@/hooks/queries/useListingPrice";
 import { useChangeListingStatus } from "@/hooks/mutations/useListingMutations";
+import { usePublishListing } from "@/hooks/mutations/useListingReviewMutations";
 import { ListingStatusBadge } from "@/components/atoms/ListingStatusBadge";
 import { ListingPurposeBadge } from "@/components/atoms/ListingPurposeBadge";
 import { PriceChangeBadge } from "@/components/atoms/PriceChangeBadge";
@@ -17,6 +18,7 @@ import { ListingPriceHistoryPanel } from "@/components/organisms/ListingPriceHis
 import { AuditTimelinePanel } from "@/components/organisms/AuditTimelinePanel";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Button } from "@/components/ui/button";
+import { useAuth } from "@/contexts/AuthContext";
 import {
   LISTING_PAUSED_REASONS,
   LISTING_ACTIVE_REASONS,
@@ -26,6 +28,8 @@ import {
   LISTING_OFF_MARKET_REASONS,
 } from "@/lib/constants/status-reasons";
 import type { ListingStatus } from "@/lib/types/listing";
+
+const REVIEWER_ROLES = new Set(["listing_manager", "company_admin", "company_owner"]);
 
 const LISTING_TRANSITIONS: Array<{
   fromStatuses: ListingStatus[];
@@ -56,10 +60,15 @@ interface PageProps {
 
 export default function ListingDetailPage({ params }: PageProps): React.ReactElement {
   const { id } = use(params);
+  const { currentUser } = useAuth();
   const { data: listing, isLoading, error } = useListing(id);
   const { data: priceHistory } = useListingPriceHistory(id);
   const { mutateAsync: changeStatus } = useChangeListingStatus(listing?.property_id ?? "");
+  const { mutateAsync: publish, isPending: publishing } = usePublishListing(id);
   const [showPriceModal, setShowPriceModal] = useState(false);
+
+  const isReviewer = !!currentUser && REVIEWER_ROLES.has(currentUser.role);
+  const isAssignedReviewer = isReviewer && listing?.assigned_reviewer_id === currentUser?.id;
 
   if (isLoading) {
     return <p className="text-sm text-muted-foreground p-6">Loading listing...</p>;
@@ -118,6 +127,45 @@ export default function ListingDetailPage({ params }: PageProps): React.ReactEle
                 <DollarSign className="h-3 w-3" />Change price
               </Button>
             </div>
+          </div>
+
+          {/* Status-contextual action buttons */}
+          <div className="flex gap-2 mt-3 flex-wrap">
+            {listing.status === "approved" && (
+              <Button
+                size="sm"
+                className="bg-emerald-600 hover:bg-emerald-700 text-white gap-1.5"
+                disabled={publishing}
+                onClick={() => publish()}
+              >
+                <Rocket className="h-3.5 w-3.5" />
+                {publishing ? "Publishing…" : "Publish to Market"}
+              </Button>
+            )}
+            {listing.status === "pending_review" && isAssignedReviewer && (
+              <Button asChild size="sm" variant="outline" className="gap-1.5">
+                <Link href={`/listings/${listing.id}/review`}>
+                  <ClipboardCheck className="h-3.5 w-3.5" />
+                  Review Now
+                </Link>
+              </Button>
+            )}
+            {listing.status === "changes_requested" && (
+              <Button asChild size="sm" variant="outline" className="gap-1.5">
+                <Link href={`/listings/${listing.id}/edit`}>
+                  <Pencil className="h-3.5 w-3.5" />
+                  Open in Editor to Revise
+                </Link>
+              </Button>
+            )}
+            {(listing.status === "draft" || listing.status === "changes_requested") && (
+              <Button asChild size="sm" variant="outline" className="gap-1.5">
+                <Link href={`/listings/${listing.id}/edit`}>
+                  <Pencil className="h-3.5 w-3.5" />
+                  Edit
+                </Link>
+              </Button>
+            )}
           </div>
         </div>
       </div>
