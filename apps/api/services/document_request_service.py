@@ -103,6 +103,7 @@ class DocumentRequestService(BaseService):
         self, tenant_id: UUID,
         status: DocumentRequestStatus | None, customer_id: UUID | None,
         skip: int, limit: int,
+        lead_id: UUID | None = None, deal_id: UUID | None = None,
     ) -> tuple[list[dict], int]:
         await self._set_rls(tenant_id)
         stmt = select(DocumentRequest).where(DocumentRequest.tenant_id == tenant_id)
@@ -110,6 +111,10 @@ class DocumentRequestService(BaseService):
             stmt = stmt.where(DocumentRequest.status == status)
         if customer_id:
             stmt = stmt.where(DocumentRequest.customer_id == customer_id)
+        if lead_id:
+            stmt = stmt.where(DocumentRequest.lead_id == lead_id)
+        if deal_id:
+            stmt = stmt.where(DocumentRequest.deal_id == deal_id)
         total = (await self.session.execute(
             select(func.count()).select_from(stmt.subquery())
         )).scalar_one()

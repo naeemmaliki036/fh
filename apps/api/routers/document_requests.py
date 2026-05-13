@@ -66,11 +66,16 @@ async def list_document_requests(
     tenant_id: TenantContext,
     status: DocumentRequestStatus | None = Query(None),
     customer_id: UUID | None = Query(None),
+    lead_id: UUID | None = Query(None),
+    deal_id: UUID | None = Query(None),
     skip: int = Query(0, ge=0),
     limit: int = Query(50, ge=1, le=200),
     svc: DocumentRequestService = Depends(_svc),
 ) -> DocumentRequestListResponse:
-    rows, total = await svc.list_requests(tenant_id, status, customer_id, skip, limit)
+    rows, total = await svc.list_requests(
+        tenant_id, status, customer_id, skip, limit,
+        lead_id=lead_id, deal_id=deal_id,
+    )
     return DocumentRequestListResponse(items=[_to_resp(r) for r in rows], total=total)
 
 
