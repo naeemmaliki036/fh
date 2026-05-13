@@ -45,7 +45,19 @@ logging.basicConfig(level=logging.INFO)
 @asynccontextmanager
 async def lifespan(app: FastAPI) -> AsyncIterator[None]:
     """Startup / shutdown lifecycle."""
-    yield
+    import asyncio
+
+    from apps.api.workers.email_worker import run_forever as run_email_worker
+
+    worker_task = asyncio.create_task(run_email_worker())
+    try:
+        yield
+    finally:
+        worker_task.cancel()
+        try:
+            await worker_task
+        except asyncio.CancelledError:
+            pass
 
 
 app = FastAPI(

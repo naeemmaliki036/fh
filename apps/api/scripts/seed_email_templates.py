@@ -147,6 +147,47 @@ _TEMPLATES: list[dict] = [
             "tenant_name",
         ],
     },
+    {
+        "key": "marketing_demo_request",
+        "name": "Marketing — Inbound Demo Request",
+        "subject": "New demo request from {full_name} ({company_name})",
+        "body_html": """<h2>New Demo Request</h2>
+<p>A visitor requested a demo from the AqarFlow marketing site.</p>
+<ul>
+  <li><strong>Name:</strong> {full_name}</li>
+  <li><strong>Company:</strong> {company_name}</li>
+  <li><strong>Email:</strong> {email}</li>
+  <li><strong>Phone:</strong> {phone}</li>
+  <li><strong>Country:</strong> {country}</li>
+  <li><strong>Team size:</strong> {team_size}</li>
+</ul>
+<p><strong>Message:</strong></p>
+<blockquote>{message}</blockquote>
+<p>Follow up within one business day.</p>""",
+        "body_text": (
+            "New demo request: {full_name} ({company_name}, {country}, team {team_size}). "
+            "Email: {email}, Phone: {phone}. Message: {message}"
+        ),
+        "variables": [
+            "full_name",
+            "company_name",
+            "email",
+            "phone",
+            "country",
+            "team_size",
+            "message",
+        ],
+    },
+    {
+        "key": "marketing_waitlist",
+        "name": "Marketing — Pricing Waitlist Signup",
+        "subject": "New pricing-waitlist signup: {email}",
+        "body_html": """<h2>New Waitlist Signup</h2>
+<p>A visitor joined the AqarFlow pricing waitlist.</p>
+<p><strong>Email:</strong> {email}</p>""",
+        "body_text": "New pricing-waitlist signup: {email}",
+        "variables": ["email"],
+    },
 ]
 
 
