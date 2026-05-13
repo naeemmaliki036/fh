@@ -22,8 +22,8 @@ export default function DashboardPage(): React.ReactElement {
   const { data: leadsData, isLoading: leadsLoading } = useLeads({ limit: 1 });
   const { data: propertiesData, isLoading: propsLoading } = useProperties({ limit: 1 });
   const { data: dealsData, isLoading: dealsLoading } = useDeals({ limit: 1 });
+  const { data: totalListingsData, isLoading: totalListingsLoading } = useListings({ limit: 1 });
   const { data: listingsData, isLoading: listingsLoading } = useListings({ status: "active", limit: 1 });
-  const { data: newLeadsData, isLoading: newLeadsLoading } = useLeads({ limit: 1 });
 
   const firstName = currentUser?.full_name?.split(" ")[0] ?? "there";
 
@@ -44,8 +44,8 @@ export default function DashboardPage(): React.ReactElement {
         <KpiCard
           label="Total Listings"
           sublabel="All time"
-          value={listingsData?.total}
-          isLoading={listingsLoading}
+          value={totalListingsData?.total}
+          isLoading={totalListingsLoading}
           icon={LayoutList}
           iconVariant="info"
         />
@@ -66,10 +66,10 @@ export default function DashboardPage(): React.ReactElement {
           iconVariant="warning"
         />
         <KpiCard
-          label="New This Week"
-          sublabel="Leads"
-          value={newLeadsData?.total}
-          isLoading={newLeadsLoading}
+          label="Total Properties"
+          sublabel="In inventory"
+          value={propertiesData?.total}
+          isLoading={propsLoading}
           icon={TrendingUp}
           iconVariant="info"
         />

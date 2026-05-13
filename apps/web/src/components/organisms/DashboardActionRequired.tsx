@@ -50,13 +50,6 @@ export function DashboardActionRequired(): React.ReactElement {
         )}
       </div>
 
-      {/* Placeholder rows for future overdue/task items */}
-      {/* TODO: replace with real overdue tasks from /tasks or /leads?overdue=true once endpoint exists */}
-      <div className="border-t border-slate-100 px-5 py-3">
-        <p className="text-xs text-slate-300 italic">
-          Overdue tasks will appear here — endpoint pending
-        </p>
-      </div>
     </div>
   );
 }

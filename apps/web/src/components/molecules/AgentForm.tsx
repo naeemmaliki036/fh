@@ -94,7 +94,7 @@ export function AgentForm({ defaultValues, isPending, submitLabel, onSubmit, onC
         </div>
         <div className="space-y-1.5">
           <Label>License Expiry</Label>
-          <Input type="date" {...register("license_expiry_at")} />
+          <Input type="date" min={defaultValues ? undefined : new Date().toISOString().slice(0, 10)} {...register("license_expiry_at")} />
         </div>
         <div className="space-y-1.5">
           <Label>Commission</Label>

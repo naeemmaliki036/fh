@@ -6,6 +6,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { MediaKindBadge } from "@/components/atoms/MediaKindBadge";
 import { useUpdateMedia, useDeleteMedia, useReorderMedia } from "@/hooks/mutations/useMediaMutations";
+import { ConfirmDialog } from "@/components/molecules/ConfirmDialog";
 import type { Media } from "@/lib/types/media";
 
 interface MediaCardProps {
@@ -66,7 +67,14 @@ export function MediaCard({ media, propertyId, isFirst, isLast, allIds }: MediaC
         <div className="flex gap-1 justify-end">
           <Button size="icon" variant="ghost" className="h-6 w-6" disabled={isFirst} onClick={() => move("up")}><ChevronUp className="h-3 w-3" /></Button>
           <Button size="icon" variant="ghost" className="h-6 w-6" disabled={isLast} onClick={() => move("down")}><ChevronDown className="h-3 w-3" /></Button>
-          <Button size="icon" variant="ghost" className="h-6 w-6" onClick={() => remove(media.id)} disabled={deleting}><Trash2 className="h-3 w-3 text-destructive" /></Button>
+          <ConfirmDialog
+            title="Remove media?"
+            description="This will permanently delete the file. This action cannot be undone."
+            confirmLabel="Remove"
+            variant="destructive"
+            onConfirm={() => remove(media.id)}
+            trigger={<Button size="icon" variant="ghost" className="h-6 w-6" disabled={deleting}><Trash2 className="h-3 w-3 text-destructive" /></Button>}
+          />
         </div>
       </div>
     </div>

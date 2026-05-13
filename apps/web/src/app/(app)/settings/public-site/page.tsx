@@ -20,7 +20,12 @@ const OWNER_ROLES = new Set(["company_owner", "company_admin"]);
 
 const baseSchema = z.object({
   public_site_enabled: z.boolean(),
-  public_site_logo_url: z.string().url("Must be a valid URL").or(z.literal("")).optional(),
+  public_site_logo_url: z
+    .string()
+    .url("Must be a valid URL")
+    .refine((u) => u.startsWith("https://"), "Must start with https://")
+    .or(z.literal(""))
+    .optional(),
   public_site_tagline: z.string().max(200, "Max 200 characters").optional(),
 });
 type BaseFormValues = z.infer<typeof baseSchema>;

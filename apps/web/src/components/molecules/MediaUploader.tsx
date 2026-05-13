@@ -38,6 +38,11 @@ export function MediaUploader({ propertyId }: MediaUploaderProps): React.ReactEl
     const f = e.target.files?.[0];
     setFileErr(null); setFile(null);
     if (!f) return;
+    const allowed = ["image/jpeg", "image/png", "image/webp", "video/mp4", "video/webm"];
+    if (!allowed.includes(f.type)) {
+      setFileErr("Unsupported file type — images (jpg/png/webp) and videos (mp4/webm) only");
+      return;
+    }
     if (f.size > MAX_BYTES) { setFileErr("Max 50 MB"); return; }
     setFile(f);
   };

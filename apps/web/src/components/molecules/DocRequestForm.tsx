@@ -52,7 +52,7 @@ export function DocRequestForm({ isPending, onSubmit, onCancel }: DocRequestForm
       title: title.trim(),
       instructions: instructions.trim() || null,
       items,
-      expires_in_days: parseInt(expiresInDays, 10) || 7,
+      expires_in_days: Math.max(1, Math.min(90, parseInt(expiresInDays, 10) || 7)),
     });
   };
 
