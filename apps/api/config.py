@@ -58,11 +58,6 @@ class Settings(BaseSettings):
     resend_api_key: str = ""
     email_from: str = "fh <onboarding@resend.dev>"
 
-    # Seeding
-    seed_superadmin_email: str = "admin@fhplatform.com"
-    seed_superadmin_password: str = "change-me"
-    seed_superadmin_name: str = "Super Admin"
-
     model_config = {
         "env_file": ".env",
         "env_file_encoding": "utf-8",

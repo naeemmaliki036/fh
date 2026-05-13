@@ -11,8 +11,9 @@
 
 ```bash
 openssl rand -hex 32   # JWT_SECRET_KEY
-openssl rand -base64 24  # SEED_SUPERADMIN_PASSWORD
 ```
+
+The first super_admin is **not** seeded from env. You'll create it interactively after the first deploy (see step 6).
 
 ## 1. Create the project
 
@@ -42,9 +43,6 @@ JWT_ACCESS_TTL_MIN=30
 JWT_REFRESH_TTL_DAYS=7
 CORS_ORIGINS=["https://<web-domain>.up.railway.app"]
 FRONTEND_BASE_URL=https://<web-domain>.up.railway.app
-SEED_SUPERADMIN_EMAIL=admin@yourdomain.com
-SEED_SUPERADMIN_PASSWORD=<paste openssl output>
-SEED_SUPERADMIN_NAME=Super Admin
 AWS_ACCESS_KEY_ID=...
 AWS_SECRET_ACCESS_KEY=...
 AWS_S3_BUCKET=fh-private-docs
@@ -86,13 +84,23 @@ Push to `main`. Railway builds both services in parallel.
 
 API startup runs `alembic upgrade head` automatically (CMD in `Dockerfile.api`).
 
-Seeding the super admin is **one-time, manual**:
+Creating the first super_admin is **one-time, manual, and interactive** — credentials are entered at the prompt and written straight to the database:
 
 ```bash
-railway run --service api python -m apps.api.scripts.seed
+railway run --service api python -m apps.api.scripts.create_superadmin
 ```
 
 (Requires `railway login` + `railway link` locally.)
+
+> Once created, super_admin rows are protected by a Postgres trigger that
+> blocks `DELETE` from any client (including the API). If you ever need to
+> remove one, you must disable the trigger in a direct DB session first:
+>
+> ```sql
+> ALTER TABLE platform_users DISABLE TRIGGER trg_block_super_admin_delete;
+> DELETE FROM platform_users WHERE email = '...';
+> ALTER TABLE platform_users ENABLE TRIGGER trg_block_super_admin_delete;
+> ```
 
 ## 7. Verify
 

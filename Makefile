@@ -1,4 +1,4 @@
-.PHONY: setup docker-up docker-down db-migrate db-makemigration db-seed kill-ports dev-api dev-web test-api test-web test lint typecheck dev
+.PHONY: setup docker-up docker-down db-migrate db-makemigration create-superadmin kill-ports dev-api dev-web test-api test-web test lint typecheck dev
 
 # ── Infrastructure ─────────────────────────────────────────────────────────────
 
@@ -21,8 +21,8 @@ db-makemigration:
 	@read -p "Migration message: " msg; \
 	alembic -c infra/alembic.ini revision --autogenerate -m "$$msg"
 
-db-seed:
-	python -m apps.api.scripts.seed
+create-superadmin:
+	python -m apps.api.scripts.create_superadmin
 
 # ── Bootstrap ──────────────────────────────────────────────────────────────────
 
@@ -56,6 +56,6 @@ setup:
 	@echo "Waiting for PostgreSQL..."
 	@sleep 5
 	$(MAKE) db-migrate
-	$(MAKE) db-seed
 	cd apps/web && npm install
-	@echo "Setup complete. Run 'make dev' to start API + web."
+	@echo "Setup complete. Bootstrap your super_admin: 'make create-superadmin'"
+	@echo "Then run 'make dev' to start API + web."
