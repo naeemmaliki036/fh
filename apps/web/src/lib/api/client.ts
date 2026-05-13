@@ -172,4 +172,15 @@ export const platformApiClient: AxiosInstance = buildClient(
 // Default export: tenant client (used by most repositories)
 export const apiClient = tenantApiClient;
 
+// Shared client for endpoints that accept either platform or tenant JWT
+// (AnyAuthUser dependency on the backend). Picks the platform token when
+// present, otherwise falls back to the tenant token.
+export const anyApiClient = new Proxy({} as AxiosInstance, {
+  get(_target, prop) {
+    const client = getPlatformToken() ? platformApiClient : tenantApiClient;
+    const value = (client as unknown as Record<string | symbol, unknown>)[prop as string];
+    return typeof value === "function" ? (value as (...a: unknown[]) => unknown).bind(client) : value;
+  },
+}) as AxiosInstance;
+
 export { API_BASE_URL };
