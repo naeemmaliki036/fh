@@ -13,6 +13,7 @@ import { PropertyStatusBadge } from "@/components/atoms/PropertyStatusBadge";
 import { PropertyTypeBadge } from "@/components/atoms/PropertyTypeBadge";
 import { StatusHeaderBar } from "@/components/molecules/StatusHeaderBar";
 import { AuditTimelinePanel } from "@/components/organisms/AuditTimelinePanel";
+import { PropertyDescriptionPanel } from "@/components/organisms/PropertyDescriptionPanel";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Button } from "@/components/ui/button";
 import {
@@ -101,6 +102,7 @@ export default function PropertyDetailPage({ params }: PageProps): React.ReactEl
       <Tabs defaultValue="overview">
         <TabsList>
           <TabsTrigger value="overview">Overview</TabsTrigger>
+          <TabsTrigger value="description">Description</TabsTrigger>
           <TabsTrigger value="media">Media ({property.media_count})</TabsTrigger>
           <TabsTrigger value="listings">Listings ({property.listing_count})</TabsTrigger>
           <TabsTrigger value="agents">Agents ({property.assigned_agents.length})</TabsTrigger>
@@ -109,6 +111,10 @@ export default function PropertyDetailPage({ params }: PageProps): React.ReactEl
 
         <TabsContent value="overview" className="pt-4">
           <PropertyOverviewPanel property={property} />
+        </TabsContent>
+
+        <TabsContent value="description" className="pt-4">
+          <PropertyDescriptionPanel property={property} />
         </TabsContent>
 
         <TabsContent value="media" className="pt-4">
