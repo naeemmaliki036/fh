@@ -64,12 +64,21 @@ export function DemoRequestForm(): React.ReactElement {
     resolver: zodResolver(demoSchema),
   });
 
-  async function onSubmit(_data: DemoFormValues): Promise<void> {
-    // TODO: wire to POST /api/marketing/demo-request
-    await new Promise<void>((resolve) => setTimeout(resolve, 800));
-    setSubmitted(true);
-    reset();
-    toast.success("Thanks! We'll be in touch within one business day.");
+  async function onSubmit(data: DemoFormValues): Promise<void> {
+    try {
+      const base = process.env.NEXT_PUBLIC_API_URL ?? "http://localhost:8000";
+      const res = await fetch(`${base}/marketing/demo-request`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(data),
+      });
+      if (!res.ok) throw new Error(`HTTP ${res.status}`);
+      setSubmitted(true);
+      reset();
+      toast.success("Thanks! We'll be in touch within one business day.");
+    } catch {
+      toast.error("Submission failed. Please try again or email us directly.");
+    }
   }
 
   if (submitted) {

@@ -10,13 +10,23 @@ function PricingCard(): React.ReactElement {
   const [email, setEmail] = useState("");
   const [submitted, setSubmitted] = useState(false);
 
-  function handleSubmit(e: React.FormEvent<HTMLFormElement>): void {
+  async function handleSubmit(e: React.FormEvent<HTMLFormElement>): Promise<void> {
     e.preventDefault();
     if (!email) return;
-    // TODO: wire to POST /api/marketing/early-access
-    setSubmitted(true);
-    setEmail("");
-    toast.success("You're on the list! We'll notify you when pricing is live.");
+    try {
+      const base = process.env.NEXT_PUBLIC_API_URL ?? "http://localhost:8000";
+      const res = await fetch(`${base}/marketing/waitlist`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ email }),
+      });
+      if (!res.ok) throw new Error(`HTTP ${res.status}`);
+      setSubmitted(true);
+      setEmail("");
+      toast.success("You're on the list! We'll notify you when pricing is live.");
+    } catch {
+      toast.error("Submission failed. Please try again.");
+    }
   }
 
   return (

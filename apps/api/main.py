@@ -28,6 +28,7 @@ from apps.api.routers import (
     listing_document_routes,
     listing_price_routes,
     listings,
+    marketing,
     media,
     notifications,
     platform_users,
@@ -126,6 +127,7 @@ app.include_router(tenant_public_site.router, prefix="/tenants/me/public-site", 
 app.include_router(notifications.router, prefix="/platform/notifications", tags=["notifications"])
 app.include_router(platform_users.router, prefix="/platform/users", tags=["platform"])
 app.include_router(audit_logs.router, prefix="/audit-logs", tags=["audit-logs"])
+app.include_router(marketing.router, prefix="/marketing", tags=["marketing"])
 app.include_router(email_templates.router, prefix="/admin/email-templates", tags=["email-templates"])
 app.include_router(email_outbox.router, prefix="/admin/email-outbox", tags=["email-outbox"])
 
