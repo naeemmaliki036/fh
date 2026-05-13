@@ -66,6 +66,11 @@ export function ListingDocumentsPanel({ listingId }: ListingDocumentsPanelProps)
     setSelectedFile(null);
     const f = e.target.files?.[0];
     if (!f) return;
+    const allowed = ["application/pdf", "image/png", "image/jpeg", "image/webp"];
+    if (!allowed.includes(f.type)) {
+      setFileErr("Only PDF or image files (png/jpg/webp) are allowed");
+      return;
+    }
     if (f.size > MAX_BYTES) {
       setFileErr("Max file size is 5 MB");
       return;
