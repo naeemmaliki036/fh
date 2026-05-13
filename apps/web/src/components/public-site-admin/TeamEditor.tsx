@@ -5,6 +5,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Button } from "@/components/ui/button";
 import { ToggleSwitch } from "@/components/ui/toggle-switch";
+import { ImageUploadField } from "@/components/molecules/ImageUploadField";
 import type { ConfigFormValues } from "./types";
 
 interface TeamEditorProps {
@@ -118,8 +119,14 @@ export function TeamEditor({ control }: TeamEditorProps): React.ReactElement {
               name={`team.members.${i}.photo_url`}
               render={({ field, fieldState }) => (
                 <div className="space-y-1">
-                  <Label className="text-xs">Photo URL (https)</Label>
-                  <Input {...field} value={field.value ?? ""} placeholder="https://example.com/photo.jpg" />
+                  <Label className="text-xs">Photo</Label>
+                  <ImageUploadField
+                    purpose="team_photo"
+                    label="photo"
+                    size="compact"
+                    value={field.value ?? null}
+                    onChange={(url) => field.onChange(url ?? null)}
+                  />
                   {fieldState.error && <p className="text-xs text-destructive">{fieldState.error.message}</p>}
                 </div>
               )}

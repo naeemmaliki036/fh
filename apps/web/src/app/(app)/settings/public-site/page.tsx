@@ -38,7 +38,7 @@ export default function PublicSiteSettingsPage(): React.ReactElement {
   const { data: settings, isLoading } = usePublicSiteSettings();
   const { mutate: save, isPending } = useUpdatePublicSiteSettings();
 
-  const { register, handleSubmit, setValue, watch, reset, formState: { errors } } =
+  const { register, handleSubmit, control, setValue, watch, reset, formState: { errors } } =
     useForm<BaseFormValues>({
       resolver: zodResolver(baseSchema),
       defaultValues: {

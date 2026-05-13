@@ -103,33 +103,47 @@ function LoadingSkeleton(): React.ReactElement {
 // ─── Bell trigger button ─────────────────────────────────────────────────────
 
 interface BellTriggerProps {
+  totalCount: number;
   unreadCount: number;
 }
 
-function BellTrigger({ unreadCount }: BellTriggerProps): React.ReactElement {
+function BellTrigger({ totalCount, unreadCount }: BellTriggerProps): React.ReactElement {
+  const hasItems = totalCount > 0;
+  const hasUnread = unreadCount > 0;
   return (
     <DropdownMenu.Trigger asChild>
       <button
         type="button"
-        aria-label={`Alerts${unreadCount > 0 ? `, ${unreadCount} unread` : ""}`}
+        aria-label={`Alerts${hasUnread ? `, ${unreadCount} unread` : ""}`}
         className={cn(
-          "relative inline-flex h-9 w-9 items-center justify-center rounded-md",
-          "text-muted-foreground transition-colors",
-          "hover:bg-accent hover:text-accent-foreground",
+          "relative inline-flex h-9 w-9 items-center justify-center rounded-md transition-colors",
           "focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring",
+          hasUnread
+            ? "bg-primary/10 text-primary hover:bg-primary/15"
+            : hasItems
+            ? "text-foreground hover:bg-accent hover:text-accent-foreground"
+            : "text-muted-foreground hover:bg-accent hover:text-accent-foreground",
         )}
       >
-        <Bell className="h-4 w-4" />
-        {unreadCount > 0 && (
+        <Bell className={cn("h-4 w-4", hasUnread && "fill-current/10")} />
+        {hasItems && (
           <span
             className={cn(
-              "absolute right-1 top-1 flex h-4 w-4 items-center justify-center",
-              "rounded-full bg-destructive text-[10px] font-bold",
-              "text-destructive-foreground leading-none",
+              "absolute -right-1 -top-1 flex h-[18px] min-w-[18px] items-center justify-center",
+              "rounded-full px-1 text-[10px] font-bold font-mono leading-none ring-2 ring-background",
+              hasUnread
+                ? "bg-destructive text-destructive-foreground"
+                : "bg-muted-foreground/80 text-background",
             )}
           >
-            {unreadCount > 99 ? "99+" : unreadCount}
+            {totalCount > 99 ? "99+" : totalCount}
           </span>
+        )}
+        {hasUnread && (
+          <span
+            aria-hidden="true"
+            className="absolute -right-1 -top-1 h-[18px] min-w-[18px] rounded-full bg-destructive/40 animate-ping"
+          />
         )}
       </button>
     </DropdownMenu.Trigger>
@@ -140,6 +154,7 @@ function BellTrigger({ unreadCount }: BellTriggerProps): React.ReactElement {
 
 export function NotificationsBell(): React.ReactElement {
   const { items, unreadCount, isLoading, markAllRead } = useAlertCenter();
+  const totalCount = items.length;
 
   const handleOpenChange = useCallback(
     (isOpen: boolean): void => {
@@ -152,7 +167,7 @@ export function NotificationsBell(): React.ReactElement {
 
   return (
     <DropdownMenu.Root onOpenChange={handleOpenChange}>
-      <BellTrigger unreadCount={unreadCount} />
+      <BellTrigger totalCount={totalCount} unreadCount={unreadCount} />
 
       <DropdownMenu.Portal>
         <DropdownMenu.Content
