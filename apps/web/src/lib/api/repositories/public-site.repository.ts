@@ -17,7 +17,7 @@ const publicHttp = axios.create({ baseURL: API_BASE, timeout: 30_000 });
 export const publicSiteRepository = {
   async getProfile(slug: string): Promise<PublicTenantProfile> {
     const res = await publicHttp.get<PublicTenantProfile>(
-      `/api/public/sites/${slug}`,
+      `/public/sites/${slug}`,
     );
     return res.data;
   },
@@ -27,7 +27,7 @@ export const publicSiteRepository = {
     params: PublicListingsParams = {},
   ): Promise<PublicListingListResponse> {
     const res = await publicHttp.get<PublicListingListResponse>(
-      `/api/public/sites/${slug}/listings`,
+      `/public/sites/${slug}/listings`,
       {
         params: {
           page: params.page ?? 1,
@@ -44,21 +44,21 @@ export const publicSiteRepository = {
 
   async getListing(slug: string, listingId: string): Promise<PublicListingDetail> {
     const res = await publicHttp.get<PublicListingDetail>(
-      `/api/public/sites/${slug}/listings/${listingId}`,
+      `/public/sites/${slug}/listings/${listingId}`,
     );
     return res.data;
   },
 
   async getAgents(slug: string): Promise<PublicAgentSnippet[]> {
     const res = await publicHttp.get<PublicAgentSnippet[]>(
-      `/api/public/sites/${slug}/agents`,
+      `/public/sites/${slug}/agents`,
     );
     return res.data;
   },
 
   async createLead(slug: string, data: PublicLeadCreate): Promise<PublicLeadResponse> {
     const res = await publicHttp.post<PublicLeadResponse>(
-      `/api/public/sites/${slug}/leads`,
+      `/public/sites/${slug}/leads`,
       data,
     );
     return res.data;
