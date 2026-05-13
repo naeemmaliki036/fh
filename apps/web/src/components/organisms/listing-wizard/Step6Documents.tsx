@@ -23,7 +23,7 @@ export function Step6Documents({ listingId }: Step6DocumentsProps): React.ReactE
           <div>
             <p className="text-sm font-medium text-muted-foreground">Documents unavailable</p>
             <p className="text-xs text-muted-foreground mt-0.5">
-              Save the listing first — you'll be redirected here to attach documents.
+              Save the listing first — you&apos;ll be redirected here to attach documents.
             </p>
           </div>
         </div>

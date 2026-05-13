@@ -35,7 +35,7 @@ export function WizardStatusBanner({ listing }: WizardStatusBannerProps): React.
             This listing has been approved
           </p>
           <p className="text-xs text-emerald-700 dark:text-emerald-400 mt-0.5">
-            Fields are read-only. Use "Publish to market" on the listing detail page.
+            Fields are read-only. Use &ldquo;Publish to market&rdquo; on the listing detail page.
           </p>
         </div>
       </div>

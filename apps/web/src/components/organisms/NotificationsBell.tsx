@@ -213,7 +213,7 @@ export function NotificationsBell(): React.ReactElement {
           <div className="border-t px-3 py-2">
             <DropdownMenu.Item asChild>
               <Link
-                href="/notifications"
+                href="/inbox"
                 className={cn(
                   "block text-center text-xs text-muted-foreground",
                   "underline-offset-2 hover:underline outline-none",

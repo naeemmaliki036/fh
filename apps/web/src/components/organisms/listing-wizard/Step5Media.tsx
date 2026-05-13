@@ -25,7 +25,7 @@ export function Step5Media({ listingId, propertyId, heroMediaId }: Step5MediaPro
           <div>
             <p className="text-sm font-medium text-muted-foreground">Media unavailable</p>
             <p className="text-xs text-muted-foreground mt-0.5">
-              Save the listing first — you'll be redirected here to upload media.
+              Save the listing first — you&apos;ll be redirected here to upload media.
             </p>
           </div>
         </div>

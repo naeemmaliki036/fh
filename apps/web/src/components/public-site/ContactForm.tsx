@@ -101,7 +101,7 @@ export function ContactForm({ slug, listingId, compact = false }: ContactFormPro
       <div className="rounded-[2rem] bg-white p-8 shadow-sm text-center space-y-4">
         <div className="text-4xl">&#10003;</div>
         <p className="text-lg font-bold text-slate-950">Message sent!</p>
-        <p className="text-sm text-slate-600">We'll get back to you shortly.</p>
+        <p className="text-sm text-slate-600">We&apos;ll get back to you shortly.</p>
         <button
           type="button"
           onClick={() => setSucceeded(false)}
