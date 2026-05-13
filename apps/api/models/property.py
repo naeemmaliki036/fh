@@ -15,8 +15,8 @@ for that migration.
 
 import uuid
 
-from sqlalchemy import Enum, ForeignKey, Numeric, SmallInteger, String, Text
-from sqlalchemy.dialects.postgresql import JSONB, UUID
+from sqlalchemy import Enum, ForeignKey, Numeric, SmallInteger, String, Text, text
+from sqlalchemy.dialects.postgresql import ARRAY, JSONB, UUID
 from sqlalchemy.orm import Mapped, mapped_column
 
 from packages.common.db.base import Base, TenantMixin, TimestampMixin, UUIDMixin
@@ -76,6 +76,13 @@ class Property(Base, UUIDMixin, TimestampMixin, TenantMixin):
         nullable=False,
         default=PropertyStatus.DRAFT,
         server_default=PropertyStatus.DRAFT.value,
+    )
+
+    # Freeform tags for search/filtering — e.g. ["sea_view", "ready_2025"].
+    tags: Mapped[list] = mapped_column(
+        ARRAY(Text),
+        nullable=False,
+        server_default=text("'{}'::text[]"),
     )
 
     created_by_user_id: Mapped[uuid.UUID | None] = mapped_column(

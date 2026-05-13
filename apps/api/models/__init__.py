@@ -6,6 +6,8 @@ from .customer import Customer
 from .deal import Deal
 from .document_request import DocumentRequest
 from .document_request_item import DocumentRequestItem
+from .email_outbox import EmailOutbox
+from .email_template import EmailTemplate
 from .enums import (
     AgentStatus,
     AuditAction,
@@ -35,6 +37,8 @@ from .enums import (
 from .lead import Lead
 from .lead_activity import LeadActivity
 from .listing import Listing
+from .listing_document import ListingDocument
+from .listing_price_history import ListingPriceHistory
 from .media import Media
 from .notification import Notification
 from .platform_user import PlatformUser
@@ -81,7 +85,11 @@ __all__ = [
     "Property",
     "PropertyAgent",
     "Listing",
+    "ListingDocument",
+    "ListingPriceHistory",
     "Media",
+    "EmailTemplate",
+    "EmailOutbox",
     "Lead",
     "LeadActivity",
     "DocumentRequest",

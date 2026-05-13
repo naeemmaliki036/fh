@@ -13,15 +13,21 @@ portal_sync_enabled is a Phase 2 trigger flag. Backend-dev will use it to
 decide whether to push this listing to configured portal connectors.
 """
 
+from __future__ import annotations
+
 import uuid
+from typing import TYPE_CHECKING
 
 from sqlalchemy import Boolean, Date, Enum, ForeignKey, Numeric, String, Text
 from sqlalchemy.dialects.postgresql import UUID
-from sqlalchemy.orm import Mapped, mapped_column
+from sqlalchemy.orm import Mapped, mapped_column, relationship
 
 from packages.common.db.base import Base, TenantMixin, TimestampMixin, UUIDMixin
 
 from .enums import ListingPurpose, ListingStatus, ListingTier, RentPeriod
+
+if TYPE_CHECKING:
+    from .media import Media
 
 _ev = lambda x: [e.value for e in x]  # noqa: E731
 
@@ -77,4 +83,17 @@ class Listing(Base, UUIDMixin, TimestampMixin, TenantMixin):
     # Phase 2: wired to portal connector sync jobs.
     portal_sync_enabled: Mapped[bool] = mapped_column(
         Boolean, nullable=False, default=False, server_default="false"
+    )
+
+    # Hero image — a pinned media record from the property's media gallery.
+    # NULL until explicitly set by the listing manager.
+    hero_media_id: Mapped[uuid.UUID | None] = mapped_column(
+        UUID(as_uuid=True),
+        ForeignKey("media.id", ondelete="SET NULL"),
+        nullable=True,
+    )
+    hero_media: Mapped[Media | None] = relationship(
+        "Media",
+        foreign_keys=[hero_media_id],
+        lazy="select",
     )

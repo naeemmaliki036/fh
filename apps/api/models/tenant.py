@@ -3,13 +3,16 @@
 Tenant deliberately does NOT use TenantMixin; it IS the tenant.
 approved_by_id is a soft FK to platform_users.id (no DB-level FK to avoid
 circular dependency in migration ordering — the service layer enforces this).
+suspended_by_platform_user_id has a DB-level FK to platform_users(id) with
+ON DELETE SET NULL (added in 0018).
+operating_countries is a Postgres TEXT[] column added in 0017.
 """
 
 import uuid
 from datetime import datetime
 
-from sqlalchemy import Boolean, Enum, String, Text, text
-from sqlalchemy.dialects.postgresql import JSONB, UUID
+from sqlalchemy import Boolean, Enum, ForeignKey, String, Text, text
+from sqlalchemy.dialects.postgresql import ARRAY, JSONB, UUID
 from sqlalchemy.orm import Mapped, mapped_column
 
 from packages.common.db.base import Base, TimestampMixin, UUIDMixin
@@ -92,6 +95,13 @@ class Tenant(Base, UUIDMixin, TimestampMixin):
         server_default=text("'{}'::jsonb"),
     )
 
+    # ISO 3166-1 alpha-2 country codes the tenant operates in.
+    operating_countries: Mapped[list] = mapped_column(
+        ARRAY(Text),
+        nullable=False,
+        server_default=text("ARRAY['AE']::text[]"),
+    )
+
     # Approval trail — nullable until a platform admin approves.
     approved_at: Mapped[datetime | None] = mapped_column(
         nullable=True,
@@ -100,4 +110,19 @@ class Tenant(Base, UUIDMixin, TimestampMixin):
     approved_by_id: Mapped[uuid.UUID | None] = mapped_column(
         UUID(as_uuid=True),
         nullable=True,
+    )
+
+    # Suspension audit trail — populated when status transitions to SUSPENDED.
+    suspended_at: Mapped[datetime | None] = mapped_column(
+        nullable=True,
+    )
+    suspended_reason: Mapped[str | None] = mapped_column(
+        Text,
+        nullable=True,
+    )
+    suspended_by_platform_user_id: Mapped[uuid.UUID | None] = mapped_column(
+        UUID(as_uuid=True),
+        ForeignKey("platform_users.id", ondelete="SET NULL"),
+        nullable=True,
+        index=True,
     )

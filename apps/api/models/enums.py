@@ -19,6 +19,7 @@ class PlatformRole(str, enum.Enum):
     SUPER_ADMIN = "super_admin"
     OPERATIONS_ADMIN = "operations_admin"
     FINANCE_ADMIN = "finance_admin"
+    SUPPORT_ADMIN = "support_admin"  # Added in migration 0024
 
 
 class TenantRole(str, enum.Enum):
