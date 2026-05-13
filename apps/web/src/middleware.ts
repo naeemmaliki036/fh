@@ -10,11 +10,19 @@ const PUBLIC_PATHS = [
   "/account-status",
   "/contact",
   "/p",
+  "/demo",
 ];
 
-const PLATFORM_PATHS = ["/tenants", "/notifications"];
+const PLATFORM_PATHS = [
+  "/tenants",
+  "/notifications",
+  "/users",
+  "/email-templates",
+  "/email-outbox",
+];
 
 function isPublicPath(pathname: string): boolean {
+  if (pathname === "/") return true;
   return PUBLIC_PATHS.some((p) => pathname.startsWith(p));
 }
 
