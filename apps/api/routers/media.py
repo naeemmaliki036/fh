@@ -1,4 +1,11 @@
-"""Media router — upload + management for property media."""
+"""Media router — upload + management for property media.
+
+Video uploads (kind=video) are additionally validated against per-listing caps:
+  - max 2 video media items per property
+  - max 25 MB per video
+  - MIME must be video/mp4 or video/webm
+These checks are delegated to ListingService.validate_video_upload().
+"""
 
 from uuid import UUID
 
@@ -12,6 +19,7 @@ from apps.api.schemas.media import (
     MediaResponse,
     MediaUpdateRequest,
 )
+from apps.api.services.listing_service import ListingService
 from apps.api.services.media_service import MediaService
 
 router = APIRouter()
@@ -19,6 +27,10 @@ router = APIRouter()
 
 def _svc(db: DbSession) -> MediaService:
     return MediaService(db)
+
+
+def _listing_svc(db: DbSession) -> ListingService:
+    return ListingService(db)
 
 
 def _to_resp(media, url: str) -> MediaResponse:
@@ -34,12 +46,19 @@ async def upload_media(
     kind: MediaKind = Form(MediaKind.IMAGE),
     alt_text: str | None = Form(None),
     svc: MediaService = Depends(_svc),
+    listing_svc: ListingService = Depends(_listing_svc),
 ) -> MediaResponse:
     data = await file.read()
+    mime = file.content_type or "application/octet-stream"
+
+    # Video-specific per-listing cap validation
+    if kind == MediaKind.VIDEO:
+        await listing_svc.validate_video_upload(property_id, tenant_id, data, mime)
+
     media, url = await svc.upload(
         property_id, tenant_id, current_user,
         data, file.filename or "upload",
-        file.content_type or "application/octet-stream",
+        mime,
         kind, alt_text=alt_text,
     )
     return _to_resp(media, url)

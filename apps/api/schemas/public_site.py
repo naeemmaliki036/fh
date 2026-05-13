@@ -40,6 +40,7 @@ class PublicTenantProfileResponse(BaseModel):
     tagline: str | None = None
     contact_email: str
     contact_phone: str
+    operating_countries: list[str] = Field(default_factory=lambda: ["AE"])
     stats: PublicTenantStats | None = None
     config: dict | None = None
 
@@ -63,6 +64,7 @@ class PublicListingItem(BaseModel):
     property_type: str
     primary_photo_url: str | None = None
     purpose: str
+    tags: list[str] = Field(default_factory=list)
 
 
 class PublicListingListResponse(BaseModel):
@@ -98,7 +100,9 @@ class PublicListingDetailResponse(BaseModel):
     address: str | None = None
     property_type: str
     amenities: list[Any] | None = None
+    tags: list[str] = Field(default_factory=list)
     media_urls: list[str] = Field(default_factory=list)
+    hero_media_url: str | None = None
     agent: PublicAgentSnippet | None = None
 
 

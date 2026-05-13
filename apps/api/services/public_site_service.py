@@ -28,6 +28,7 @@ from apps.api.models.property_agent import PropertyAgent
 from apps.api.models.tenant import Tenant
 from apps.api.services.audit_service import AuditService
 from apps.api.services.base import BaseService
+from fastapi import HTTPException
 from packages.common.storage import get_public_storage
 from packages.common.utils.error_handlers import not_found
 
@@ -51,10 +52,20 @@ class PublicSiteService(BaseService):
     # ------------------------------------------------------------------
 
     async def _resolve_tenant(self, slug: str) -> Tenant:
-        """Load tenant by slug; 404 if missing or site disabled."""
+        """Load tenant by slug; 404 if missing/disabled, 410 if suspended."""
         stmt = select(Tenant).where(Tenant.slug == slug)
         tenant = (await self.session.execute(stmt)).scalar_one_or_none()
-        if not tenant or not tenant.public_site_enabled or tenant.status != TenantStatus.ACTIVE:
+        if not tenant or not tenant.public_site_enabled:
+            raise not_found("Public site")
+        if tenant.status == TenantStatus.SUSPENDED:
+            raise HTTPException(
+                status_code=410,
+                detail={
+                    "detail": "site_offline",
+                    "reason": tenant.suspended_reason or "This site is temporarily unavailable.",
+                },
+            )
+        if tenant.status != TenantStatus.ACTIVE:
             raise not_found("Public site")
         return tenant
 
@@ -132,8 +143,21 @@ class PublicSiteService(BaseService):
         prop_ids = [prop.id for _, prop in rows]
         photo_map = await self._primary_photos_bulk(prop_ids)
 
+        # Fetch hero media URLs in one batch query
+        hero_keys: dict[UUID, str] = {}
+        hero_ids = [listing.hero_media_id for listing, _ in rows if listing.hero_media_id]
+        if hero_ids:
+            id_list = ", ".join(f"'{mid}'" for mid in hero_ids)
+            hero_rows = (
+                await self.session.execute(
+                    text(f"SELECT id, storage_key FROM media WHERE id IN ({id_list})")
+                )
+            ).all()
+            hero_keys = {row.id: _media_url(row.storage_key) for row in hero_rows}
+
         items = []
         for listing, prop in rows:
+            hero_url = hero_keys.get(listing.hero_media_id) if listing.hero_media_id else None
             items.append({
                 "id": listing.id,
                 "title": listing.title,
@@ -144,8 +168,9 @@ class PublicSiteService(BaseService):
                 "area_sqft": float(prop.size_sqft) if prop.size_sqft else None,
                 "address": prop.address_line,
                 "property_type": prop.property_type.value,
-                "primary_photo_url": photo_map.get(prop.id),
+                "primary_photo_url": hero_url or photo_map.get(prop.id),
                 "purpose": listing.purpose.value,
+                "tags": prop.tags or [],
             })
         return {"items": items, "total": total, "page": page, "page_size": page_size}
 
@@ -176,6 +201,13 @@ class PublicSiteService(BaseService):
 
         agent_data = await self._get_primary_agent(prop.id, tid)
 
+        # Hero media URL
+        hero_url: str | None = None
+        if listing.hero_media_id:
+            hero_m = await self.session.get(Media, listing.hero_media_id)
+            if hero_m:
+                hero_url = _media_url(hero_m.storage_key)
+
         return {
             "id": listing.id,
             "title": listing.title,
@@ -189,7 +221,9 @@ class PublicSiteService(BaseService):
             "address": prop.address_line,
             "property_type": prop.property_type.value,
             "amenities": prop.amenities or [],
+            "tags": prop.tags or [],
             "media_urls": media_urls,
+            "hero_media_url": hero_url,
             "agent": agent_data,
         }
 

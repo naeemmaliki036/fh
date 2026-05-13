@@ -4,9 +4,32 @@ import uuid
 from datetime import datetime
 from decimal import Decimal
 
-from pydantic import BaseModel, ConfigDict
+from pydantic import BaseModel, ConfigDict, field_validator
 
 from apps.api.models.enums import PropertyStatus, PropertyType
+
+
+def _validate_tags(v: list[str] | None) -> list[str] | None:
+    """Dedupe case-insensitively (preserve first occurrence), strip, max 5, each 1-30 chars."""
+    if v is None:
+        return v
+    stripped = [t.strip() for t in v]
+    for t in stripped:
+        if not t:
+            raise ValueError("Tag must not be empty after stripping whitespace")
+        if len(t) > 30:
+            raise ValueError(f"Tag '{t}' exceeds 30 character limit")
+    # dedupe: preserve first occurrence, case-insensitive
+    seen: set[str] = set()
+    deduped: list[str] = []
+    for t in stripped:
+        key = t.lower()
+        if key not in seen:
+            seen.add(key)
+            deduped.append(t)
+    if len(deduped) > 5:
+        raise ValueError("Maximum 5 tags allowed")
+    return deduped
 
 
 class PropertyAgentResponse(BaseModel):
@@ -44,6 +67,12 @@ class PropertyCreateRequest(BaseModel):
     amenities: list[str] | None = None
     internal_reference: str | None = None
     agent_ids: list[uuid.UUID] | None = None
+    tags: list[str] | None = None
+
+    @field_validator("tags", mode="before")
+    @classmethod
+    def validate_tags(cls, v: list[str] | None) -> list[str] | None:
+        return _validate_tags(v)
 
 
 class PropertyUpdateRequest(BaseModel):
@@ -63,7 +92,13 @@ class PropertyUpdateRequest(BaseModel):
     longitude: Decimal | None = None
     amenities: list[str] | None = None
     internal_reference: str | None = None
+    tags: list[str] | None = None
     # status intentionally omitted — use PATCH /{id}/status (audited)
+
+    @field_validator("tags", mode="before")
+    @classmethod
+    def validate_tags(cls, v: list[str] | None) -> list[str] | None:
+        return _validate_tags(v)
 
 
 class PropertyResponse(BaseModel):
@@ -87,6 +122,7 @@ class PropertyResponse(BaseModel):
     amenities: list[str] | None = None
     internal_reference: str | None = None
     status: PropertyStatus
+    tags: list[str] = []
     assigned_agents: list[PropertyAgentResponse] = []
     media_count: int = 0
     listing_count: int = 0

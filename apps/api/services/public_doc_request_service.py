@@ -9,6 +9,7 @@ bypasses RLS automatically — safe for Phase 1.
 from datetime import UTC, datetime
 from uuid import UUID
 
+from fastapi import HTTPException
 from sqlalchemy import select, text
 from sqlalchemy.ext.asyncio import AsyncSession
 
@@ -19,6 +20,7 @@ from apps.api.models.enums import (
     AuditAction,
     DocumentRequestStatus,
     PrivateDocumentEntityType,
+    TenantStatus,
 )
 from apps.api.models.tenant import Tenant
 from apps.api.services.audit_service import AuditService
@@ -65,6 +67,14 @@ class PublicDocRequestService(BaseService):
             raise not_found("Document request")
         await self._check_and_expire(dr)
         tenant = await self.session.get(Tenant, dr.tenant_id)
+        if tenant and tenant.status == TenantStatus.SUSPENDED:
+            raise HTTPException(
+                status_code=410,
+                detail={
+                    "detail": "site_offline",
+                    "reason": tenant.suspended_reason or "This site is temporarily unavailable.",
+                },
+            )
         items = await self._get_items(dr.id)
         return {"request": dr, "tenant_name": tenant.name if tenant else "", "items": items, "verified": verified}
 

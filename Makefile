@@ -1,4 +1,4 @@
-.PHONY: setup docker-up docker-down db-migrate db-makemigration create-superadmin kill-ports dev-api dev-web test-api test-web test lint typecheck dev
+.PHONY: setup docker-up docker-down db-migrate db-makemigration create-superadmin seed-email-templates kill-ports dev-api dev-web test-api test-web test lint typecheck dev
 
 # ── Infrastructure ─────────────────────────────────────────────────────────────
 
@@ -23,6 +23,9 @@ db-makemigration:
 
 create-superadmin:
 	python -m apps.api.scripts.create_superadmin
+
+seed-email-templates:
+	python -m apps.api.scripts.seed_email_templates
 
 # ── Bootstrap ──────────────────────────────────────────────────────────────────
 

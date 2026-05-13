@@ -14,16 +14,22 @@ from starlette.exceptions import HTTPException as StarletteHTTPException
 from apps.api.config import settings
 from apps.api.middleware.logging import LoggingMiddleware
 from apps.api.middleware.security_headers import SecurityHeadersMiddleware
+from apps.api.middleware.tenant_suspension import TenantSuspensionMiddleware
 from apps.api.routers import (
     agents,
     auth,
     customers,
     deals,
     document_requests,
+    email_outbox,
+    email_templates,
     leads,
+    listing_document_routes,
+    listing_price_routes,
     listings,
     media,
     notifications,
+    platform_users,
     properties,
     tenants,
     users,
@@ -52,6 +58,7 @@ app = FastAPI(
 # ---------------------------------------------------------------------------
 app.add_middleware(SecurityHeadersMiddleware)
 app.add_middleware(LoggingMiddleware)
+app.add_middleware(TenantSuspensionMiddleware)
 app.add_middleware(
     CORSMiddleware,
     allow_origins=settings.cors_origins,
@@ -108,12 +115,17 @@ app.include_router(leads.router, prefix="/leads", tags=["leads"])
 app.include_router(deals.router, prefix="/deals", tags=["deals"])
 app.include_router(properties.router, prefix="/properties", tags=["properties"])
 app.include_router(listings.router, prefix="", tags=["listings"])
+app.include_router(listing_price_routes.router, prefix="", tags=["listings"])
+app.include_router(listing_document_routes.router, prefix="", tags=["listings"])
 app.include_router(media.router, prefix="", tags=["media"])
 app.include_router(document_requests.router, prefix="/document-requests", tags=["document-requests"])
 app.include_router(public_document_requests.router, prefix="/public/document-requests", tags=["public"])
 app.include_router(public_site.router, prefix="/public/sites", tags=["public"])
 app.include_router(tenant_public_site.router, prefix="/tenants/me/public-site", tags=["tenants"])
 app.include_router(notifications.router, prefix="/platform/notifications", tags=["notifications"])
+app.include_router(platform_users.router, prefix="/platform/users", tags=["platform"])
+app.include_router(email_templates.router, prefix="/admin/email-templates", tags=["email-templates"])
+app.include_router(email_outbox.router, prefix="/admin/email-outbox", tags=["email-outbox"])
 
 
 @app.get("/health", tags=["health"])

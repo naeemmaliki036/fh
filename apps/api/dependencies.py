@@ -160,8 +160,35 @@ async def get_request_context(request: Request) -> RequestContext:
     return RequestContext(ip_address=ip, user_agent=ua)
 
 
+async def get_any_authenticated_user(
+    credentials: Annotated[HTTPAuthorizationCredentials | None, Depends(_bearer)],
+) -> dict:
+    """Accept both platform and tenant tokens.
+
+    Returns the same shape as get_current_user / get_current_platform_user with
+    is_platform flag set appropriately. Use where an endpoint must serve both
+    platform admins and tenant users (e.g. shared admin panels).
+    """
+    payload = _extract_payload(credentials)
+    if payload.get("type") != "access":
+        raise HTTPException(
+            status_code=status.HTTP_401_UNAUTHORIZED,
+            detail="Invalid token type",
+            headers={"WWW-Authenticate": "Bearer"},
+        )
+    is_platform = bool(payload.get("is_platform"))
+    return {
+        "id": payload["sub"],
+        "tenant_id": payload.get("tenant_id"),
+        "email": payload.get("email", ""),
+        "role": payload.get("role"),
+        "is_platform": is_platform,
+    }
+
+
 # Annotated aliases for routers
 CurrentUser = Annotated[dict, Depends(get_current_user)]
 CurrentPlatformUser = Annotated[dict, Depends(get_current_platform_user)]
+AnyAuthUser = Annotated[dict, Depends(get_any_authenticated_user)]
 TenantContext = Annotated[UUID, Depends(get_tenant_context)]
 ReqCtx = Annotated[RequestContext, Depends(get_request_context)]

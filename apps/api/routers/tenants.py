@@ -2,21 +2,38 @@
 
 Route order matters: literal paths (/me) must be registered before
 parameterised paths (/{tenant_id}) to prevent FastAPI matching 'me' as a UUID.
+
+RBAC is enforced per-endpoint via require_platform_role().
 """
 
+from typing import Annotated
 from uuid import UUID
 
 from fastapi import APIRouter, Depends, Query
 
 from apps.api.dependencies import (
-    CurrentPlatformUser,
     CurrentUser,
     DbSession,
     ReqCtx,
     TenantContext,
 )
-from apps.api.models.enums import TenantStatus
-from apps.api.schemas.tenant import TenantListResponse, TenantResponse, TenantUpdateRequest
+from apps.api.models.enums import PlatformRole, TenantStatus
+from apps.api.schemas.tenant import (
+    TenantApproveRequest,
+    TenantDetailResponse,
+    TenantListResponse,
+    TenantReactivateRequest,
+    TenantRejectRequest,
+    TenantResponse,
+    TenantSuspendRequest,
+    TenantUpdateRequest,
+)
+from apps.api.security.platform_roles import (
+    ALL_PLATFORM_ROLES,
+    OPS_AND_ABOVE,
+    require_platform_role,
+)
+from apps.api.services.tenant_detail_service import TenantDetailService
 from apps.api.services.tenant_service import TenantService
 
 router = APIRouter()
@@ -24,6 +41,16 @@ router = APIRouter()
 
 def _svc(db: DbSession) -> TenantService:
     return TenantService(db)
+
+
+def _detail_svc(db: DbSession) -> TenantDetailService:
+    return TenantDetailService(db)
+
+
+# Annotated shortcut types for RBAC deps
+_AllPlatformRoles = Annotated[dict, Depends(require_platform_role(*ALL_PLATFORM_ROLES))]
+_OpsAndAbove = Annotated[dict, Depends(require_platform_role(*OPS_AND_ABOVE))]
+_SuperOnly = Annotated[dict, Depends(require_platform_role(PlatformRole.SUPER_ADMIN))]
 
 
 # ------------------------------------------------------------------
@@ -58,52 +85,79 @@ async def update_my_tenant(
         timezone_=updates.get("timezone"),
         locale=updates.get("locale"),
         default_properties_view=updates.get("default_properties_view"),
+        operating_countries=updates.get("operating_countries"),
         ip_address=ctx.ip_address,
         user_agent=ctx.user_agent,
     )
 
 
 # ------------------------------------------------------------------
-# Platform-admin endpoints
+# Platform-admin list + detail
 # ------------------------------------------------------------------
 
 
 @router.get("", response_model=TenantListResponse)
 async def list_tenants(
-    _: CurrentPlatformUser,
+    _platform_user: _AllPlatformRoles,
     status: TenantStatus | None = Query(None),
     svc: TenantService = Depends(_svc),
 ) -> TenantListResponse:
-    """List all tenants (platform admin only)."""
+    """List all tenants (all platform roles)."""
     items, total = await svc.list_tenants(status=status)
     return TenantListResponse(items=items, total=total)  # type: ignore[arg-type]
 
 
-@router.get("/{tenant_id}", response_model=TenantResponse)
-async def get_tenant(
+@router.get("/{tenant_id}", response_model=TenantDetailResponse)
+async def get_tenant_detail(
     tenant_id: UUID,
-    current_user: CurrentUser,
-    svc: TenantService = Depends(_svc),
-) -> TenantResponse:
-    """Get tenant by ID. Tenant users can only access their own."""
-    token_tid = current_user.get("tenant_id")
-    if token_tid and UUID(token_tid) != tenant_id:
-        from packages.common.utils.error_handlers import forbidden
-        raise forbidden("Cannot access another tenant's data")
-    return await svc.get_tenant(tenant_id)  # type: ignore[return-value]
+    _platform_user: _AllPlatformRoles,
+    svc: TenantDetailService = Depends(_detail_svc),
+) -> TenantDetailResponse:
+    """Rich tenant detail for admin portal (all platform roles)."""
+    detail = await svc.get_detail(tenant_id)
+    return TenantDetailResponse(
+        tenant=detail["tenant"],  # type: ignore[arg-type]
+        counts=detail["counts"],  # type: ignore[arg-type]
+        recent_activity=detail["recent_activity"],  # type: ignore[arg-type]
+        subscription_info=detail["subscription_info"],  # type: ignore[arg-type]
+    )
+
+
+# ------------------------------------------------------------------
+# Lifecycle actions — super/operations only
+# ------------------------------------------------------------------
 
 
 @router.post("/{tenant_id}/approve", response_model=TenantResponse)
 async def approve_tenant(
     tenant_id: UUID,
-    current_platform: CurrentPlatformUser,
+    _body: TenantApproveRequest,
+    platform_user: _OpsAndAbove,
     ctx: ReqCtx,
     svc: TenantService = Depends(_svc),
 ) -> TenantResponse:
-    """Approve a pending tenant (platform admin only)."""
+    """Approve a pending tenant (super/operations admin)."""
     return await svc.approve_tenant(  # type: ignore[return-value]
         tenant_id,
-        UUID(current_platform["id"]),
+        UUID(platform_user["id"]),
+        ip_address=ctx.ip_address,
+        user_agent=ctx.user_agent,
+    )
+
+
+@router.post("/{tenant_id}/reject", response_model=TenantResponse)
+async def reject_tenant(
+    tenant_id: UUID,
+    body: TenantRejectRequest,
+    platform_user: _OpsAndAbove,
+    ctx: ReqCtx,
+    svc: TenantService = Depends(_svc),
+) -> TenantResponse:
+    """Reject a pending_approval tenant (super/operations admin)."""
+    return await svc.reject_tenant(  # type: ignore[return-value]
+        tenant_id,
+        UUID(platform_user["id"]),
+        reason_note=body.reason_note,
         ip_address=ctx.ip_address,
         user_agent=ctx.user_agent,
     )
@@ -112,14 +166,34 @@ async def approve_tenant(
 @router.post("/{tenant_id}/suspend", response_model=TenantResponse)
 async def suspend_tenant(
     tenant_id: UUID,
-    current_platform: CurrentPlatformUser,
+    body: TenantSuspendRequest,
+    platform_user: _OpsAndAbove,
     ctx: ReqCtx,
     svc: TenantService = Depends(_svc),
 ) -> TenantResponse:
-    """Suspend an active tenant (platform admin only)."""
+    """Suspend an active tenant (super/operations admin)."""
     return await svc.suspend_tenant(  # type: ignore[return-value]
         tenant_id,
-        actor_id=UUID(current_platform["id"]),
+        actor_id=UUID(platform_user["id"]),
+        reason_note=body.reason_note,
+        ip_address=ctx.ip_address,
+        user_agent=ctx.user_agent,
+    )
+
+
+@router.post("/{tenant_id}/reactivate", response_model=TenantResponse)
+async def reactivate_tenant(
+    tenant_id: UUID,
+    body: TenantReactivateRequest,
+    platform_user: _OpsAndAbove,
+    ctx: ReqCtx,
+    svc: TenantService = Depends(_svc),
+) -> TenantResponse:
+    """Reactivate a suspended tenant (super/operations admin)."""
+    return await svc.reactivate_tenant(  # type: ignore[return-value]
+        tenant_id,
+        UUID(platform_user["id"]),
+        reason_note=body.reason_note,
         ip_address=ctx.ip_address,
         user_agent=ctx.user_agent,
     )

@@ -62,6 +62,7 @@ async def get_public_profile(
         tagline=tenant.public_site_tagline,
         contact_email=tenant.contact_email,
         contact_phone=tenant.contact_phone,
+        operating_countries=tenant.operating_countries or ["AE"],
         stats=PublicTenantStats(**stats_data),
         config=tenant.public_site_config or {},
     )

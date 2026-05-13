@@ -88,6 +88,25 @@ class AuditAction(str, enum.Enum):
     LISTING_STATUS_CHANGED = "listing_status_changed"
     PROPERTY_STATUS_CHANGED = "property_status_changed"
 
+    # Property / listing field changes
+    PROPERTY_TAGS_CHANGED = "property_tags_changed"
+    LISTING_PRICE_CHANGED = "listing_price_changed"
+    LISTING_HERO_MEDIA_SET = "listing_hero_media_set"
+
+    # Listing document events
+    LISTING_DOCUMENT_UPLOADED = "listing_document_uploaded"
+    LISTING_DOCUMENT_DELETED = "listing_document_deleted"
+
+    # Tenant lifecycle — extended
+    TENANT_REACTIVATED = "tenant_reactivated"
+    TENANT_REJECTED = "tenant_rejected"
+
+    # Platform user management
+    PLATFORM_USER_CREATED = "platform_user_created"
+    PLATFORM_USER_UPDATED = "platform_user_updated"
+    PLATFORM_USER_ROLE_CHANGED = "platform_user_role_changed"
+    PLATFORM_USER_PASSWORD_RESET = "platform_user_password_reset"
+
     # Catch-all for ad-hoc events
     OTHER = "other"
 

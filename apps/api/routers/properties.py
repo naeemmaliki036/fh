@@ -1,5 +1,6 @@
 """Properties router — Property CRUD + Property↔Agent assignments."""
 
+from datetime import date
 from uuid import UUID
 
 from fastapi import APIRouter, Depends, Query
@@ -49,16 +50,57 @@ async def list_properties(
     tenant_id: TenantContext,
     status: PropertyStatus | None = Query(None),
     property_type: PropertyType | None = Query(None),
+    country: str | None = Query(None),
     city: str | None = Query(None),
     area: str | None = Query(None),
+    assigned_agent_id: UUID | None = Query(None),
+    min_price: float | None = Query(None, ge=0),
+    max_price: float | None = Query(None, ge=0),
+    currency: str | None = Query(None, max_length=8),
+    min_bedrooms: int | None = Query(None, ge=0),
+    max_bedrooms: int | None = Query(None, ge=0),
+    min_bathrooms: int | None = Query(None, ge=0),
+    max_bathrooms: int | None = Query(None, ge=0),
+    min_size_sqft: float | None = Query(None, ge=0),
+    max_size_sqft: float | None = Query(None, ge=0),
+    tags: str | None = Query(None, description="CSV of tags; row must have ALL"),
+    created_from: date | None = Query(None),
+    created_to: date | None = Query(None),
+    has_listing: bool | None = Query(None),
     q: str | None = Query(None),
+    sort_by: str = Query("created_at", pattern="^(created_at|updated_at|price|title)$"),
+    sort_dir: str = Query("desc", pattern="^(asc|desc)$"),
     skip: int = Query(0, ge=0),
     limit: int = Query(50, ge=1, le=200),
     svc: PropertyService = Depends(_prop_svc),
 ) -> PropertyListResponse:
+    tag_list = [t.strip() for t in tags.split(",") if t.strip()] if tags else None
     items, total = await svc.list_properties(
-        tenant_id, status=status, property_type=property_type,
-        city=city, area=area, q=q, skip=skip, limit=limit,
+        tenant_id,
+        status=status,
+        property_type=property_type,
+        country=country,
+        city=city,
+        area=area,
+        assigned_agent_id=assigned_agent_id,
+        min_price=min_price,
+        max_price=max_price,
+        currency=currency,
+        min_bedrooms=min_bedrooms,
+        max_bedrooms=max_bedrooms,
+        min_bathrooms=min_bathrooms,
+        max_bathrooms=max_bathrooms,
+        min_size_sqft=min_size_sqft,
+        max_size_sqft=max_size_sqft,
+        tags=tag_list,
+        created_from=created_from,
+        created_to=created_to,
+        has_listing=has_listing,
+        q=q,
+        sort_by=sort_by,
+        sort_dir=sort_dir,
+        skip=skip,
+        limit=limit,
     )
     return PropertyListResponse(items=[_to_response(d) for d in items], total=total)
 

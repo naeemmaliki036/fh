@@ -13,7 +13,7 @@ from packages.common.storage import get_public_storage
 from packages.common.utils.error_handlers import bad_request, forbidden, not_found
 
 _MAX_IMAGE = 15 * 1024 * 1024
-_MAX_VIDEO = 200 * 1024 * 1024
+_MAX_VIDEO = 25 * 1024 * 1024   # 25 MB per video (listing cap)
 _MAX_PDF = 25 * 1024 * 1024
 
 _MIME_LIMITS: dict[str, int] = {
@@ -21,6 +21,7 @@ _MIME_LIMITS: dict[str, int] = {
     "image/png": _MAX_IMAGE,
     "image/webp": _MAX_IMAGE,
     "video/mp4": _MAX_VIDEO,
+    "video/webm": _MAX_VIDEO,
     "application/pdf": _MAX_PDF,
 }
 _MIME_KINDS: dict[str, set[MediaKind]] = {
@@ -28,6 +29,7 @@ _MIME_KINDS: dict[str, set[MediaKind]] = {
     "image/png": {MediaKind.IMAGE, MediaKind.FLOORPLAN},
     "image/webp": {MediaKind.IMAGE},
     "video/mp4": {MediaKind.VIDEO},
+    "video/webm": {MediaKind.VIDEO},
     "application/pdf": {MediaKind.FLOORPLAN, MediaKind.BROCHURE},
 }
 _MANAGER_ROLES = {

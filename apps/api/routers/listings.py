@@ -1,10 +1,13 @@
 """Listings router — CRUD + lifecycle under /properties/{id}/listings and /listings/{id}."""
 
+from datetime import date
 from uuid import UUID
 
-from fastapi import APIRouter, Depends
+from fastapi import APIRouter, Depends, Query
 
 from apps.api.dependencies import CurrentUser, DbSession, ReqCtx, TenantContext
+from apps.api.models.enums import ListingPurpose, ListingStatus, ListingTier
+from apps.api.models.listing import Listing
 from apps.api.schemas.listing import (
     ListingCreateRequest,
     ListingListResponse,
@@ -13,12 +16,31 @@ from apps.api.schemas.listing import (
 )
 from apps.api.schemas.status_change import ListingStatusChangeRequest
 from apps.api.services.listing_service import ListingService
+from packages.common.storage import get_public_storage
 
 router = APIRouter()
 
 
 def _svc(db: DbSession) -> ListingService:
     return ListingService(db)
+
+
+def _hero_url(listing: Listing) -> str | None:
+    """Assemble CDN URL for hero_media if loaded."""
+    m = listing.hero_media
+    if m is None:
+        return None
+    storage = get_public_storage()
+    if storage.public_base_url:
+        return f"{storage.public_base_url}/{m.storage_key}"
+    return f"/_local-public/{m.storage_key}"
+
+
+def _to_resp(listing: Listing) -> ListingResponse:
+    return ListingResponse.model_validate({
+        **listing.__dict__,
+        "hero_media_url": _hero_url(listing),
+    })
 
 
 # ------------------------------------------------------------------
@@ -32,10 +54,7 @@ async def list_listings(
     svc: ListingService = Depends(_svc),
 ) -> ListingListResponse:
     items, total = await svc.list_for_property(property_id, tenant_id)
-    return ListingListResponse(
-        items=[ListingResponse.model_validate(listing) for listing in items],
-        total=total,
-    )
+    return ListingListResponse(items=[_to_resp(l) for l in items], total=total)
 
 
 @router.post("/properties/{property_id}/listings", response_model=ListingResponse, status_code=201)
@@ -48,12 +67,61 @@ async def create_listing(
 ) -> ListingResponse:
     fields = body.model_dump()
     listing = await svc.create_listing(property_id, tenant_id, current_user, **fields)
-    return ListingResponse.model_validate(listing)
+    return _to_resp(listing)
 
 
 # ------------------------------------------------------------------
 # Flat /listings endpoints
 # ------------------------------------------------------------------
+
+@router.get("/listings", response_model=ListingListResponse)
+async def list_all_listings(
+    tenant_id: TenantContext,
+    status: ListingStatus | None = Query(None),
+    purpose: ListingPurpose | None = Query(None),
+    listing_tier: ListingTier | None = Query(None),
+    assigned_agent_id: UUID | None = Query(None),
+    min_price: float | None = Query(None, ge=0),
+    max_price: float | None = Query(None, ge=0),
+    currency: str | None = Query(None, max_length=8),
+    country: str | None = Query(None),
+    city: str | None = Query(None),
+    area: str | None = Query(None),
+    created_from: date | None = Query(None),
+    created_to: date | None = Query(None),
+    valid_from_to: date | None = Query(None, description="Listings whose valid_from <= this date"),
+    valid_until_from: date | None = Query(None, description="Listings whose valid_until >= this date"),
+    q: str | None = Query(None),
+    sort_by: str = Query("created_at", pattern="^(created_at|updated_at|price|title)$"),
+    sort_dir: str = Query("desc", pattern="^(asc|desc)$"),
+    skip: int = Query(0, ge=0),
+    limit: int = Query(50, ge=1, le=200),
+    svc: ListingService = Depends(_svc),
+) -> ListingListResponse:
+    items, total = await svc.list_listings(
+        tenant_id,
+        status=status,
+        purpose=purpose,
+        listing_tier=listing_tier,
+        assigned_agent_id=assigned_agent_id,
+        min_price=min_price,
+        max_price=max_price,
+        currency=currency,
+        country=country,
+        city=city,
+        area=area,
+        created_from=created_from,
+        created_to=created_to,
+        valid_from_to=valid_from_to,
+        valid_until_from=valid_until_from,
+        q=q,
+        sort_by=sort_by,
+        sort_dir=sort_dir,
+        skip=skip,
+        limit=limit,
+    )
+    return ListingListResponse(items=[_to_resp(l) for l in items], total=total)
+
 
 @router.get("/listings/{listing_id}", response_model=ListingResponse)
 async def get_listing(
@@ -61,7 +129,7 @@ async def get_listing(
     tenant_id: TenantContext,
     svc: ListingService = Depends(_svc),
 ) -> ListingResponse:
-    return ListingResponse.model_validate(await svc.get_listing(listing_id, tenant_id))
+    return _to_resp(await svc.get_listing(listing_id, tenant_id))
 
 
 @router.patch("/listings/{listing_id}", response_model=ListingResponse)
@@ -73,9 +141,7 @@ async def update_listing(
     svc: ListingService = Depends(_svc),
 ) -> ListingResponse:
     updates = body.model_dump(exclude_unset=True)
-    return ListingResponse.model_validate(
-        await svc.update_listing(listing_id, tenant_id, current_user, updates)
-    )
+    return _to_resp(await svc.update_listing(listing_id, tenant_id, current_user, updates))
 
 
 @router.delete("/listings/{listing_id}", status_code=204)
@@ -99,9 +165,7 @@ async def activate_listing(
     tenant_id: TenantContext,
     svc: ListingService = Depends(_svc),
 ) -> ListingResponse:
-    return ListingResponse.model_validate(
-        await svc.activate(listing_id, tenant_id, current_user)
-    )
+    return _to_resp(await svc.activate(listing_id, tenant_id, current_user))
 
 
 @router.post("/listings/{listing_id}/pause", response_model=ListingResponse)
@@ -111,9 +175,7 @@ async def pause_listing(
     tenant_id: TenantContext,
     svc: ListingService = Depends(_svc),
 ) -> ListingResponse:
-    return ListingResponse.model_validate(
-        await svc.pause(listing_id, tenant_id, current_user)
-    )
+    return _to_resp(await svc.pause(listing_id, tenant_id, current_user))
 
 
 @router.post("/listings/{listing_id}/archive", response_model=ListingResponse)
@@ -123,9 +185,7 @@ async def archive_listing(
     tenant_id: TenantContext,
     svc: ListingService = Depends(_svc),
 ) -> ListingResponse:
-    return ListingResponse.model_validate(
-        await svc.archive(listing_id, tenant_id, current_user)
-    )
+    return _to_resp(await svc.archive(listing_id, tenant_id, current_user))
 
 
 @router.patch("/listings/{listing_id}/status", response_model=ListingResponse)
@@ -137,13 +197,11 @@ async def change_listing_status(
     ctx: ReqCtx,
     svc: ListingService = Depends(_svc),
 ) -> ListingResponse:
-    return ListingResponse.model_validate(
-        await svc.change_status(
-            listing_id, tenant_id, current_user,
-            new_status=body.status,
-            reason_code=body.reason_code,
-            reason_note=body.reason_note,
-            ip_address=ctx.ip_address,
-            user_agent=ctx.user_agent,
-        )
-    )
+    return _to_resp(await svc.change_status(
+        listing_id, tenant_id, current_user,
+        new_status=body.status,
+        reason_code=body.reason_code,
+        reason_note=body.reason_note,
+        ip_address=ctx.ip_address,
+        user_agent=ctx.user_agent,
+    ))
