@@ -2,7 +2,7 @@
 
 import { useState } from "react";
 import Link from "next/link";
-import { Users } from "lucide-react";
+import { Users, Plus } from "lucide-react";
 import { useAgents } from "@/hooks/queries/useAgents";
 import { useChangeAgentStatus } from "@/hooks/mutations/useAgentMutations";
 import { StatusBadge } from "@/components/atoms/StatusBadge";
@@ -102,7 +102,7 @@ export function AgentsTable(): React.ReactElement {
           </SelectContent>
         </Select>
         <span className="text-sm text-muted-foreground ml-auto">{data?.total ?? 0} agents</span>
-        <Button onClick={() => setShowCreate(true)}>+ New Agent</Button>
+        <Button onClick={() => setShowCreate(true)}><Plus className="mr-1.5 h-4 w-4" />New Agent</Button>
       </div>
 
       {isLoading ? (
@@ -197,7 +197,7 @@ export function AgentsTable(): React.ReactElement {
                     <p className="text-sm font-medium">No agents yet</p>
                     <p className="text-xs text-muted-foreground mt-0.5">Add your first agent to start assigning deals.</p>
                   </div>
-                  <Button size="sm" onClick={() => setShowCreate(true)}>+ New Agent</Button>
+                  <Button size="sm" onClick={() => setShowCreate(true)}><Plus className="mr-1.5 h-4 w-4" />New Agent</Button>
                 </div>
               </td>
             </tr>

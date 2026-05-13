@@ -106,8 +106,16 @@ export function ListingForm({ defaultValues, isPending, submitLabel, onSubmit, o
             )} />
           </div>
         )}
-        <div className="space-y-1.5"><Label>Valid From</Label><Input type="date" {...register("valid_from")} /></div>
-        <div className="space-y-1.5"><Label>Valid Until</Label><Input type="date" {...register("valid_until")} /></div>
+        <div className="space-y-1.5">
+          <Label>Valid From</Label>
+          <Input type="date" {...register("valid_from")} />
+          <p className="text-xs text-muted-foreground mt-1">Leave blank for no expiry</p>
+        </div>
+        <div className="space-y-1.5">
+          <Label>Valid Until</Label>
+          <Input type="date" {...register("valid_until")} />
+          <p className="text-xs text-muted-foreground mt-1">Leave blank for no expiry</p>
+        </div>
         <div className="space-y-1.5 col-span-2">
           <Label>Description</Label>
           <textarea {...register("description")} rows={2} className="flex w-full rounded-md border border-input bg-transparent px-3 py-2 text-sm shadow-sm focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring resize-none" />

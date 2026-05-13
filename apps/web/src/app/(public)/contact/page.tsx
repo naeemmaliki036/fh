@@ -80,7 +80,7 @@ function ContactForm(): React.ReactElement {
 
 export default function ContactPage(): React.ReactElement {
   return (
-    <div className="space-y-6 mt-4">
+    <div className="mx-auto max-w-lg space-y-6 px-4 py-8 bg-muted/20 min-h-screen">
       <div>
         <h1 className="text-2xl font-semibold tracking-tight">Contact Platform</h1>
         <p className="text-sm text-muted-foreground mt-1">

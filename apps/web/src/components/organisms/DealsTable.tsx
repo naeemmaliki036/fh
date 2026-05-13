@@ -4,7 +4,7 @@ import { useState } from "react";
 import Link from "next/link";
 import { useDeals } from "@/hooks/queries/useDeals";
 import { useAgents } from "@/hooks/queries/useAgents";
-import { Handshake } from "lucide-react";
+import { Handshake, Plus } from "lucide-react";
 import { DealStageBadge } from "@/components/atoms/DealStageBadge";
 import { DealTypeBadge } from "@/components/atoms/DealTypeBadge";
 import { PayoutStatusBadge } from "@/components/atoms/PayoutStatusBadge";
@@ -81,7 +81,7 @@ export function DealsTable(): React.ReactElement {
           </SelectContent>
         </Select>
         <span className="text-sm text-muted-foreground ml-auto">{total} deals</span>
-        <Button onClick={() => setShowCreate(true)}>+ New Deal</Button>
+        <Button onClick={() => setShowCreate(true)}><Plus className="mr-1.5 h-4 w-4" />New Deal</Button>
       </div>
 
       {isLoading && <p className="text-sm text-muted-foreground">Loading…</p>}
@@ -139,7 +139,7 @@ export function DealsTable(): React.ReactElement {
                 <p className="text-sm font-medium">No deals found</p>
                 <p className="text-xs text-muted-foreground mt-0.5">Create your first deal to start tracking commissions.</p>
               </div>
-              <Button size="sm" onClick={() => setShowCreate(true)}>+ New Deal</Button>
+              <Button size="sm" onClick={() => setShowCreate(true)}><Plus className="mr-1.5 h-4 w-4" />New Deal</Button>
             </div>
           </div>
         )}

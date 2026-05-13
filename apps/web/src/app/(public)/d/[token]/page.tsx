@@ -18,7 +18,15 @@ interface VerifyError {
   locked?: boolean;
 }
 
-export default function PublicDocumentRequestPage({ params }: PageProps): React.ReactElement {
+export default function PublicDocumentRequestPage(props: PageProps): React.ReactElement {
+  return (
+    <div className="mx-auto max-w-lg px-4 py-8 bg-muted/20 min-h-screen">
+      <PublicDocumentRequestInner {...props} />
+    </div>
+  );
+}
+
+function PublicDocumentRequestInner({ params }: PageProps): React.ReactElement {
   const { token } = use(params);
   const [jwt, setJwt] = useState<string | null>(null);
   const [verifying, setVerifying] = useState(false);

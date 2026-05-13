@@ -74,7 +74,7 @@ export function AgentForm({ defaultValues, isPending, submitLabel, onSubmit, onC
         </div>
         <div className="space-y-1.5">
           <Label>Phone</Label>
-          <Input {...register("phone")} />
+          <Input {...register("phone")} placeholder="+971 50 123 4567" />
         </div>
         <div className="space-y-1.5">
           <Label>License ID</Label>

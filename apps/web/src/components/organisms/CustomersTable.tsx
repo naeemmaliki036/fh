@@ -2,6 +2,7 @@
 
 import { useState } from "react";
 import Link from "next/link";
+import { Plus } from "lucide-react";
 import { useCustomers } from "@/hooks/queries/useCustomers";
 import { useAgents } from "@/hooks/queries/useAgents";
 import { useDeleteCustomer } from "@/hooks/mutations/useCustomerMutations";
@@ -78,7 +79,7 @@ export function CustomersTable(): React.ReactElement {
           </SelectContent>
         </Select>
         <span className="text-sm text-muted-foreground ml-auto">{total} customers</span>
-        <Button onClick={() => setShowCreate(true)}>+ New Customer</Button>
+        <Button onClick={() => setShowCreate(true)}><Plus className="mr-1.5 h-4 w-4" />New Customer</Button>
       </div>
 
       {isLoading ? (

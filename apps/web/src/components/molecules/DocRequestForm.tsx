@@ -77,6 +77,7 @@ export function DocRequestForm({ isPending, onSubmit, onCancel }: DocRequestForm
         <div className="space-y-1.5">
           <Label>Expires in (days)</Label>
           <Input type="number" min={1} max={90} value={expiresInDays} onChange={e => setExpiresInDays(e.target.value)} />
+          <p className="text-xs text-muted-foreground mt-1">Max 90 days</p>
         </div>
       </div>
 

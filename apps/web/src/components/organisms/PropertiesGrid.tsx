@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from "react";
 import Link from "next/link";
-import { LayoutGrid, List } from "lucide-react";
+import { LayoutGrid, List, Plus } from "lucide-react";
 import { useProperties } from "@/hooks/queries/useProperties";
 import { useMyTenant } from "@/hooks/queries/useTenants";
 import { useChangePropertyStatus } from "@/hooks/mutations/usePropertyMutations";
@@ -25,6 +25,11 @@ const STATUSES: PropertyStatus[] = ["draft", "available", "reserved", "sold", "r
 const TYPES: PropertyType[] = ["apartment", "villa", "townhouse", "penthouse", "office", "retail", "warehouse", "plot", "building", "other"];
 
 type PendingTransition = { property: Property; targetStatus: PropertyStatus };
+
+const PROPERTY_STATUS_DIALOG_TITLE: Record<string, string> = {
+  available: "Mark as Available",
+  off_market: "Mark Off-Market",
+};
 
 export function PropertiesGrid(): React.ReactElement {
   const [search, setSearch] = useState("");
@@ -105,7 +110,7 @@ export function PropertiesGrid(): React.ReactElement {
           </button>
         </div>
 
-        <Button onClick={() => setShowCreate(true)}>+ New Property</Button>
+        <Button onClick={() => setShowCreate(true)}><Plus className="mr-1.5 h-4 w-4" />New Property</Button>
       </div>
 
       {error && <p className="text-sm text-destructive">Failed to load properties.</p>}
@@ -175,7 +180,7 @@ export function PropertiesGrid(): React.ReactElement {
         <StatusChangeDialog
           open
           onOpenChange={(o) => { if (!o) setPending(null); }}
-          title={`${pending.targetStatus === "off_market" ? "Mark off-market" : "Mark available"}: ${pending.property.title}?`}
+          title={`${PROPERTY_STATUS_DIALOG_TITLE[pending.targetStatus] ?? `Change status to ${pending.targetStatus}`}: ${pending.property.title}?`}
           description={
             pending.targetStatus === "off_market"
               ? "This property will be marked as off-market."

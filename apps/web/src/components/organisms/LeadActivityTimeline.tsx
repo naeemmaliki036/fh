@@ -60,7 +60,7 @@ export function LeadActivityTimeline({ leadId }: LeadActivityTimelineProps): Rea
       {/* Composer */}
       <div className="rounded-md border p-4 space-y-3 bg-muted/20">
         <p className="text-sm font-medium">Add Activity</p>
-        <div className="flex gap-2 items-start">
+        <div className="flex flex-col gap-2 sm:flex-row sm:items-end">
           <Select value={kind} onValueChange={v => setKind(v as LeadActivityKind)}>
             <SelectTrigger className="w-44 flex-shrink-0"><SelectValue /></SelectTrigger>
             <SelectContent>

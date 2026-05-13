@@ -48,8 +48,10 @@ function AccountStatusContent(): React.ReactElement {
 
 export default function AccountStatusPage(): React.ReactElement {
   return (
-    <Suspense fallback={<div className="mt-8 h-32 animate-pulse rounded-lg bg-muted/40" />}>
-      <AccountStatusContent />
-    </Suspense>
+    <div className="mx-auto max-w-lg px-4 py-8 bg-muted/20 min-h-screen">
+      <Suspense fallback={<div className="mt-8 h-32 animate-pulse rounded-lg bg-muted/40" />}>
+        <AccountStatusContent />
+      </Suspense>
+    </div>
   );
 }

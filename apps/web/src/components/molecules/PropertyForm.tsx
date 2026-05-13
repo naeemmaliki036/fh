@@ -42,7 +42,7 @@ interface PropertyFormProps {
 }
 
 export function PropertyForm({ defaultValues, showStatus, isPending, submitLabel, onSubmit, onCancel }: PropertyFormProps): React.ReactElement {
-  const { register, handleSubmit, control, formState: { errors } } = useForm<FormValues>({
+  const { register, handleSubmit, control, reset, formState: { errors } } = useForm<FormValues>({
     resolver: zodResolver(schema),
     defaultValues: {
       title: defaultValues?.title ?? "",
@@ -126,7 +126,11 @@ export function PropertyForm({ defaultValues, showStatus, isPending, submitLabel
         </div>
       </div>
       <div className="flex gap-2 justify-end pt-2">
-        {onCancel && <Button type="button" variant="outline" onClick={onCancel}>Cancel</Button>}
+        {onCancel && (
+          <Button type="button" variant="outline" onClick={() => { reset(); onCancel(); }}>
+            Discard changes
+          </Button>
+        )}
         <Button type="submit" disabled={isPending}>{isPending ? "Saving..." : submitLabel}</Button>
       </div>
     </form>

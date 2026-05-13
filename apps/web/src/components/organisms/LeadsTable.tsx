@@ -10,6 +10,7 @@ import { LeadCreateDialog } from "@/components/organisms/LeadCreateDialog";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { Plus } from "lucide-react";
 import { cn } from "@/lib/utils/cn";
 import { formatDate } from "@/lib/utils/format-date";
 import { useMyTenant } from "@/hooks/queries/useTenants";
@@ -68,7 +69,7 @@ export function LeadsTable(): React.ReactElement {
           </SelectContent>
         </Select>
         <span className="text-sm text-muted-foreground ml-auto">{total} leads</span>
-        <Button onClick={() => setShowCreate(true)}>+ New Lead</Button>
+        <Button onClick={() => setShowCreate(true)}><Plus className="mr-1.5 h-4 w-4" />New Lead</Button>
       </div>
 
       {isLoading && <p className="text-sm text-muted-foreground">Loading…</p>}

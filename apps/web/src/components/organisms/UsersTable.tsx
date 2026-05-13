@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useEffect } from "react";
-import { UserIcon } from "lucide-react";
+import { UserIcon, Plus } from "lucide-react";
 import { useUsers } from "@/hooks/queries/useUsers";
 import { Input } from "@/components/ui/input";
 import { useChangeUserStatus } from "@/hooks/mutations/useUserMutations";
@@ -87,7 +87,7 @@ export function UsersTable(): React.ReactElement {
                       <p className="text-xs text-muted-foreground mt-0.5">Invite a user to give them access to this workspace.</p>
                     </div>
                     {canManage && (
-                      <Button size="sm" onClick={() => setShowCreate(true)}>+ New User</Button>
+                      <Button size="sm" onClick={() => setShowCreate(true)}><Plus className="mr-1.5 h-4 w-4" />New User</Button>
                     )}
                   </div>
                 </td>

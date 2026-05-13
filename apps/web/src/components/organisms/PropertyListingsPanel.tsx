@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useEffect } from "react";
-import { LayoutGrid, List } from "lucide-react";
+import { LayoutGrid, List, Plus } from "lucide-react";
 import { usePropertyListings } from "@/hooks/queries/useProperties";
 import { useMyTenant } from "@/hooks/queries/useTenants";
 import { useDeleteListing, useChangeListingStatus } from "@/hooks/mutations/useListingMutations";
@@ -93,7 +93,7 @@ export function PropertyListingsPanel({ propertyId }: PropertyListingsPanelProps
             <List className="h-4 w-4" />
           </button>
         </div>
-        <Button onClick={() => setShowCreate(true)}>+ New Listing</Button>
+        <Button onClick={() => setShowCreate(true)}><Plus className="mr-1.5 h-4 w-4" />New Listing</Button>
       </div>
 
       {isLoading && <p className="text-sm text-muted-foreground">Loading listings...</p>}
@@ -102,7 +102,7 @@ export function PropertyListingsPanel({ propertyId }: PropertyListingsPanelProps
         <div className="flex flex-col items-center justify-center gap-3 py-10 border rounded-md bg-muted/20 text-muted-foreground">
           <p className="text-sm font-medium">No listings yet</p>
           <p className="text-xs">Create a listing to publish this property to the market.</p>
-          <Button size="sm" onClick={() => setShowCreate(true)}>+ New Listing</Button>
+          <Button size="sm" onClick={() => setShowCreate(true)}><Plus className="mr-1.5 h-4 w-4" />New Listing</Button>
         </div>
       )}
 

@@ -2,6 +2,7 @@
 
 import { useState } from "react";
 import Link from "next/link";
+import { Plus } from "lucide-react";
 import { useDocumentRequests } from "@/hooks/queries/useDocumentRequests";
 import { useCancelDocumentRequest } from "@/hooks/mutations/useDocumentRequestMutations";
 import { DocRequestStatusBadge } from "@/components/atoms/DocRequestStatusBadge";
@@ -46,7 +47,7 @@ export default function DocumentRequestsPage(): React.ReactElement {
           <h1 className="text-2xl font-semibold tracking-tight">Document Requests</h1>
           <p className="text-sm text-muted-foreground mt-1">Send secure document collection links to customers</p>
         </div>
-        <Button onClick={() => setShowCreate(true)}>+ New Request</Button>
+        <Button onClick={() => setShowCreate(true)}><Plus className="mr-1.5 h-4 w-4" />New Request</Button>
       </div>
 
       <div className="flex gap-3">
