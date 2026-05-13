@@ -9,11 +9,28 @@ import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import type { DealCommissionOverrideRequest } from "@/lib/types/deal";
 
-const schema = z.object({
-  commission_type: z.enum(["percentage", "fixed"]),
-  commission_value: z.string().min(1, "Value required"),
-  override_reason: z.string().min(5, "Reason must be at least 5 characters"),
-});
+const schema = z
+  .object({
+    commission_type: z.enum(["percentage", "fixed"]),
+    commission_value: z.string().min(1, "Value required"),
+    override_reason: z.string().min(5, "Reason must be at least 5 characters"),
+  })
+  .superRefine((v, ctx) => {
+    const n = Number(v.commission_value);
+    if (!Number.isFinite(n) || n <= 0) {
+      ctx.addIssue({
+        code: z.ZodIssueCode.custom,
+        path: ["commission_value"],
+        message: "Must be a positive number",
+      });
+    } else if (v.commission_type === "percentage" && n > 100) {
+      ctx.addIssue({
+        code: z.ZodIssueCode.custom,
+        path: ["commission_value"],
+        message: "Percentage cannot exceed 100",
+      });
+    }
+  });
 type FormValues = z.infer<typeof schema>;
 
 interface CommissionFormProps {
@@ -45,7 +62,7 @@ export function CommissionForm({ isPending, onSubmit, onCancel }: CommissionForm
         </div>
         <div className="space-y-1.5">
           <Label>Value</Label>
-          <Input {...register("commission_value")} placeholder="0" step="0.01" />
+          <Input {...register("commission_value")} type="number" min="0" step="0.01" placeholder="0" />
           {errors.commission_value && <p className="text-xs text-destructive">{errors.commission_value.message}</p>}
         </div>
       </div>

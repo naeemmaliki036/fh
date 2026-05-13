@@ -14,21 +14,42 @@ import { useAuditLog } from "@/hooks/queries/useAuditLog";
 import { formatDate } from "@/lib/utils/format-date";
 import type { AuditLog, AuditAction } from "@/lib/types/audit-log";
 
-const ACTION_LABELS: Record<AuditAction, string> = {
-  created: "Created",
-  updated: "Updated",
-  deleted: "Deleted",
-  status_changed: "Status changed",
-  price_changed: "Price changed",
+const ACTION_LABELS: Partial<Record<AuditAction, string>> = {
+  tenant_created: "Tenant created",
+  tenant_approved: "Tenant approved",
+  tenant_rejected: "Tenant rejected",
+  tenant_suspended: "Tenant suspended",
+  tenant_reactivated: "Tenant reactivated",
+  user_created: "User created",
+  user_role_changed: "Role changed",
+  user_status_changed: "User status changed",
+  user_deactivated: "User deactivated",
+  user_reactivated: "User reactivated",
+  agent_created: "Agent created",
+  agent_status_changed: "Agent status changed",
+  property_created: "Property created",
+  property_updated: "Property updated",
+  property_status_changed: "Status changed",
+  property_tags_changed: "Tags changed",
+  listing_created: "Listing created",
+  listing_status_changed: "Status changed",
+  listing_price_changed: "Price changed",
+  listing_hero_media_set: "Hero media set",
+  listing_document_uploaded: "Document uploaded",
+  listing_document_deleted: "Document deleted",
+  lead_created: "Lead created",
+  deal_created: "Deal created",
+  deal_stage_changed: "Stage changed",
+  commission_overridden: "Commission overridden",
   document_accessed: "Document accessed",
   document_uploaded: "Document uploaded",
   document_deleted: "Document deleted",
-  commission_overridden: "Commission overridden",
-  hero_media_set: "Hero media set",
   other: "Other",
 };
 
-const ALL_ACTIONS: AuditAction[] = Object.keys(ACTION_LABELS) as AuditAction[];
+function labelFor(action: AuditAction): string {
+  return ACTION_LABELS[action] ?? action.replace(/_/g, " ");
+}
 
 function avatarInitials(name: string | null): string {
   if (!name) return "?";
@@ -40,9 +61,17 @@ function avatarInitials(name: string | null): string {
     .toUpperCase();
 }
 
-function DiffBlock({ diff }: { diff: Record<string, unknown> | null }): ReactElement {
+function DiffBlock({
+  before,
+  after,
+}: {
+  before: Record<string, unknown> | null;
+  after: Record<string, unknown> | null;
+}): ReactElement {
   const [expanded, setExpanded] = useState(false);
-  if (!diff || Object.keys(diff).length === 0) return <></>;
+  const hasContent =
+    (before && Object.keys(before).length > 0) || (after && Object.keys(after).length > 0);
+  if (!hasContent) return <></>;
 
   return (
     <div className="mt-1.5">
@@ -56,7 +85,7 @@ function DiffBlock({ diff }: { diff: Record<string, unknown> | null }): ReactEle
       </button>
       {expanded && (
         <pre className="mt-1 text-xs bg-muted rounded-md p-2 overflow-x-auto max-h-40">
-          {JSON.stringify(diff, null, 2)}
+          {JSON.stringify({ before, after }, null, 2)}
         </pre>
       )}
     </div>
@@ -64,32 +93,28 @@ function DiffBlock({ diff }: { diff: Record<string, unknown> | null }): ReactEle
 }
 
 function TimelineRow({ entry }: { entry: AuditLog }): ReactElement {
+  const actorName = entry.actor?.full_name ?? entry.actor?.email ?? null;
+
   return (
     <div className="flex gap-3 py-3 border-b last:border-0">
-      {/* Avatar */}
       <div className="flex-shrink-0 h-8 w-8 rounded-full bg-muted flex items-center justify-center text-xs font-medium">
-        {entry.actor_name ? avatarInitials(entry.actor_name) : <User className="h-4 w-4 text-muted-foreground" />}
+        {actorName ? avatarInitials(actorName) : <User className="h-4 w-4 text-muted-foreground" />}
       </div>
 
-      {/* Content */}
       <div className="flex-1 min-w-0">
         <div className="flex flex-wrap items-center gap-2">
           <Badge variant="secondary" className="text-xs py-0">
-            {ACTION_LABELS[entry.action] ?? entry.action}
+            {labelFor(entry.action)}
           </Badge>
-          {entry.actor_name && (
-            <span className="text-xs text-muted-foreground">{entry.actor_name}</span>
+          {actorName && (
+            <span className="text-xs text-muted-foreground">{actorName}</span>
           )}
           <span className="text-xs text-muted-foreground ml-auto">
             {formatDate(entry.created_at, "en")}
           </span>
         </div>
 
-        {entry.reason_note && (
-          <p className="text-xs text-muted-foreground mt-0.5 italic">"{entry.reason_note}"</p>
-        )}
-
-        <DiffBlock diff={entry.diff} />
+        <DiffBlock before={entry.metadata_before} after={entry.metadata_after} />
       </div>
     </div>
   );
@@ -102,15 +127,13 @@ interface AuditTimelinePanelProps {
 
 export function AuditTimelinePanel({ entityType, entityId }: AuditTimelinePanelProps): ReactElement {
   const [actionFilter, setActionFilter] = useState<AuditAction | "all">("all");
-
-  // TODO: Backend needs GET /audit-logs?entity_type=&entity_id= endpoint
-  // Currently stubbed — the query will fail gracefully if endpoint is missing
   const { data, isLoading, error } = useAuditLog(entityType, entityId);
 
-  const entries = (data?.items ?? [])
-    .filter((e) => actionFilter === "all" || e.action === actionFilter)
-    .slice()
-    .reverse();
+  const entries = (data?.items ?? []).filter(
+    (e) => actionFilter === "all" || e.action === actionFilter,
+  );
+
+  const knownActions = Array.from(new Set((data?.items ?? []).map((e) => e.action)));
 
   return (
     <div className="space-y-4">
@@ -125,8 +148,8 @@ export function AuditTimelinePanel({ entityType, entityId }: AuditTimelinePanelP
           </SelectTrigger>
           <SelectContent>
             <SelectItem value="all">All actions</SelectItem>
-            {ALL_ACTIONS.map((a) => (
-              <SelectItem key={a} value={a}>{ACTION_LABELS[a]}</SelectItem>
+            {knownActions.map((a) => (
+              <SelectItem key={a} value={a}>{labelFor(a)}</SelectItem>
             ))}
           </SelectContent>
         </Select>
@@ -136,8 +159,7 @@ export function AuditTimelinePanel({ entityType, entityId }: AuditTimelinePanelP
 
       {error && (
         <p className="text-sm text-muted-foreground italic">
-          {/* TODO: audit-log list endpoint not yet implemented on backend */}
-          Activity log not available yet.
+          Activity log unavailable right now.
         </p>
       )}
 

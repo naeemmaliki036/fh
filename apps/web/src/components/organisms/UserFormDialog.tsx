@@ -71,7 +71,7 @@ export function UserFormDialog(props: UserFormDialogProps): React.ReactElement {
     return (
       <CreateForm
         onClose={props.onClose}
-        onSubmit={(data) => { createUser(data); props.onClose(); }}
+        onSubmit={(data) => createUser(data, { onSuccess: props.onClose })}
         isPending={isPending}
       />
     );
@@ -80,7 +80,9 @@ export function UserFormDialog(props: UserFormDialogProps): React.ReactElement {
     <EditForm
       user={props.user}
       onClose={props.onClose}
-      onSubmit={(data) => { updateUser({ id: props.user.id, ...data }); props.onClose(); }}
+      onSubmit={(data) =>
+        updateUser({ id: props.user.id, ...data }, { onSuccess: props.onClose })
+      }
       isPending={isPending}
     />
   );

@@ -17,19 +17,50 @@ import type { DealCreateRequest, DealType } from "@/lib/types/deal";
 
 const DEAL_TYPES: DealType[] = ["sale", "rent_short", "rent_long"];
 
-const schema = z.object({
-  deal_type: z.enum(DEAL_TYPES as [DealType, ...DealType[]]),
-  property_id: z.string().min(1, "Property required"),
-  primary_agent_id: z.string().min(1, "Agent required"),
-  transaction_value: z.string().min(1, "Value required"),
-  transaction_currency: z.string().min(3).max(3),
-  expected_close_at: z.string().optional(),
-  notes: z.string().optional(),
-  commission_override: z.boolean().default(false),
-  commission_type: z.enum(["percentage", "fixed"]).optional(),
-  commission_value: z.string().optional(),
-  commission_override_reason: z.string().optional(),
-});
+const _numericString = z
+  .string()
+  .min(1, "Value required")
+  .refine((s) => Number(s) > 0, "Must be a positive number");
+
+const schema = z
+  .object({
+    deal_type: z.enum(DEAL_TYPES as [DealType, ...DealType[]]),
+    property_id: z.string().min(1, "Property required"),
+    primary_agent_id: z.string().min(1, "Agent required"),
+    transaction_value: _numericString,
+    transaction_currency: z.string().min(3).max(3),
+    expected_close_at: z.string().optional(),
+    notes: z.string().optional(),
+    commission_override: z.boolean().default(false),
+    commission_type: z.enum(["percentage", "fixed"]).optional(),
+    commission_value: z.string().optional(),
+    commission_override_reason: z.string().optional(),
+  })
+  .superRefine((v, ctx) => {
+    if (!v.commission_override) return;
+    if (!v.commission_type || !v.commission_value) {
+      ctx.addIssue({
+        code: z.ZodIssueCode.custom,
+        path: ["commission_value"],
+        message: "Commission type and value required when overriding",
+      });
+      return;
+    }
+    const n = Number(v.commission_value);
+    if (!Number.isFinite(n) || n <= 0) {
+      ctx.addIssue({
+        code: z.ZodIssueCode.custom,
+        path: ["commission_value"],
+        message: "Must be a positive number",
+      });
+    } else if (v.commission_type === "percentage" && n > 100) {
+      ctx.addIssue({
+        code: z.ZodIssueCode.custom,
+        path: ["commission_value"],
+        message: "Percentage cannot exceed 100",
+      });
+    }
+  });
 type FormValues = z.infer<typeof schema>;
 
 interface DealFormProps {
@@ -105,7 +136,7 @@ export function DealForm({ agents, isPending, onSubmit, onCancel }: DealFormProp
         </div>
         <div className="space-y-1.5">
           <Label>Transaction Value *</Label>
-          <Input {...register("transaction_value")} placeholder="0" />
+          <Input {...register("transaction_value")} type="number" min="0" step="0.01" placeholder="0" />
         </div>
         <div className="space-y-1.5">
           <Label>Currency</Label>
@@ -136,7 +167,7 @@ export function DealForm({ agents, isPending, onSubmit, onCancel }: DealFormProp
           </div>
           <div className="space-y-1.5">
             <Label>Commission Value</Label>
-            <Input {...register("commission_value")} placeholder="0" />
+            <Input {...register("commission_value")} type="number" min="0" step="0.01" placeholder="0" />
           </div>
           <div className="space-y-1.5 col-span-2">
             <Label>Override Reason (min 5 chars)</Label>

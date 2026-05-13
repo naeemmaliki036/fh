@@ -8,7 +8,6 @@ import type {
 export class AuditLogRepository extends BaseRepository<AuditLog> {
   protected readonly basePath = "/audit-logs";
 
-  // TODO: backend needs GET /audit-logs?entity_type=&entity_id=&limit= endpoint
   async listForEntity(
     params: AuditLogListParams,
   ): Promise<AuditLogListResponse> {

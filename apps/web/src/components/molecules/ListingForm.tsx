@@ -14,17 +14,30 @@ const PURPOSES: ListingPurpose[] = ["sale", "rent_short", "rent_long"];
 const RENT_PERIODS: RentPeriod[] = ["daily", "weekly", "monthly", "yearly"];
 const TIERS: ListingTier[] = ["standard", "premium", "featured"];
 
-const schema = z.object({
-  title: z.string().min(2, "Title required"),
-  purpose: z.enum(PURPOSES as [ListingPurpose, ...ListingPurpose[]]),
-  price: z.string().min(1, "Price required"),
-  currency: z.string().min(1),
-  description: z.string().optional().nullable(),
-  rent_period: z.enum(RENT_PERIODS as [RentPeriod, ...RentPeriod[]]).optional().nullable(),
-  listing_tier: z.enum(TIERS as [ListingTier, ...ListingTier[]]).optional(),
-  valid_from: z.string().optional().nullable(),
-  valid_until: z.string().optional().nullable(),
-});
+const schema = z
+  .object({
+    title: z.string().min(2, "Title required"),
+    purpose: z.enum(PURPOSES as [ListingPurpose, ...ListingPurpose[]]),
+    price: z
+      .string()
+      .min(1, "Price required")
+      .refine((s) => Number(s) > 0, "Must be a positive number"),
+    currency: z.string().min(1),
+    description: z.string().optional().nullable(),
+    rent_period: z.enum(RENT_PERIODS as [RentPeriod, ...RentPeriod[]]).optional().nullable(),
+    listing_tier: z.enum(TIERS as [ListingTier, ...ListingTier[]]).optional(),
+    valid_from: z.string().optional().nullable(),
+    valid_until: z.string().optional().nullable(),
+  })
+  .superRefine((v, ctx) => {
+    if (v.valid_from && v.valid_until && v.valid_until < v.valid_from) {
+      ctx.addIssue({
+        code: z.ZodIssueCode.custom,
+        path: ["valid_until"],
+        message: "Must be on or after start date",
+      });
+    }
+  });
 
 type FormValues = z.infer<typeof schema>;
 

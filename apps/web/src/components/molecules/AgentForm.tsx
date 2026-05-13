@@ -19,11 +19,23 @@ import type { Agent, AgentCreateRequest, AgentUpdateRequest } from "@/lib/types"
 const schema = z.object({
   full_name: z.string().min(2, "Name required"),
   email: z.string().email("Invalid email"),
-  phone: z.string().optional(),
+  phone: z
+    .string()
+    .optional()
+    .refine((v) => !v || /^\+?[\d\s\-()]{7,20}$/.test(v), "Invalid phone number"),
   license_id: z.string().optional(),
   license_expiry_at: z.string().optional(),
   default_commission_type: z.enum(["percentage", "fixed"]),
   default_commission_value: z.string().regex(/^\d+(\.\d+)?$/, "Must be a number"),
+}).superRefine((v, ctx) => {
+  const n = Number(v.default_commission_value);
+  if (Number.isFinite(n) && v.default_commission_type === "percentage" && n > 100) {
+    ctx.addIssue({
+      code: z.ZodIssueCode.custom,
+      path: ["default_commission_value"],
+      message: "Percentage cannot exceed 100",
+    });
+  }
 });
 
 type FormValues = z.infer<typeof schema>;

@@ -31,12 +31,28 @@ export function ChangePriceModal({
 }: ChangePriceModalProps): ReactElement {
   const [newPrice, setNewPrice] = useState("");
   const [reasonNote, setReasonNote] = useState("");
+  const [error, setError] = useState<string | null>(null);
   const { mutate: changePrice, isPending } = useChangeListingPrice(listingId);
 
+  const parsedPrice = Number(newPrice);
+  const isValidPrice = newPrice.trim() !== "" && Number.isFinite(parsedPrice) && parsedPrice > 0;
+
   const handleSubmit = (): void => {
-    if (!newPrice.trim() || !reasonNote.trim()) return;
+    if (!reasonNote.trim()) {
+      setError("Reason is required");
+      return;
+    }
+    if (!isValidPrice) {
+      setError("New price must be a positive number");
+      return;
+    }
+    if (parsedPrice === Number(currentPrice)) {
+      setError("New price is the same as current price");
+      return;
+    }
+    setError(null);
     changePrice(
-      { new_price: newPrice.trim(), reason_note: reasonNote.trim() },
+      { new_price: parsedPrice.toString(), reason_note: reasonNote.trim() },
       {
         onSuccess: () => {
           setNewPrice("");
@@ -91,8 +107,9 @@ export function ChangePriceModal({
 
         <DialogFooter className="gap-2 sm:gap-0">
           <Button variant="outline" onClick={handleClose}>Cancel</Button>
+          {error && <p className="text-xs text-destructive px-1">{error}</p>}
           <Button
-            disabled={isPending || !newPrice.trim() || !reasonNote.trim()}
+            disabled={isPending || !isValidPrice || !reasonNote.trim()}
             onClick={handleSubmit}
           >
             {isPending ? "Saving..." : "Confirm"}
