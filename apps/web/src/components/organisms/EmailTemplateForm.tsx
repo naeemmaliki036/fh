@@ -1,6 +1,6 @@
 "use client";
 
-import { useRef, useState, useEffect, type ReactElement } from "react";
+import { useRef, useState, type ReactElement } from "react";
 import { useForm, Controller } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
@@ -15,6 +15,7 @@ import {
   useCreateEmailTemplate,
   useUpdateEmailTemplate,
 } from "@/hooks/mutations/useEmailTemplateMutations";
+import { useAuth } from "@/contexts/AuthContext";
 import type { EmailTemplate } from "@/lib/types";
 
 const schema = z.object({
@@ -31,6 +32,9 @@ const schema = z.object({
 
 type FormValues = z.infer<typeof schema>;
 
+// Fields that tenant users are not allowed to modify.
+const TENANT_LOCKED_FIELDS = ["key", "name", "variables"] as const;
+
 interface EmailTemplateFormProps {
   template?: EmailTemplate;
   forcedScope?: "platform" | "tenant";
@@ -43,7 +47,11 @@ export function EmailTemplateForm({
   forcedTenantId,
 }: EmailTemplateFormProps): ReactElement {
   const router = useRouter();
+  const { currentPlatformUser } = useAuth();
+  // isTenantScope: user is logged in as a tenant user (not a platform admin)
+  const isTenantScope = currentPlatformUser === null;
   const isEdit = !!template;
+
   const [variables, setVariables] = useState<string[]>(
     template ? Object.keys(template.variables) : [],
   );
@@ -90,7 +98,8 @@ export function EmailTemplateForm({
     } else if (subjectRef.current) {
       const inp = subjectRef.current;
       const start = inp.selectionStart ?? inp.value.length;
-      const newVal = inp.value.slice(0, start) + token + inp.value.slice(inp.selectionEnd ?? start);
+      const newVal =
+        inp.value.slice(0, start) + token + inp.value.slice(inp.selectionEnd ?? start);
       setValue("subject", newVal, { shouldDirty: true });
     }
   }
@@ -105,21 +114,28 @@ export function EmailTemplateForm({
     const vars = buildVariablesDict(variables);
 
     if (isEdit && template) {
-      update(
-        {
-          name: values.name,
-          subject: values.subject,
-          body_html: values.body_html,
-          body_text: values.body_text || null,
-          variables: vars,
-          active: values.active,
+      // Tenant users: only send content-editable fields
+      const updatePayload = isTenantScope
+        ? {
+            subject: values.subject,
+            body_html: values.body_html,
+            body_text: values.body_text || null,
+            active: values.active,
+          }
+        : {
+            name: values.name,
+            subject: values.subject,
+            body_html: values.body_html,
+            body_text: values.body_text || null,
+            variables: vars,
+            active: values.active,
+          };
+
+      update(updatePayload, {
+        onSuccess: () => {
+          setSavedId(template.id);
         },
-        {
-          onSuccess: () => {
-            setSavedId(template.id);
-          },
-        },
-      );
+      });
     } else {
       create(
         {
@@ -131,7 +147,6 @@ export function EmailTemplateForm({
           body_text: values.body_text || null,
           variables: vars,
           active: values.active,
-          // scope is derived from tenant_id being null or not on the backend
         },
         {
           onSuccess: (created) => {
@@ -166,7 +181,8 @@ export function EmailTemplateForm({
           </div>
         </div>
 
-        {!isEdit && !forcedScope && (
+        {/* Scope toggle — hidden for tenant users */}
+        {!isTenantScope && !isEdit && !forcedScope && (
           <Controller
             name="active"
             control={control}
@@ -188,7 +204,7 @@ export function EmailTemplateForm({
           />
         )}
 
-        {(isEdit || forcedScope) && (
+        {(isEdit || forcedScope || isTenantScope) && (
           <Controller
             name="active"
             control={control}
@@ -206,21 +222,43 @@ export function EmailTemplateForm({
           />
         )}
 
+        {/* Key — always disabled on edit; shown as plain text for tenant users */}
         <div className="space-y-1">
           <Label>Key</Label>
-          <Input
-            {...register("key")}
-            placeholder="welcome_email or welcome-email"
-            disabled={isEdit}
-            className={isEdit ? "bg-muted cursor-not-allowed" : ""}
-          />
-          {errors.key && <p className="text-xs text-destructive">{errors.key.message}</p>}
+          {isTenantScope && isEdit ? (
+            <p className="rounded-md border bg-muted px-3 py-2 text-sm font-mono text-muted-foreground">
+              {template?.key}
+            </p>
+          ) : (
+            <>
+              <Input
+                {...register("key")}
+                placeholder="welcome_email or welcome-email"
+                disabled={isEdit}
+                className={isEdit ? "bg-muted cursor-not-allowed" : ""}
+              />
+              {errors.key && (
+                <p className="text-xs text-destructive">{errors.key.message}</p>
+              )}
+            </>
+          )}
         </div>
 
+        {/* Name — editable for platform; read-only for tenant */}
         <div className="space-y-1">
           <Label>Name</Label>
-          <Input {...register("name")} placeholder="Welcome Email" />
-          {errors.name && <p className="text-xs text-destructive">{errors.name.message}</p>}
+          {isTenantScope ? (
+            <p className="rounded-md border bg-muted px-3 py-2 text-sm text-muted-foreground">
+              {template?.name}
+            </p>
+          ) : (
+            <>
+              <Input {...register("name")} placeholder="Welcome Email" />
+              {errors.name && (
+                <p className="text-xs text-destructive">{errors.name.message}</p>
+              )}
+            </>
+          )}
         </div>
 
         <div className="space-y-1">
@@ -233,7 +271,9 @@ export function EmailTemplateForm({
             }}
             placeholder="Welcome, {first_name}!"
           />
-          {errors.subject && <p className="text-xs text-destructive">{errors.subject.message}</p>}
+          {errors.subject && (
+            <p className="text-xs text-destructive">{errors.subject.message}</p>
+          )}
         </div>
 
         <div className="space-y-1">
@@ -263,13 +303,17 @@ export function EmailTemplateForm({
           />
         </div>
 
-        <div className="space-y-1">
-          <Label>Variables</Label>
-          <VariableChipsEditor value={variables} onChange={setVariables} />
-          <p className="text-xs text-muted-foreground">
-            Press Enter or comma to add. Use these names in subject / body as {"{varname}"}.
-          </p>
-        </div>
+        {/* Variables editor — hidden for tenant users; read-only panel shown instead */}
+        {!isTenantScope && (
+          <div className="space-y-1">
+            <Label>Variables</Label>
+            <VariableChipsEditor value={variables} onChange={setVariables} />
+            <p className="text-xs text-muted-foreground">
+              Press Enter or comma to add. Use these names in subject / body as{" "}
+              {"{varname}"}.
+            </p>
+          </div>
+        )}
       </form>
 
       <aside className="space-y-4 pt-[68px]">

@@ -36,6 +36,8 @@ export interface Property {
   assigned_agents: PropertyAgentAssignment[];
   media_count: number;
   listing_count: number;
+  thumbnail_url?: string | null;
+  thumbnail_kind?: "image" | "video" | null;
   created_at: string;
   updated_at: string;
 }

@@ -21,8 +21,8 @@ from apps.api.schemas.email_template import (
     TestSendRequest,
     TestSendResponse,
 )
-from apps.api.services.email_template_service import EmailTemplateService
-from packages.common.utils.error_handlers import forbidden
+from apps.api.services.email_template_service import EmailTemplateService, TENANT_TEMPLATE_KEYS
+from packages.common.utils.error_handlers import bad_request, forbidden
 
 router = APIRouter()
 
@@ -90,8 +90,10 @@ async def get_template(
 
 
 # ------------------------------------------------------------------
-# Create — platform users OR tenant write-roles
+# Create — platform users only; tenants cannot create new templates
 # ------------------------------------------------------------------
+
+_LOCKED_TENANT_FIELDS = frozenset({"key", "name", "variables", "tenant_id"})
 
 
 @router.post("", response_model=EmailTemplateResponse, status_code=201)
@@ -102,19 +104,14 @@ async def create_template(
 ) -> EmailTemplateResponse:
     caller_tid = _caller_tenant_id(current_user)
     if caller_tid is not None:
-        _assert_tenant_write(current_user)
-        # Tenant users can only create templates scoped to their own tenant.
-        body_data = body.model_dump()
-        body_data["tenant_id"] = caller_tid
-    else:
-        body_data = body.model_dump()
-
-    row = await svc.create_template(body_data)
+        # Tenants cannot create new templates — templates are pre-seeded on approval.
+        raise forbidden("Tenant templates are pre-seeded; use edit instead.")
+    row = await svc.create_template(body.model_dump())
     return EmailTemplateResponse.model_validate(row)
 
 
 # ------------------------------------------------------------------
-# Update (partial)
+# Update (partial) — tenant users may only touch content fields
 # ------------------------------------------------------------------
 
 
@@ -128,13 +125,24 @@ async def update_template(
     caller_tid = _caller_tenant_id(current_user)
     if caller_tid is not None:
         _assert_tenant_write(current_user)
+
     updates = body.model_dump(exclude_unset=True)
+
+    if caller_tid is not None:
+        # Strip any locked fields a tenant may have sent
+        locked_sent = _LOCKED_TENANT_FIELDS & updates.keys()
+        if locked_sent:
+            raise bad_request(
+                f"Tenant users cannot change: {', '.join(sorted(locked_sent))}. "
+                "Only subject, body_html, body_text, and active are editable."
+            )
+
     row = await svc.update_template(template_id, updates, caller_tenant_id=caller_tid)
     return EmailTemplateResponse.model_validate(row)
 
 
 # ------------------------------------------------------------------
-# Delete
+# Delete — platform users only
 # ------------------------------------------------------------------
 
 
@@ -146,8 +154,8 @@ async def delete_template(
 ) -> None:
     caller_tid = _caller_tenant_id(current_user)
     if caller_tid is not None:
-        _assert_tenant_write(current_user)
-    await svc.delete_template(template_id, caller_tenant_id=caller_tid)
+        raise forbidden("Tenants cannot delete seeded templates.")
+    await svc.delete_template(template_id, caller_tenant_id=None)
 
 
 # ------------------------------------------------------------------

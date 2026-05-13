@@ -83,6 +83,8 @@ class ListingResponse(BaseModel):
     portal_sync_enabled: bool
     hero_media_id: uuid.UUID | None = None
     hero_media_url: str | None = None  # assembled by router/service
+    thumbnail_url: str | None = None
+    thumbnail_kind: str | None = None  # "image" | "video"
     created_at: datetime
     updated_at: datetime
 

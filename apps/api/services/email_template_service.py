@@ -14,6 +14,13 @@ from packages.common.utils.error_handlers import bad_request, not_found
 
 _log = logging.getLogger("fh.email_template")
 
+# Keys that every tenant gets their own editable copy of on approval.
+# key/name/variables are locked; subject/body_html/body_text/active are editable.
+TENANT_TEMPLATE_KEYS: tuple[str, ...] = (
+    "doc_request",    # sent to customer for document collection
+    "lead_assigned",  # sent to agent when a lead is assigned
+)
+
 
 class EmailTemplateService(BaseService):
     """Manages platform- and tenant-level email templates."""
@@ -131,6 +138,59 @@ class EmailTemplateService(BaseService):
         row = await self.get_template(template_id, caller_tenant_id=caller_tenant_id)
         await self.session.delete(row)
         await self.session.flush()
+
+    # ------------------------------------------------------------------
+    # Tenant template seeding
+    # ------------------------------------------------------------------
+
+    async def seed_tenant_templates(self, tenant_id: uuid.UUID) -> int:
+        """For each TENANT_TEMPLATE_KEY, create a tenant-scoped copy of the
+        platform template if one doesn't already exist. Returns count created.
+        Idempotent — safe to call repeatedly. Caller owns the transaction."""
+        created = 0
+        for key in TENANT_TEMPLATE_KEYS:
+            # Check for existing tenant-scoped copy
+            existing = (
+                await self.session.execute(
+                    select(EmailTemplate).where(
+                        EmailTemplate.key == key,
+                        EmailTemplate.tenant_id == tenant_id,
+                    )
+                )
+            ).scalar_one_or_none()
+            if existing is not None:
+                continue
+
+            # Find platform-level template
+            platform_row = (
+                await self.session.execute(
+                    select(EmailTemplate).where(
+                        EmailTemplate.key == key,
+                        EmailTemplate.tenant_id.is_(None),
+                    )
+                )
+            ).scalar_one_or_none()
+            if platform_row is None:
+                _log.warning("seed_tenant_templates: platform template '%s' not found", key)
+                continue
+
+            copy = EmailTemplate(
+                tenant_id=tenant_id,
+                key=platform_row.key,
+                name=platform_row.name,
+                subject=platform_row.subject,
+                body_html=platform_row.body_html,
+                body_text=platform_row.body_text,
+                variables=platform_row.variables,
+                active=platform_row.active,
+            )
+            self.session.add(copy)
+            created += 1
+            _log.info("seed_tenant_templates: created '%s' for tenant %s", key, tenant_id)
+
+        if created:
+            await self.session.flush()
+        return created
 
     # ------------------------------------------------------------------
     # Test send — renders + sends immediately, bypassing outbox

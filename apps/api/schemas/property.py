@@ -126,6 +126,8 @@ class PropertyResponse(BaseModel):
     assigned_agents: list[PropertyAgentResponse] = []
     media_count: int = 0
     listing_count: int = 0
+    thumbnail_url: str | None = None
+    thumbnail_kind: str | None = None  # "image" | "video"
     created_at: datetime
     updated_at: datetime
 

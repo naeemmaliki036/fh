@@ -36,10 +36,13 @@ def _hero_url(listing: Listing) -> str | None:
     return f"/_local-public/{m.storage_key}"
 
 
-def _to_resp(listing: Listing) -> ListingResponse:
+def _to_resp(listing: Listing, thumbnails: dict | None = None) -> ListingResponse:
+    thumb = (thumbnails or {}).get(str(listing.id), {})
     return ListingResponse.model_validate({
         **listing.__dict__,
         "hero_media_url": _hero_url(listing),
+        "thumbnail_url": thumb.get("thumbnail_url"),
+        "thumbnail_kind": thumb.get("thumbnail_kind"),
     })
 
 
@@ -54,7 +57,8 @@ async def list_listings(
     svc: ListingService = Depends(_svc),
 ) -> ListingListResponse:
     items, total = await svc.list_for_property(property_id, tenant_id)
-    return ListingListResponse(items=[_to_resp(l) for l in items], total=total)
+    thumbnails = await svc.batch_fallback_thumbnails(items)
+    return ListingListResponse(items=[_to_resp(l, thumbnails) for l in items], total=total)
 
 
 @router.post("/properties/{property_id}/listings", response_model=ListingResponse, status_code=201)
@@ -120,7 +124,8 @@ async def list_all_listings(
         skip=skip,
         limit=limit,
     )
-    return ListingListResponse(items=[_to_resp(l) for l in items], total=total)
+    thumbnails = await svc.batch_fallback_thumbnails(items)
+    return ListingListResponse(items=[_to_resp(l, thumbnails) for l in items], total=total)
 
 
 @router.get("/listings/{listing_id}", response_model=ListingResponse)

@@ -3,17 +3,29 @@ import { cva, type VariantProps } from "class-variance-authority";
 import { cn } from "@/lib/utils/cn";
 
 const badgeVariants = cva(
-  "inline-flex items-center rounded-md border px-2.5 py-0.5 text-xs font-semibold transition-colors focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2",
+  [
+    "inline-flex items-center rounded-md border px-2.5 py-0.5",
+    "font-mono text-[10px] uppercase tracking-wider",
+    "transition-colors focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2",
+  ].join(" "),
   {
     variants: {
       variant: {
-        default: "border-transparent bg-primary text-primary-foreground shadow hover:bg-primary/80",
-        secondary: "border-transparent bg-secondary text-secondary-foreground hover:bg-secondary/80",
+        default:
+          "border-transparent bg-primary text-primary-foreground shadow hover:bg-primary/80",
+        secondary:
+          "border-transparent bg-secondary text-secondary-foreground hover:bg-secondary/80",
         destructive:
-          "border-transparent bg-destructive text-destructive-foreground shadow hover:bg-destructive/80",
-        outline: "text-foreground",
-        success: "border-transparent bg-green-100 text-green-800",
-        warning: "border-transparent bg-yellow-100 text-yellow-800",
+          "border-transparent bg-rose-100 text-rose-900 dark:bg-rose-950 dark:text-rose-300 shadow hover:bg-rose-200 dark:hover:bg-rose-900",
+        outline: "text-foreground border-border",
+        success:
+          "border-transparent bg-emerald-100 text-emerald-900 dark:bg-emerald-950 dark:text-emerald-300",
+        warning:
+          "border-transparent bg-amber-100 text-amber-900 dark:bg-amber-950 dark:text-amber-300",
+        info:
+          "border-transparent bg-sky-100 text-sky-900 dark:bg-sky-950 dark:text-sky-300",
+        muted:
+          "border-transparent bg-slate-100 text-slate-700 dark:bg-slate-900 dark:text-slate-300",
       },
     },
     defaultVariants: {

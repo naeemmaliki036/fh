@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect } from "react";
-import { useForm } from "react-hook-form";
+import { useForm, Controller } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
 import { ExternalLink } from "lucide-react";
@@ -14,6 +14,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { ToggleSwitch } from "@/components/ui/toggle-switch";
 import { PublicSiteUrlPanel } from "@/components/public-site/PublicSiteUrlPanel";
+import { ImageUploadField } from "@/components/molecules/ImageUploadField";
 import { CustomizeSection } from "./CustomizeSection";
 
 const OWNER_ROLES = new Set(["company_owner", "company_admin"]);
@@ -111,17 +112,23 @@ export default function PublicSiteSettingsPage(): React.ReactElement {
               />
             </div>
             <div className="space-y-1.5">
-              <Label htmlFor="logo_url">Logo URL</Label>
-              <Input
-                id="logo_url"
-                placeholder="https://example.com/logo.png"
-                disabled={!canEdit}
-                {...register("public_site_logo_url")}
+              <Label>Company Logo</Label>
+              <Controller
+                name="public_site_logo_url"
+                control={control}
+                render={({ field }) => (
+                  <ImageUploadField
+                    purpose="logo"
+                    label="company logo"
+                    value={field.value || null}
+                    onChange={(url) => field.onChange(url ?? "")}
+                  />
+                )}
               />
               {errors.public_site_logo_url && (
                 <p className="text-xs text-destructive">{errors.public_site_logo_url.message}</p>
               )}
-              <p className="text-xs text-muted-foreground">Direct URL to your logo image (PNG, SVG).</p>
+              <p className="text-xs text-muted-foreground">PNG or WebP recommended. Max 5 MB.</p>
             </div>
             <div className="space-y-1.5">
               <Label htmlFor="tagline">Tagline</Label>

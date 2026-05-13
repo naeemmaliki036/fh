@@ -2,10 +2,32 @@
 
 import Link from "next/link";
 import { type ReactElement } from "react";
+import { Play } from "lucide-react";
 import { ListingStatusBadge } from "@/components/atoms/ListingStatusBadge";
 import { ListingPurposeBadge } from "@/components/atoms/ListingPurposeBadge";
 import { formatDate } from "@/lib/utils/format-date";
 import type { Listing } from "@/lib/types/listing";
+
+function ListingThumb({ url, kind }: { url?: string | null; kind?: string | null }): ReactElement {
+  if (url && kind === "image") {
+    return (
+      <img
+        src={url}
+        className="h-10 w-14 rounded object-cover flex-shrink-0"
+        alt=""
+        loading="lazy"
+      />
+    );
+  }
+  if (url && kind === "video") {
+    return (
+      <div className="relative h-10 w-14 rounded bg-black flex-shrink-0 flex items-center justify-center">
+        <Play className="h-4 w-4 text-white" />
+      </div>
+    );
+  }
+  return <div className="h-10 w-14 rounded bg-muted flex-shrink-0" />;
+}
 
 interface ListingsTableProps {
   listings: Listing[];
@@ -25,6 +47,7 @@ export function ListingsTable({ listings }: ListingsTableProps): ReactElement {
       <table className="w-full text-sm">
         <thead className="bg-muted/40">
           <tr>
+            <th className="px-4 py-2.5 text-left font-medium w-12" />
             <th className="px-4 py-2.5 text-left font-medium text-muted-foreground">Title</th>
             <th className="px-4 py-2.5 text-left font-medium text-muted-foreground">Purpose</th>
             <th className="px-4 py-2.5 text-left font-medium text-muted-foreground">Price</th>
@@ -36,6 +59,9 @@ export function ListingsTable({ listings }: ListingsTableProps): ReactElement {
         <tbody className="divide-y">
           {listings.map((l) => (
             <tr key={l.id} className="hover:bg-muted/30 transition-colors">
+              <td className="px-4 py-2.5">
+                <ListingThumb url={l.thumbnail_url} kind={l.thumbnail_kind} />
+              </td>
               <td className="px-4 py-2.5">
                 <Link
                   href={`/listings/${l.id}`}

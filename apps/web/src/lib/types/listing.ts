@@ -16,6 +16,9 @@ export interface Listing {
   status: ListingStatus;
   listing_tier: ListingTier;
   hero_media_id: string | null;
+  hero_media_url?: string | null;
+  thumbnail_url?: string | null;
+  thumbnail_kind?: "image" | "video" | null;
   tags: string[] | null;
   valid_from: string | null;
   valid_until: string | null;

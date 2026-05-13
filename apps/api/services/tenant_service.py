@@ -15,6 +15,7 @@ from apps.api.models.platform_user import PlatformUser
 from apps.api.models.tenant import Tenant
 from apps.api.services.audit_service import AuditService
 from apps.api.services.base import BaseService
+from apps.api.services.email_template_service import EmailTemplateService
 from apps.api.services.tenant_lifecycle_helpers import (
     fan_out_platform_notification,
     queue_tenant_lifecycle_email,
@@ -63,6 +64,9 @@ class TenantService(BaseService):
         after = {"status": tenant.status.value, "approved_by_id": str(approver_id)}
         await self._rls_and_audit(tenant_id, AuditAction.TENANT_APPROVED, approver_id, before, after, ip_address, user_agent)
         await self.session.refresh(tenant)
+        seeded = await EmailTemplateService(self.session).seed_tenant_templates(tenant.id)
+        if seeded:
+            _log.info("approve_tenant: seeded %d email templates for tenant %s", seeded, tenant.id)
         await queue_tenant_lifecycle_email(
             self.session, tenant=tenant, template_key="tenant_approved",
             subject=f"Your account '{tenant.name}' has been approved",

@@ -50,17 +50,9 @@ export function PlatformLoginForm(): React.ReactElement {
 
       {/* Password */}
       <div className="space-y-1.5">
-        <div className="flex items-center justify-between">
-          <Label htmlFor="platform-password" className="text-sm font-medium text-slate-700">
-            Password
-          </Label>
-          <a
-            href="#"
-            className="text-xs text-slate-400 hover:text-slate-700 transition-colors"
-          >
-            Forgot your password?
-          </a>
-        </div>
+        <Label htmlFor="platform-password" className="text-sm font-medium text-slate-700">
+          Password
+        </Label>
         <Input
           id="platform-password"
           type="password"

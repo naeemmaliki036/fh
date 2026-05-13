@@ -38,6 +38,8 @@ def _to_response(data: dict) -> PropertyResponse:
         "assigned_agents": data["assigned_agents"],
         "media_count": data["media_count"],
         "listing_count": data["listing_count"],
+        "thumbnail_url": data.get("thumbnail_url"),
+        "thumbnail_kind": data.get("thumbnail_kind"),
     })
 
 

@@ -6,11 +6,16 @@ type KnownStatus = TenantStatus | UserStatus | AgentStatus;
 export type StatusVariant = "success" | "warning" | "destructive" | "info" | "muted";
 
 const VARIANT_CLASSES: Record<StatusVariant, string> = {
-  success: "bg-green-100 text-green-800 border-green-200",
-  warning: "bg-amber-100 text-amber-800 border-amber-200",
-  destructive: "bg-red-100 text-red-800 border-red-200",
-  info: "bg-blue-100 text-blue-800 border-blue-200",
-  muted: "bg-slate-100 text-slate-600 border-slate-200",
+  success:
+    "bg-emerald-100 text-emerald-900 border-emerald-200 dark:bg-emerald-950 dark:text-emerald-300 dark:border-emerald-800",
+  warning:
+    "bg-amber-100 text-amber-900 border-amber-200 dark:bg-amber-950 dark:text-amber-300 dark:border-amber-800",
+  destructive:
+    "bg-rose-100 text-rose-900 border-rose-200 dark:bg-rose-950 dark:text-rose-300 dark:border-rose-800",
+  info:
+    "bg-sky-100 text-sky-900 border-sky-200 dark:bg-sky-950 dark:text-sky-300 dark:border-sky-800",
+  muted:
+    "bg-slate-100 text-slate-700 border-slate-200 dark:bg-slate-900 dark:text-slate-300 dark:border-slate-700",
 };
 
 const STATUS_CONFIG: Partial<Record<KnownStatus, { label: string; variant: StatusVariant }>> = {
@@ -38,7 +43,8 @@ export const StatusBadge = forwardRef<HTMLSpanElement, StatusBadgeProps>(
       <span
         ref={ref}
         className={cn(
-          "inline-flex items-center rounded-full border px-2.5 py-0.5 text-xs font-semibold",
+          "inline-flex items-center rounded-full border px-2.5 py-0.5",
+          "font-mono text-[10px] uppercase tracking-wider",
           VARIANT_CLASSES[resolvedVariant],
           className,
         )}

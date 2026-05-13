@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from "react";
 import Link from "next/link";
-import { LayoutGrid, List, Plus, ExternalLink } from "lucide-react";
+import { LayoutGrid, List, Plus, ExternalLink, Play } from "lucide-react";
 import { useProperties } from "@/hooks/queries/useProperties";
 import { useMyTenant } from "@/hooks/queries/useTenants";
 import { usePublicSiteSettings } from "@/hooks/queries/tenant-public-site/usePublicSiteSettings";
@@ -20,6 +20,24 @@ import { formatListingPrice } from "@/lib/utils/format-listing-price";
 import { PROPERTY_OFF_MARKET_REASONS, PROPERTY_AVAILABLE_REASONS } from "@/lib/constants/status-reasons";
 import type { PropertyStatus, PropertyType, Property } from "@/lib/types/property";
 import type { PropertiesViewMode } from "@/lib/types/tenant";
+
+function CardThumb({ url, kind }: { url?: string | null; kind?: string | null }): React.ReactElement {
+  if (url && kind === "image") {
+    return (
+      <div className="aspect-video w-full overflow-hidden rounded-t-xl -mx-4 -mt-4 mb-3" style={{ marginLeft: "-1rem", marginRight: "-1rem", marginTop: "-1rem", width: "calc(100% + 2rem)" }}>
+        <img src={url} alt="" loading="lazy" className="h-full w-full object-cover" />
+      </div>
+    );
+  }
+  if (url && kind === "video") {
+    return (
+      <div className="aspect-video w-full overflow-hidden rounded-t-xl -mx-4 -mt-4 mb-3 bg-black flex items-center justify-center" style={{ marginLeft: "-1rem", marginRight: "-1rem", marginTop: "-1rem", width: "calc(100% + 2rem)" }}>
+        <Play className="h-8 w-8 text-white" />
+      </div>
+    );
+  }
+  return <div className="aspect-video w-full rounded-t-xl -mx-4 -mt-4 mb-3 bg-muted" style={{ marginLeft: "-1rem", marginRight: "-1rem", marginTop: "-1rem", width: "calc(100% + 2rem)" }} />;
+}
 
 const STORAGE_KEY = "properties_view_mode";
 const STATUSES: PropertyStatus[] = ["draft", "available", "reserved", "sold", "rented", "off_market"];
@@ -145,6 +163,7 @@ export function PropertiesGrid({ filterParams }: PropertiesGridProps = {}): Reac
             const transitions = getPropertyTransitions(p);
             return (
               <div key={p.id} className="block rounded-xl border bg-card hover:shadow-md transition-shadow p-4 space-y-3">
+                <CardThumb url={p.thumbnail_url} kind={p.thumbnail_kind} />
                 <div className="flex items-start justify-between gap-2">
                   <Link href={`/properties/${p.id}`} className="font-medium text-sm line-clamp-2 flex-1 hover:underline">
                     {p.title}

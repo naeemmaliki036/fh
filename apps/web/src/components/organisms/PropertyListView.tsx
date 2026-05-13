@@ -1,12 +1,34 @@
 "use client";
 
 import Link from "next/link";
+import { Play } from "lucide-react";
 import { PropertyTypeBadge } from "@/components/atoms/PropertyTypeBadge";
 import { PropertyStatusBadge } from "@/components/atoms/PropertyStatusBadge";
 import { Button } from "@/components/ui/button";
 import type { Property, PropertyStatus } from "@/lib/types/property";
 
 type TransitionDef = { label: string; status: PropertyStatus; destructive: boolean };
+
+function PropertyThumb({ url, kind }: { url?: string | null; kind?: string | null }): React.ReactElement {
+  if (url && kind === "image") {
+    return (
+      <img
+        src={url}
+        className="h-10 w-14 rounded object-cover flex-shrink-0"
+        alt=""
+        loading="lazy"
+      />
+    );
+  }
+  if (url && kind === "video") {
+    return (
+      <div className="relative h-10 w-14 rounded bg-black flex-shrink-0 flex items-center justify-center">
+        <Play className="h-4 w-4 text-white" />
+      </div>
+    );
+  }
+  return <div className="h-10 w-14 rounded bg-muted flex-shrink-0" />;
+}
 
 export function getPropertyTransitions(p: Property): TransitionDef[] {
   switch (p.status) {
@@ -50,7 +72,7 @@ export function PropertyListView({ items, onStatusChange }: PropertyListViewProp
             return (
               <tr key={p.id} className="border-b hover:bg-muted/30">
                 <td className="px-3 py-2.5">
-                  <div className="h-10 w-14 rounded bg-muted flex-shrink-0" />
+                  <PropertyThumb url={p.thumbnail_url} kind={p.thumbnail_kind} />
                 </td>
                 <td className="px-3 py-2.5">
                   <p className="font-medium line-clamp-1">{p.title}</p>

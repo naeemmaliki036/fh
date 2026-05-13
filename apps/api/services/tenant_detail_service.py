@@ -81,12 +81,40 @@ class TenantDetailService(BaseService):
             "deals_count": deals_count,
         }
 
-    async def _get_recent_audit(self, tenant_id: UUID, limit: int) -> list[AuditLog]:
-        """Last *limit* audit log rows for this tenant, newest first."""
+    async def _get_recent_audit(self, tenant_id: UUID, limit: int) -> list[dict]:
+        """Last *limit* audit log rows for this tenant with actor names attached."""
         stmt = (
             select(AuditLog)
             .where(AuditLog.tenant_id == tenant_id)
             .order_by(AuditLog.created_at.desc())
             .limit(limit)
         )
-        return list((await self.session.execute(stmt)).scalars().all())
+        rows = list((await self.session.execute(stmt)).scalars().all())
+        actor_ids = {r.actor_user_id for r in rows if r.actor_user_id}
+        users: dict[UUID, User] = {}
+        if actor_ids:
+            u_result = await self.session.execute(
+                select(User).where(User.id.in_(actor_ids))
+            )
+            users = {u.id: u for u in u_result.scalars().all()}
+
+        out: list[dict] = []
+        for r in rows:
+            u = users.get(r.actor_user_id) if r.actor_user_id else None
+            out.append({
+                "id": r.id,
+                "created_at": r.created_at,
+                "action": r.action,
+                "tenant_id": r.tenant_id,
+                "entity_type": r.entity_type,
+                "entity_id": r.entity_id,
+                "actor_user_id": r.actor_user_id,
+                "actor_platform_user_id": r.actor_platform_user_id,
+                "actor": (
+                    {"id": u.id, "full_name": u.full_name, "email": u.email}
+                    if u else None
+                ),
+                "metadata_before": r.metadata_before,
+                "metadata_after": r.metadata_after,
+            })
+        return out

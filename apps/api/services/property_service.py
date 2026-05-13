@@ -11,6 +11,7 @@ from apps.api.models.listing import Listing
 from apps.api.models.media import Media
 from apps.api.models.property import Property
 from apps.api.models.property_agent import PropertyAgent
+from apps.api.services._media_thumbs import batch_first_media
 from apps.api.services.audit_service import AuditService
 from apps.api.services.base import BaseService
 from packages.common.utils.error_handlers import bad_request, conflict, forbidden, not_found
@@ -171,7 +172,20 @@ class PropertyService(BaseService):
         props = list((await self.session.execute(
             stmt.order_by(order_col).offset(skip).limit(limit)
         )).scalars().all())
-        return [{"property": p, "assigned_agents": [], "media_count": 0, "listing_count": 0} for p in props], total
+
+        prop_ids = [p.id for p in props]
+        thumbnails = await batch_first_media(self.session, prop_ids)
+
+        return [
+            {
+                "property": p,
+                "assigned_agents": [],
+                "media_count": 0,
+                "listing_count": 0,
+                **thumbnails.get(p.id, {"thumbnail_url": None, "thumbnail_kind": None}),
+            }
+            for p in props
+        ], total
 
     async def get_property(self, property_id: UUID, tenant_id: UUID) -> dict:
         await self._set_rls(tenant_id)

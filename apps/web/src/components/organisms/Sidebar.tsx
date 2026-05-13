@@ -22,7 +22,6 @@ import { cn } from "@/lib/utils/cn";
 import { useAuth } from "@/contexts/AuthContext";
 import { usePublicSiteSettings } from "@/hooks/queries/tenant-public-site/usePublicSiteSettings";
 import { useLogout } from "@/hooks/mutations/useAuthMutations";
-import { RoleBadge } from "@/components/atoms/RoleBadge";
 
 interface NavItem {
   href: string;
@@ -31,7 +30,6 @@ interface NavItem {
   adminOnly?: boolean;
 }
 
-/** Items are not to be reordered — grouping is visual only */
 const MAIN_ITEMS: NavItem[] = [
   { href: "/dashboard", label: "Dashboard", icon: LayoutDashboard },
 ];
@@ -57,7 +55,7 @@ const ADMIN_ROLES = new Set(["company_owner", "company_admin"]);
 
 function SectionLabel({ label }: { label: string }): React.ReactElement {
   return (
-    <p className="mb-1 mt-4 px-3 text-[10px] font-semibold uppercase tracking-widest text-sidebar-foreground/30 first:mt-0">
+    <p className="mb-1 mt-4 px-3 text-[10px] font-mono uppercase tracking-widest text-muted-foreground first:mt-0">
       {label}
     </p>
   );
@@ -71,8 +69,8 @@ function NavLink({ item, isActive }: { item: NavItem; isActive: boolean }): Reac
       className={cn(
         "flex items-center gap-3 rounded-md px-3 py-2 text-sm font-medium transition-colors",
         isActive
-          ? "bg-sidebar-accent text-sidebar-accent-foreground"
-          : "text-sidebar-foreground/70 hover:bg-sidebar-accent/50 hover:text-sidebar-foreground",
+          ? "bg-primary/10 text-foreground"
+          : "text-muted-foreground hover:bg-muted hover:text-foreground",
       )}
     >
       <Icon className="h-4 w-4 flex-shrink-0" />
@@ -88,6 +86,19 @@ function getInitials(name: string): string {
     .map((w) => w[0])
     .join("")
     .toUpperCase();
+}
+
+function getRoleLabel(role: string): string {
+  const labels: Record<string, string> = {
+    company_owner: "Company Owner",
+    company_admin: "Company Admin",
+    property_admin: "Property Admin",
+    listing_manager: "Listing Mgr",
+    agent: "Agent",
+    finance_user: "Finance",
+    read_only: "Read Only",
+  };
+  return labels[role] ?? role;
 }
 
 export function Sidebar(): React.ReactElement {
@@ -106,16 +117,16 @@ export function Sidebar(): React.ReactElement {
   }
 
   return (
-    <aside className="flex h-full w-64 flex-col bg-sidebar text-sidebar-foreground">
+    <aside className="flex h-full w-64 flex-col bg-sidebar border-r border-sidebar-border text-sidebar-foreground">
       {/* Brand header */}
-      <div className="flex h-16 items-center gap-3 px-6">
-        <span className="text-lg font-bold tracking-tight">AqarFlow</span>
+      <div className="flex h-16 items-center gap-3 border-b border-sidebar-border px-6">
+        <span className="text-lg font-bold tracking-tight text-foreground">AqarFlow</span>
         {showPublicSiteLink && (
           <a
             href={`/p/${publicSiteSettings.slug}`}
             target="_blank"
             rel="noopener noreferrer"
-            className="inline-flex items-center gap-1 rounded-md px-2 py-1 text-xs font-medium text-sidebar-foreground/60 transition hover:bg-sidebar-accent/50 hover:text-sidebar-foreground"
+            className="inline-flex items-center gap-1 rounded-md px-2 py-1 text-xs font-medium text-muted-foreground transition hover:bg-muted hover:text-foreground"
             title="View public site"
           >
             <ExternalLink className="h-3 w-3" />
@@ -147,26 +158,28 @@ export function Sidebar(): React.ReactElement {
         <div className="border-t border-sidebar-border p-3">
           <div className="flex items-center gap-3 rounded-lg px-2 py-2">
             {/* Avatar */}
-            <div className="flex h-8 w-8 flex-shrink-0 items-center justify-center rounded-full bg-sidebar-accent text-xs font-bold text-sidebar-accent-foreground">
+            <div className="flex h-8 w-8 flex-shrink-0 items-center justify-center rounded-full bg-muted text-xs font-bold text-foreground">
               {getInitials(currentUser.full_name)}
             </div>
-            {/* Name + email */}
+            {/* Name + email + role */}
             <div className="flex-1 min-w-0">
-              <p className="truncate text-sm font-semibold text-sidebar-foreground leading-tight">
+              <p className="truncate text-sm font-medium text-foreground leading-tight">
                 {currentUser.full_name}
               </p>
-              <p className="truncate text-xs text-sidebar-foreground/50 leading-tight">
+              <p className="truncate text-xs text-muted-foreground leading-tight">
                 {currentUser.email}
               </p>
               <div className="mt-1">
-                <RoleBadge role={currentUser.role} />
+                <span className="inline-flex items-center rounded-full border border-primary/30 bg-primary/15 px-2 py-0.5 font-mono text-[10px] uppercase tracking-wider text-foreground">
+                  {getRoleLabel(currentUser.role)}
+                </span>
               </div>
             </div>
             {/* Actions */}
             <div className="flex flex-col gap-1">
               <Link
                 href="/settings/profile"
-                className="flex h-6 w-6 items-center justify-center rounded-md text-sidebar-foreground/40 hover:bg-sidebar-accent/50 hover:text-sidebar-foreground transition-colors"
+                className="flex h-6 w-6 items-center justify-center rounded-md text-muted-foreground hover:bg-muted hover:text-foreground transition-colors"
                 title="Settings"
                 aria-label="Settings"
               >
@@ -175,7 +188,7 @@ export function Sidebar(): React.ReactElement {
               <button
                 onClick={() => logout()}
                 disabled={loggingOut}
-                className="flex h-6 w-6 items-center justify-center rounded-md text-sidebar-foreground/40 hover:bg-sidebar-accent/50 hover:text-sidebar-foreground transition-colors disabled:opacity-40"
+                className="flex h-6 w-6 items-center justify-center rounded-md text-muted-foreground hover:bg-muted hover:text-foreground transition-colors disabled:opacity-40"
                 title="Sign out"
                 aria-label="Sign out"
               >
