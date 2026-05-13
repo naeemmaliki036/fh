@@ -30,6 +30,8 @@ def _hero_url(listing: Listing) -> str | None:
     m = listing.hero_media
     if m is None:
         return None
+    if m.storage_key.startswith(("http://", "https://")):
+        return m.storage_key
     storage = get_public_storage()
     if storage.public_base_url:
         return f"{storage.public_base_url}/{m.storage_key}"

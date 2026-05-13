@@ -10,7 +10,13 @@ from packages.common.storage import get_public_storage
 
 
 def public_url(storage_key: str) -> str:
-    """Assemble CDN URL for a storage key using public storage config."""
+    """Assemble CDN URL for a storage key using public storage config.
+
+    Seed/demo data may store full external URLs (e.g. Unsplash/Pexels)
+    directly in storage_key — in that case return as-is.
+    """
+    if storage_key.startswith(("http://", "https://")):
+        return storage_key
     storage = get_public_storage()
     if storage.public_base_url:
         return f"{storage.public_base_url}/{storage_key}"

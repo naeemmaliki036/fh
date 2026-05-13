@@ -52,6 +52,8 @@ class MediaService(BaseService):
             raise forbidden("listing_manager, property_admin, company_admin or company_owner required")
 
     def _url(self, storage_key: str) -> str:
+        if storage_key.startswith(("http://", "https://")):
+            return storage_key
         storage = get_public_storage()
         if storage.public_base_url:
             return f"{storage.public_base_url}/{storage_key}"
