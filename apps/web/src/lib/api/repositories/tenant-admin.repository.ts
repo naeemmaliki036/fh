@@ -4,6 +4,7 @@ import type {
   TenantListParams,
   TenantListResponse,
   TenantLifecycleRequest,
+  TenantSendMessageRequest,
   Tenant,
 } from "@/lib/types";
 
@@ -41,6 +42,10 @@ class TenantAdminRepository {
       body ?? {},
     );
     return res.data;
+  }
+
+  async sendMessage(id: string, body: TenantSendMessageRequest): Promise<void> {
+    await platformApiClient.post(`${this.basePath}/${id}/send-message`, body);
   }
 }
 

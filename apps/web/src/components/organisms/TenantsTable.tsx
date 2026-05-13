@@ -13,6 +13,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
+import { formatDate } from "@/lib/utils/format-date";
 import type { TenantStatus } from "@/lib/types";
 
 const STATUS_OPTIONS: { value: TenantStatus | "all"; label: string }[] = [
@@ -21,14 +22,6 @@ const STATUS_OPTIONS: { value: TenantStatus | "all"; label: string }[] = [
   { value: "active", label: "Active" },
   { value: "suspended", label: "Suspended" },
 ];
-
-function fmt(value: string): string {
-  return new Date(value).toLocaleDateString("en-AE", {
-    year: "numeric",
-    month: "short",
-    day: "2-digit",
-  });
-}
 
 export function TenantsTable(): React.ReactElement {
   const router = useRouter();
@@ -109,7 +102,7 @@ export function TenantsTable(): React.ReactElement {
                     <TenantStatusBadge status={tenant.status} />
                   </td>
                   <td className="px-4 py-3 text-muted-foreground">{tenant.currency}</td>
-                  <td className="px-4 py-3 text-muted-foreground">{fmt(tenant.created_at)}</td>
+                  <td className="px-4 py-3 text-muted-foreground">{formatDate(tenant.created_at, "en")}</td>
                 </tr>
               ))}
             </tbody>

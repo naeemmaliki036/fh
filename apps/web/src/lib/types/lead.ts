@@ -91,6 +91,10 @@ export interface LeadListParams {
   assigned_agent_id?: string;
   customer_id?: string;
   q?: string;
+  /** ISO datetime string — inclusive start filter on next_action_at */
+  next_action_from?: string;
+  /** ISO datetime string — exclusive end filter on next_action_at */
+  next_action_to?: string;
   skip?: number;
   limit?: number;
 }

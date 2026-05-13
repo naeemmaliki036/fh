@@ -21,7 +21,7 @@ const schema = z.object({
   key: z
     .string()
     .min(1, "Required")
-    .regex(/^[a-z0-9]+(-[a-z0-9]+)*$/, "Must be kebab-case"),
+    .regex(/^[a-z0-9]+([_-][a-z0-9]+)*$/, "Must be snake_case or kebab-case"),
   name: z.string().min(1, "Required"),
   subject: z.string().min(1, "Required"),
   body_html: z.string().min(1, "Required"),
@@ -210,7 +210,7 @@ export function EmailTemplateForm({
           <Label>Key</Label>
           <Input
             {...register("key")}
-            placeholder="welcome-email"
+            placeholder="welcome_email or welcome-email"
             disabled={isEdit}
             className={isEdit ? "bg-muted cursor-not-allowed" : ""}
           />

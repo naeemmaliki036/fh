@@ -74,3 +74,8 @@ export interface TenantDetailResponse extends Tenant {
 export interface TenantLifecycleRequest {
   reason_note?: string;
 }
+
+export interface TenantSendMessageRequest {
+  subject: string;
+  body_text: string;
+}

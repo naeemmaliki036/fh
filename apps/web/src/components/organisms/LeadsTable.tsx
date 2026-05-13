@@ -11,9 +11,10 @@ import { TableSkeleton } from "@/components/molecules/TableSkeleton";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Plus } from "lucide-react";
+import { Plus, Target } from "lucide-react";
 import { cn } from "@/lib/utils/cn";
 import { formatDate } from "@/lib/utils/format-date";
+import { EmptyState } from "@/components/molecules/EmptyState";
 import { useMyTenant } from "@/hooks/queries/useTenants";
 import type { LeadStage } from "@/lib/types/lead";
 
@@ -120,7 +121,12 @@ export function LeadsTable(): React.ReactElement {
           )}
         </table>
         {!isLoading && leads.length === 0 && (
-          <p className="py-8 text-center text-sm text-muted-foreground">No leads found</p>
+          <EmptyState
+            icon={Target}
+            title="No leads yet"
+            description="Add your first lead to start tracking your pipeline."
+            cta={<Button size="sm" onClick={() => setShowCreate(true)}><Plus className="mr-1.5 h-4 w-4" />New Lead</Button>}
+          />
         )}
       </div>
 

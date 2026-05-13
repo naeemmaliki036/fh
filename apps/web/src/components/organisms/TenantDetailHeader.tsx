@@ -2,13 +2,15 @@
 
 import type { ReactElement } from "react";
 import Link from "next/link";
-import { Settings } from "lucide-react";
+import { Settings, MessageSquare } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { TenantStatusBadge } from "@/components/atoms/TenantStatusBadge";
 import { ApproveTenantDialog } from "@/components/organisms/tenant-lifecycle/ApproveTenantDialog";
 import { RejectTenantDialog } from "@/components/organisms/tenant-lifecycle/RejectTenantDialog";
 import { SuspendTenantDialog } from "@/components/organisms/tenant-lifecycle/SuspendTenantDialog";
 import { ReactivateTenantDialog } from "@/components/organisms/tenant-lifecycle/ReactivateTenantDialog";
+import { SendTenantMessageDialog } from "@/components/organisms/SendTenantMessageDialog";
+import { useAuth } from "@/contexts/AuthContext";
 import type { TenantDetailResponse } from "@/lib/types";
 
 interface TenantDetailHeaderProps {
@@ -28,6 +30,11 @@ export function TenantDetailHeader({
   onReactivate,
   isPending,
 }: TenantDetailHeaderProps): ReactElement {
+  const { currentPlatformUser } = useAuth();
+  const canSendMessage =
+    currentPlatformUser?.role === "super_admin" ||
+    currentPlatformUser?.role === "operations_admin";
+
   return (
     <div className="flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
       <div className="space-y-1">
@@ -73,6 +80,19 @@ export function TenantDetailHeader({
             tenantName={tenant.name}
             onConfirm={onReactivate}
             isPending={isPending}
+          />
+        )}
+
+        {canSendMessage && (
+          <SendTenantMessageDialog
+            tenantId={tenant.id}
+            tenantName={tenant.name}
+            trigger={
+              <Button size="sm" variant="outline">
+                <MessageSquare className="h-4 w-4 mr-1.5" />
+                Send message
+              </Button>
+            }
           />
         )}
 

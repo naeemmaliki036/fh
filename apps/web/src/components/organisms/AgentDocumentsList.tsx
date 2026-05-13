@@ -6,6 +6,7 @@ import {
   useDeleteAgentDocument,
 } from "@/hooks/mutations/useAgentMutations";
 import { agentRepository } from "@/lib/api/repositories";
+import { useMyTenant } from "@/hooks/queries/useTenants";
 import { DocumentUploader } from "@/components/molecules/DocumentUploader";
 import { DocumentRow } from "@/components/molecules/DocumentRow";
 import type { PrivateDocumentKind, DownloadUrlResponse } from "@/lib/types/private-document";
@@ -15,6 +16,7 @@ interface AgentDocumentsListProps {
 }
 
 export function AgentDocumentsList({ agentId }: AgentDocumentsListProps): React.ReactElement {
+  const { data: tenant } = useMyTenant();
   const { data: docs, isLoading, error } = useAgentDocuments(agentId);
   const { mutate: upload, isPending: uploading } = useUploadAgentDocument(agentId);
   const { mutate: deleteDoc, isPending: deleting } = useDeleteAgentDocument(agentId);
@@ -60,6 +62,7 @@ export function AgentDocumentsList({ agentId }: AgentDocumentsListProps): React.
                   onDelete={deleteDoc}
                   isDeleting={deleting}
                   getDownloadUrl={getDownloadUrl}
+                  locale={tenant?.locale}
                 />
               ))}
             </tbody>

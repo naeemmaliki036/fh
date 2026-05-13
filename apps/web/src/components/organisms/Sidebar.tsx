@@ -16,6 +16,7 @@ import {
   ExternalLink,
   LogOut,
   Mail,
+  CalendarDays,
 } from "lucide-react";
 import { cn } from "@/lib/utils/cn";
 import { useAuth } from "@/contexts/AuthContext";
@@ -40,6 +41,7 @@ const MANAGE_ITEMS: NavItem[] = [
   { href: "/customers", label: "Customers", icon: UsersRound },
   { href: "/properties", label: "Properties", icon: Home },
   { href: "/leads", label: "Leads", icon: Target },
+  { href: "/calendar", label: "Calendar", icon: CalendarDays },
   { href: "/document-requests", label: "Doc Requests", icon: FileCheck },
   { href: "/deals", label: "Deals", icon: Handshake },
 ];

@@ -24,6 +24,7 @@ export type {
   TenantCounts,
   TenantDetailResponse,
   TenantLifecycleRequest,
+  TenantSendMessageRequest,
 } from "./tenant";
 
 export type {

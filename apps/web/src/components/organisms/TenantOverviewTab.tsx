@@ -1,14 +1,10 @@
 import type { ReactElement } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { formatDate } from "@/lib/utils/format-date";
 import type { TenantDetailResponse } from "@/lib/types";
 
 function fmt(value: string | null | undefined): string {
-  if (!value) return "—";
-  return new Date(value).toLocaleDateString("en-AE", {
-    year: "numeric",
-    month: "short",
-    day: "2-digit",
-  });
+  return formatDate(value, "en") || "—";
 }
 
 interface TenantOverviewTabProps {

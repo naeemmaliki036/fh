@@ -6,6 +6,7 @@ import { KindBadge } from "@/components/atoms/KindBadge";
 import { ConfirmDialog } from "@/components/molecules/ConfirmDialog";
 import { Button } from "@/components/ui/button";
 import type { PrivateDocument, DownloadUrlResponse } from "@/lib/types/private-document";
+import { formatDate } from "@/lib/utils/format-date";
 
 function formatBytes(bytes: number): string {
   if (bytes < 1024) return `${bytes} B`;
@@ -18,9 +19,16 @@ interface DocumentRowProps {
   onDelete: (docId: string) => void;
   isDeleting: boolean;
   getDownloadUrl: (docId: string) => Promise<DownloadUrlResponse>;
+  locale?: string | null;
 }
 
-export function DocumentRow({ doc, onDelete, isDeleting, getDownloadUrl }: DocumentRowProps): React.ReactElement {
+export function DocumentRow({
+  doc,
+  onDelete,
+  isDeleting,
+  getDownloadUrl,
+  locale,
+}: DocumentRowProps): React.ReactElement {
   const handleDownload = async (): Promise<void> => {
     try {
       const { signed_url } = await getDownloadUrl(doc.id);
@@ -30,9 +38,7 @@ export function DocumentRow({ doc, onDelete, isDeleting, getDownloadUrl }: Docum
     }
   };
 
-  const uploadedAt = new Date(doc.created_at).toLocaleDateString("en-AE", {
-    year: "numeric", month: "short", day: "numeric",
-  });
+  const uploadedAt = formatDate(doc.created_at, locale);
 
   return (
     <tr className="border-b">

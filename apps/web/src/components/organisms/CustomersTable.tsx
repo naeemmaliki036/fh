@@ -2,13 +2,14 @@
 
 import { useState } from "react";
 import Link from "next/link";
-import { Plus } from "lucide-react";
+import { Plus, Users } from "lucide-react";
 import { useCustomers } from "@/hooks/queries/useCustomers";
 import { useAgents } from "@/hooks/queries/useAgents";
 import { useDeleteCustomer } from "@/hooks/mutations/useCustomerMutations";
 import { CustomerStatusBadge } from "@/components/atoms/CustomerStatusBadge";
 import { SourceBadge } from "@/components/atoms/SourceBadge";
 import { ConfirmDialog } from "@/components/molecules/ConfirmDialog";
+import { EmptyState } from "@/components/molecules/EmptyState";
 import { TableSkeleton } from "@/components/molecules/TableSkeleton";
 import { CustomerCreateDialog } from "@/components/organisms/CustomerCreateDialog";
 import { Button } from "@/components/ui/button";
@@ -83,57 +84,117 @@ export function CustomersTable(): React.ReactElement {
         <Button onClick={() => setShowCreate(true)}><Plus className="mr-1.5 h-4 w-4" />New Customer</Button>
       </div>
 
-      <div className="overflow-x-auto rounded-md border">
-            <table className="w-full text-sm">
-              <thead className="bg-muted/50">
-                <tr>
-                  <th className="px-3 py-3 text-left font-medium">Name</th>
-                  <th className="px-3 py-3 text-left font-medium">Phone</th>
-                  <th className="px-3 py-3 text-left font-medium">Email</th>
-                  <th className="px-3 py-3 text-left font-medium">Source</th>
-                  <th className="px-3 py-3 text-left font-medium">Agent</th>
-                  <th className="px-3 py-3 text-left font-medium">Status</th>
-                  <th className="px-3 py-3 text-left font-medium">Actions</th>
-                </tr>
-              </thead>
-              {isLoading ? <TableSkeleton rows={5} cols={7} /> : (
-              <tbody>
-                {customers.map((c) => (
-                  <tr key={c.id} className="border-b">
-                    <td className="px-3 py-2.5 font-medium">{c.full_name}</td>
-                    <td className="px-3 py-2.5 text-muted-foreground">{c.phone ?? "—"}</td>
-                    <td className="px-3 py-2.5 text-muted-foreground">{c.email ?? "—"}</td>
-                    <td className="px-3 py-2.5"><SourceBadge source={c.source} /></td>
-                    <td className="px-3 py-2.5 text-muted-foreground">
-                      {c.assigned_agent_id ? agentMap.get(c.assigned_agent_id) ?? "—" : "—"}
-                    </td>
-                    <td className="px-3 py-2.5"><CustomerStatusBadge status={c.status} /></td>
-                    <td className="px-3 py-2.5">
-                      <div className="flex gap-1.5">
-                        <Button size="sm" variant="outline" asChild>
-                          <Link href={`/customers/${c.id}`}>Edit</Link>
-                        </Button>
-                        {c.status !== "inactive" && (
-                          <ConfirmDialog
-                            trigger={<Button size="sm" variant="destructive">Disable</Button>}
-                            title="Disable customer?"
-                            description="This customer will be hidden from new deals and listings. You can re-enable later."
-                            confirmLabel="Disable"
-                            variant="destructive"
-                            onConfirm={() => disable(c.id)}
-                          />
-                        )}
-                      </div>
-                    </td>
-                  </tr>
-                ))}
-              </tbody>
-              )}
-            </table>
-            {!isLoading && customers.length === 0 && (
-              <p className="py-8 text-center text-sm text-muted-foreground">No customers found</p>
-            )}
+      {/* Desktop table */}
+      <div className="hidden lg:block overflow-x-auto rounded-md border">
+        <table className="w-full text-sm">
+          <thead className="bg-muted/50">
+            <tr>
+              <th className="px-3 py-3 text-left font-medium">Name</th>
+              <th className="px-3 py-3 text-left font-medium">Phone</th>
+              <th className="px-3 py-3 text-left font-medium">Email</th>
+              <th className="px-3 py-3 text-left font-medium">Source</th>
+              <th className="px-3 py-3 text-left font-medium">Agent</th>
+              <th className="px-3 py-3 text-left font-medium">Status</th>
+              <th className="px-3 py-3 text-left font-medium">Actions</th>
+            </tr>
+          </thead>
+          {isLoading ? <TableSkeleton rows={5} cols={7} /> : (
+          <tbody>
+            {customers.map((c) => (
+              <tr key={c.id} className="border-b">
+                <td className="px-3 py-2.5 font-medium">{c.full_name}</td>
+                <td className="px-3 py-2.5 text-muted-foreground">{c.phone ?? "—"}</td>
+                <td className="px-3 py-2.5 text-muted-foreground">{c.email ?? "—"}</td>
+                <td className="px-3 py-2.5"><SourceBadge source={c.source} /></td>
+                <td className="px-3 py-2.5 text-muted-foreground">
+                  {c.assigned_agent_id ? agentMap.get(c.assigned_agent_id) ?? "—" : "—"}
+                </td>
+                <td className="px-3 py-2.5"><CustomerStatusBadge status={c.status} /></td>
+                <td className="px-3 py-2.5">
+                  <div className="flex gap-1.5">
+                    <Button size="sm" variant="outline" asChild>
+                      <Link href={`/customers/${c.id}`}>Edit</Link>
+                    </Button>
+                    {c.status !== "inactive" && (
+                      <ConfirmDialog
+                        trigger={<Button size="sm" variant="destructive">Disable</Button>}
+                        title="Disable customer?"
+                        description="This customer will be hidden from new deals and listings. You can re-enable later."
+                        confirmLabel="Disable"
+                        variant="destructive"
+                        onConfirm={() => disable(c.id)}
+                      />
+                    )}
+                  </div>
+                </td>
+              </tr>
+            ))}
+          </tbody>
+          )}
+        </table>
+        {!isLoading && customers.length === 0 && (
+          <EmptyState
+            icon={Users}
+            title="No customers yet"
+            description="Add your first customer to get started."
+            cta={<Button size="sm" onClick={() => setShowCreate(true)}><Plus className="mr-1.5 h-4 w-4" />New Customer</Button>}
+          />
+        )}
+      </div>
+
+      {/* Mobile card list */}
+      <div className="lg:hidden space-y-3">
+        {isLoading && (
+          <div className="space-y-3">
+            {Array.from({ length: 4 }).map((_, i) => (
+              <div key={i} className="rounded-xl border bg-card p-4 animate-pulse h-36" />
+            ))}
           </div>
+        )}
+        {!isLoading && customers.length === 0 && (
+          <EmptyState
+            icon={Users}
+            title="No customers yet"
+            description="Add your first customer to get started."
+            cta={<Button size="sm" onClick={() => setShowCreate(true)}><Plus className="mr-1.5 h-4 w-4" />New Customer</Button>}
+          />
+        )}
+        {!isLoading && customers.map((c) => (
+          <div key={c.id} className="rounded-xl border bg-card p-4">
+            <div className="flex items-center justify-between gap-2 mb-2">
+              <p className="font-semibold truncate">{c.full_name}</p>
+              <CustomerStatusBadge status={c.status} />
+            </div>
+            <dl className="grid grid-cols-2 gap-x-2 gap-y-1 text-xs">
+              <dt className="text-muted-foreground">Phone</dt>
+              <dd className="truncate">{c.phone ?? "—"}</dd>
+              <dt className="text-muted-foreground">Email</dt>
+              <dd className="truncate">{c.email ?? "—"}</dd>
+              <dt className="text-muted-foreground">Source</dt>
+              <dd><SourceBadge source={c.source} /></dd>
+              <dt className="text-muted-foreground">Agent</dt>
+              <dd className="truncate text-muted-foreground">
+                {c.assigned_agent_id ? agentMap.get(c.assigned_agent_id) ?? "—" : "—"}
+              </dd>
+            </dl>
+            <div className="mt-3 flex gap-2">
+              <Button size="sm" variant="outline" asChild>
+                <Link href={`/customers/${c.id}`}>Edit</Link>
+              </Button>
+              {c.status !== "inactive" && (
+                <ConfirmDialog
+                  trigger={<Button size="sm" variant="destructive">Disable</Button>}
+                  title="Disable customer?"
+                  description="This customer will be hidden from new deals and listings. You can re-enable later."
+                  confirmLabel="Disable"
+                  variant="destructive"
+                  onConfirm={() => disable(c.id)}
+                />
+              )}
+            </div>
+          </div>
+        ))}
+      </div>
 
       {total > PAGE_SIZE && (
         <div className="flex items-center gap-3 justify-end">

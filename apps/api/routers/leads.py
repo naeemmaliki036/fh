@@ -1,5 +1,6 @@
 """Leads router — Lead CRUD + stage + assignment + activity timeline."""
 
+from datetime import datetime
 from uuid import UUID
 
 from fastapi import APIRouter, Depends, HTTPException, Query, status
@@ -61,13 +62,17 @@ async def list_leads(
     assigned_agent_id: UUID | None = Query(None),
     customer_id: UUID | None = Query(None),
     q: str | None = Query(None),
+    next_action_from: datetime | None = Query(None),
+    next_action_to: datetime | None = Query(None),
     skip: int = Query(0, ge=0),
     limit: int = Query(50, ge=1, le=200),
     svc: LeadService = Depends(_svc),
 ) -> LeadListResponse:
     items, total = await svc.list_leads(
         tenant_id, stage=stage, assigned_agent_id=assigned_agent_id,
-        customer_id=customer_id, q=q, skip=skip, limit=limit,
+        customer_id=customer_id, q=q,
+        next_action_from=next_action_from, next_action_to=next_action_to,
+        skip=skip, limit=limit,
     )
     return LeadListResponse(items=[_lead_resp(d) for d in items], total=total)
 

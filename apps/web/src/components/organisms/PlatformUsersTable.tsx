@@ -8,14 +8,11 @@ import { StatusBadge } from "@/components/atoms/StatusBadge";
 import { EditPlatformUserDialog } from "@/components/organisms/EditPlatformUserDialog";
 import { ResetPasswordDialog } from "@/components/organisms/ResetPasswordDialog";
 import { Button } from "@/components/ui/button";
+import { formatDate } from "@/lib/utils/format-date";
 
 function fmt(value: string | null): string {
   if (!value) return "Never";
-  return new Date(value).toLocaleDateString("en-AE", {
-    year: "numeric",
-    month: "short",
-    day: "2-digit",
-  });
+  return formatDate(value, "en");
 }
 
 export function PlatformUsersTable(): ReactElement {

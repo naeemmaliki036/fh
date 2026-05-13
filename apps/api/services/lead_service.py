@@ -63,6 +63,8 @@ class LeadService(BaseService):
         assigned_agent_id: UUID | None = None,
         customer_id: UUID | None = None,
         q: str | None = None,
+        next_action_from: datetime | None = None,
+        next_action_to: datetime | None = None,
         skip: int = 0,
         limit: int = 50,
     ) -> tuple[list[dict], int]:
@@ -84,6 +86,10 @@ class LeadService(BaseService):
                 ),
             )
             stmt = stmt.where(Lead.customer_id.in_(cust_ids))
+        if next_action_from is not None:
+            stmt = stmt.where(Lead.next_action_at >= next_action_from)
+        if next_action_to is not None:
+            stmt = stmt.where(Lead.next_action_at < next_action_to)
         total = (await self.session.execute(
             select(func.count()).select_from(stmt.subquery())
         )).scalar_one()

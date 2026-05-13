@@ -6,6 +6,7 @@ import {
   useDeleteCustomerDocument,
 } from "@/hooks/mutations/useCustomerMutations";
 import { customerRepository } from "@/lib/api/repositories";
+import { useMyTenant } from "@/hooks/queries/useTenants";
 import { DocumentUploader } from "@/components/molecules/DocumentUploader";
 import { DocumentRow } from "@/components/molecules/DocumentRow";
 import type { PrivateDocumentKind, DownloadUrlResponse } from "@/lib/types/private-document";
@@ -15,6 +16,7 @@ interface CustomerKycPanelProps {
 }
 
 export function CustomerKycPanel({ customerId }: CustomerKycPanelProps): React.ReactElement {
+  const { data: tenant } = useMyTenant();
   const { data: docs, isLoading, error } = useCustomerDocuments(customerId);
   const { mutate: upload, isPending: uploading } = useUploadCustomerDocument(customerId);
   const { mutate: deleteDoc, isPending: deleting } = useDeleteCustomerDocument(customerId);
@@ -60,6 +62,7 @@ export function CustomerKycPanel({ customerId }: CustomerKycPanelProps): React.R
                   onDelete={deleteDoc}
                   isDeleting={deleting}
                   getDownloadUrl={getDownloadUrl}
+                  locale={tenant?.locale}
                 />
               ))}
             </tbody>
