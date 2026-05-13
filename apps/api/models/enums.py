@@ -188,6 +188,7 @@ class RentPeriod(str, enum.Enum):
     DAILY = "daily"
     WEEKLY = "weekly"
     MONTHLY = "monthly"
+    QUARTERLY = "quarterly"
     YEARLY = "yearly"
 
 

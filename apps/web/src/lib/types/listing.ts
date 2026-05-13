@@ -1,5 +1,5 @@
 export type ListingPurpose = "sale" | "rent_short" | "rent_long";
-export type RentPeriod = "daily" | "weekly" | "monthly" | "yearly";
+export type RentPeriod = "daily" | "weekly" | "monthly" | "quarterly" | "yearly";
 export type ListingStatus = "draft" | "active" | "paused" | "expired" | "archived" | "sold" | "rented" | "off_market";
 export type ListingTier = "standard" | "premium" | "featured";
 

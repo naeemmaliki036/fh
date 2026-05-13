@@ -12,7 +12,7 @@ import { Textarea } from "@/components/atoms/Textarea";
 import type { Listing, ListingCreateRequest, ListingUpdateRequest, ListingPurpose, RentPeriod, ListingTier } from "@/lib/types/listing";
 
 const PURPOSES: ListingPurpose[] = ["sale", "rent_short", "rent_long"];
-const RENT_PERIODS: RentPeriod[] = ["daily", "weekly", "monthly", "yearly"];
+const RENT_PERIODS: RentPeriod[] = ["daily", "weekly", "monthly", "quarterly", "yearly"];
 const TIERS: ListingTier[] = ["standard", "premium", "featured"];
 
 const schema = z
