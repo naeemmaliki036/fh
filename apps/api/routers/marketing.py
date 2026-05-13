@@ -7,6 +7,7 @@ preserved in payload_json).
 """
 
 import logging
+import re
 
 from fastapi import APIRouter
 from pydantic import BaseModel, EmailStr, Field
@@ -14,11 +15,17 @@ from sqlalchemy.ext.asyncio import AsyncSession
 
 from apps.api.config import settings
 from apps.api.dependencies import DbSession
-from apps.api.services.email_outbox_helper import queue_email
+from apps.api.services.email_outbox_service import EmailOutboxService
 
 log = logging.getLogger(__name__)
 
 router = APIRouter()
+
+
+def _extract_email(s: str) -> str:
+    """Pull the address out of either 'Name <addr@x>' or a bare 'addr@x'."""
+    m = re.search(r"<([^>]+)>", s)
+    return (m.group(1) if m else s).strip()
 
 
 class DemoRequestPayload(BaseModel):
@@ -47,7 +54,7 @@ async def submit_demo_request(
     """
     await _try_queue(
         session,
-        recipient=settings.email_from,
+        recipient=_extract_email(settings.email_from),
         template_key="marketing_demo_request",
         variables=payload.model_dump(),
     )
@@ -62,7 +69,7 @@ async def join_waitlist(
     """Inbound waitlist signup from the pricing teaser section."""
     await _try_queue(
         session,
-        recipient=settings.email_from,
+        recipient=_extract_email(settings.email_from),
         template_key="marketing_waitlist",
         variables={"email": payload.email},
     )
@@ -76,17 +83,18 @@ async def _try_queue(
     """Queue an outbox row; swallow failures so a missing template never
     blocks a marketing-form submission. We still log the inbound payload."""
     try:
-        await queue_email(
-            session,
+        svc = EmailOutboxService(session)
+        await svc.enqueue(
             tenant_id=None,
             recipient_email=recipient,
             template_key=template_key,
             variables=variables,
         )
-    except Exception:
+    except Exception as exc:
         log.warning(
             "Marketing inbound captured but outbox enqueue failed: template=%s "
-            "payload=%s",
+            "payload=%s error=%s",
             template_key,
             variables,
+            exc,
         )
