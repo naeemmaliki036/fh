@@ -1,5 +1,6 @@
 "use client";
 
+import { Suspense } from "react";
 import { useSearchParams } from "next/navigation";
 import Link from "next/link";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
@@ -24,7 +25,7 @@ function isReason(value: string | null): value is Reason {
   return value === "pending" || value === "suspended";
 }
 
-export default function AccountStatusPage(): React.ReactElement {
+function AccountStatusContent(): React.ReactElement {
   const params = useSearchParams();
   const rawReason = params.get("reason");
   const reason: Reason = isReason(rawReason) ? rawReason : "pending";
@@ -42,5 +43,13 @@ export default function AccountStatusPage(): React.ReactElement {
         </Button>
       </CardContent>
     </Card>
+  );
+}
+
+export default function AccountStatusPage(): React.ReactElement {
+  return (
+    <Suspense fallback={<div className="mt-8 h-32 animate-pulse rounded-lg bg-muted/40" />}>
+      <AccountStatusContent />
+    </Suspense>
   );
 }
