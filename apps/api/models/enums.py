@@ -97,6 +97,11 @@ class AuditAction(str, enum.Enum):
     LISTING_DOCUMENT_UPLOADED = "listing_document_uploaded"
     LISTING_DOCUMENT_DELETED = "listing_document_deleted"
 
+    # Listing review workflow
+    LISTING_SUBMITTED_FOR_REVIEW = "listing_submitted_for_review"
+    LISTING_REVIEW_DECISION = "listing_review_decision"
+    LISTING_PUBLISHED = "listing_published"
+
     # Tenant lifecycle — extended
     TENANT_REACTIVATED = "tenant_reactivated"
     TENANT_REJECTED = "tenant_rejected"
@@ -194,10 +199,16 @@ class RentPeriod(str, enum.Enum):
 
 class ListingStatus(str, enum.Enum):
     DRAFT = "draft"
+    PENDING_REVIEW = "pending_review"
+    CHANGES_REQUESTED = "changes_requested"
+    APPROVED = "approved"
     ACTIVE = "active"
     PAUSED = "paused"
     EXPIRED = "expired"
     ARCHIVED = "archived"
+    SOLD = "sold"
+    RENTED = "rented"
+    OFF_MARKET = "off_market"
 
 
 class ListingTier(str, enum.Enum):

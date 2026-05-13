@@ -27,6 +27,7 @@ from apps.api.routers import (
     leads,
     listing_document_routes,
     listing_price_routes,
+    listing_review_routes,
     listings,
     marketing,
     media,
@@ -131,6 +132,7 @@ app.include_router(properties.router, prefix="/properties", tags=["properties"])
 app.include_router(listings.router, prefix="", tags=["listings"])
 app.include_router(listing_price_routes.router, prefix="", tags=["listings"])
 app.include_router(listing_document_routes.router, prefix="", tags=["listings"])
+app.include_router(listing_review_routes.router, prefix="", tags=["listings"])
 app.include_router(media.router, prefix="", tags=["media"])
 app.include_router(document_requests.router, prefix="/document-requests", tags=["document-requests"])
 app.include_router(public_document_requests.router, prefix="/public/document-requests", tags=["public"])

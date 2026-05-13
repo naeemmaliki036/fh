@@ -346,6 +346,30 @@ _TEMPLATES: list[dict] = [
         "body_text": "{feature_title}: {feature_summary}. Learn more: {learn_more_url}",
         "variables": ["tenant_name", "feature_title", "feature_summary", "learn_more_url"],
     },
+    {
+        "key": "listing_review_requested",
+        "name": "Listing Review Requested",
+        "subject": "Review requested: {listing_title}",
+        "body_html": """<h2>You have a listing to review</h2>
+<p>Hi {reviewer_name},</p>
+<p><strong>{submitter_name}</strong> has submitted the listing <strong>{listing_title}</strong> for your review.</p>
+{note_block}
+<p><a href="{listing_url}">Open in {tenant_name}</a></p>""",
+        "body_text": "{submitter_name} submitted '{listing_title}' for review. {note}. View: {listing_url}",
+        "variables": ["reviewer_name", "submitter_name", "listing_title", "note_block", "note", "tenant_name", "listing_url"],
+    },
+    {
+        "key": "listing_review_decision",
+        "name": "Listing Review Decision",
+        "subject": "Listing {decision}: {listing_title}",
+        "body_html": """<h2>Listing review decision</h2>
+<p>Hi {submitter_name},</p>
+<p>Your listing <strong>{listing_title}</strong> was reviewed and the decision is <strong>{decision_label}</strong>.</p>
+{note_block}
+<p><a href="{listing_url}">Open listing</a></p>""",
+        "body_text": "Listing '{listing_title}' was {decision_label}. {note}. View: {listing_url}",
+        "variables": ["submitter_name", "listing_title", "decision_label", "decision", "note_block", "note", "tenant_name", "listing_url"],
+    },
 ]
 
 

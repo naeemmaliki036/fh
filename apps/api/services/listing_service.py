@@ -12,16 +12,16 @@ from apps.api.models.enums import (
     ListingPurpose,
     ListingStatus,
     ListingTier,
-    MediaKind,
     TenantRole,
 )
 from apps.api.models.listing import Listing
 from apps.api.models.media import Media
-from apps.api.models.property import Property
-from apps.api.models.property_agent import PropertyAgent
-from apps.api.services._media_thumbs import batch_first_media, public_url
+from apps.api.services._media_thumbs import batch_fallback_thumbnails as _batch_thumbs
 from apps.api.services.audit_service import AuditService
 from apps.api.services.base import BaseService
+from apps.api.services.listing_filters import apply_listing_filters as _apply_filters
+from apps.api.services.listing_review_service import LOCKED_FOR_EDIT_STATUSES
+from apps.api.services.listing_video_validation import validate_video_upload as _validate_video
 from packages.common.utils.error_handlers import bad_request, conflict, forbidden, not_found
 
 _MANAGER_ROLES = {
@@ -33,17 +33,20 @@ _MANAGER_ROLES = {
 _RENT_PURPOSES = {ListingPurpose.RENT_SHORT, ListingPurpose.RENT_LONG}
 
 _LISTING_ALLOWED_TRANSITIONS: dict[ListingStatus, set[ListingStatus]] = {
+    # review workflow transitions handled by ListingReviewService
     ListingStatus.DRAFT: {ListingStatus.ACTIVE, ListingStatus.ARCHIVED},
-    ListingStatus.ACTIVE: {ListingStatus.PAUSED, ListingStatus.ARCHIVED},
+    ListingStatus.ACTIVE: {
+        ListingStatus.PAUSED,
+        ListingStatus.EXPIRED,
+        ListingStatus.ARCHIVED,
+        ListingStatus.SOLD,
+        ListingStatus.RENTED,
+        ListingStatus.OFF_MARKET,
+    },
     ListingStatus.PAUSED: {ListingStatus.ACTIVE, ListingStatus.ARCHIVED},
     ListingStatus.ARCHIVED: {ListingStatus.ACTIVE},
     ListingStatus.EXPIRED: {ListingStatus.ARCHIVED},
 }
-
-_MAX_VIDEOS_PER_LISTING = 2
-_MAX_VIDEO_BYTES = 25 * 1024 * 1024  # 25 MB
-_ALLOWED_VIDEO_MIMES = {"video/mp4", "video/webm"}
-
 
 class ListingService(BaseService):
     def __init__(self, session: AsyncSession) -> None:
@@ -74,35 +77,8 @@ class ListingService(BaseService):
     async def batch_fallback_thumbnails(
         self, listings: list[Listing]
     ) -> dict[str, dict]:
-        """Return {listing_id: {thumbnail_url, thumbnail_kind}}.
-
-        Prefer listing.hero_media if already loaded. For listings without a
-        hero, delegate to batch_first_media for one SQL query over their
-        property_ids — no N+1.
-        """
-        result: dict[str, dict] = {}
-        need_fallback: list[UUID] = []
-        listing_to_property: dict[str, UUID] = {}
-
-        for lst in listings:
-            m = lst.hero_media
-            if m is not None:
-                result[str(lst.id)] = {
-                    "thumbnail_url": public_url(m.storage_key),
-                    "thumbnail_kind": m.kind.value if hasattr(m.kind, "value") else str(m.kind),
-                }
-            else:
-                need_fallback.append(lst.property_id)
-                listing_to_property[str(lst.id)] = lst.property_id
-
-        if not need_fallback:
-            return result
-
-        prop_thumb = await batch_first_media(self.session, need_fallback)
-        for lid, pid in listing_to_property.items():
-            result[lid] = prop_thumb.get(pid, {"thumbnail_url": None, "thumbnail_kind": None})
-
-        return result
+        """Delegate to _media_thumbs.batch_fallback_thumbnails (no N+1)."""
+        return await _batch_thumbs(self.session, listings)
 
     async def list_for_property(
         self, property_id: UUID, tenant_id: UUID
@@ -122,6 +98,7 @@ class ListingService(BaseService):
         purpose: ListingPurpose | None = None,
         listing_tier: ListingTier | None = None,
         assigned_agent_id: UUID | None = None,
+        assigned_reviewer_id: UUID | None = None,
         min_price: float | None = None,
         max_price: float | None = None,
         currency: str | None = None,
@@ -141,62 +118,23 @@ class ListingService(BaseService):
         await self._set_rls(tenant_id)
 
         stmt = select(Listing).where(Listing.tenant_id == tenant_id)
+        stmt = _apply_filters(
+            stmt,
+            assigned_agent_id=assigned_agent_id,
+            assigned_reviewer_id=assigned_reviewer_id,
+            status=status, purpose=purpose, listing_tier=listing_tier,
+            min_price=min_price, max_price=max_price, currency=currency,
+            country=country, city=city, area=area,
+            created_from=created_from, created_to=created_to,
+            valid_from_to=valid_from_to, valid_until_from=valid_until_from,
+            q=q,
+        )
 
-        if assigned_agent_id is not None:
-            # listing → property → property_agents
-            stmt = (
-                stmt
-                .join(Property, Listing.property_id == Property.id)
-                .join(
-                    PropertyAgent,
-                    (PropertyAgent.property_id == Property.id)
-                    & (PropertyAgent.agent_id == assigned_agent_id),
-                )
-            )
-
-        if status:
-            stmt = stmt.where(Listing.status == status)
-        if purpose:
-            stmt = stmt.where(Listing.purpose == purpose)
-        if listing_tier:
-            stmt = stmt.where(Listing.listing_tier == listing_tier)
-        if min_price is not None:
-            stmt = stmt.where(Listing.price >= min_price)
-        if max_price is not None:
-            stmt = stmt.where(Listing.price <= max_price)
-        if currency:
-            stmt = stmt.where(Listing.currency == currency.upper())
-
-        # Location filters require joining Property (only if not already joined)
-        if country or city or area:
-            if assigned_agent_id is None:
-                stmt = stmt.join(Property, Listing.property_id == Property.id)
-            if country:
-                stmt = stmt.where(Property.country.ilike(f"%{country}%"))
-            if city:
-                stmt = stmt.where(Property.city.ilike(f"%{city}%"))
-            if area:
-                stmt = stmt.where(Property.area.ilike(f"%{area}%"))
-
-        if created_from:
-            stmt = stmt.where(Listing.created_at >= created_from)
-        if created_to:
-            stmt = stmt.where(Listing.created_at <= created_to)
-        if valid_from_to:
-            stmt = stmt.where(Listing.valid_from <= valid_from_to)
-        if valid_until_from:
-            stmt = stmt.where(Listing.valid_until >= valid_until_from)
-        if q:
-            pattern = f"%{q}%"
-            stmt = stmt.where(Listing.title.ilike(pattern))
-
-        _sort_cols = {
-            "created_at": Listing.created_at,
-            "updated_at": Listing.updated_at,
-            "price": Listing.price,
-            "title": Listing.title,
+        _col_map = {
+            "created_at": Listing.created_at, "updated_at": Listing.updated_at,
+            "price": Listing.price, "title": Listing.title,
         }
-        col = _sort_cols.get(sort_by, Listing.created_at)
+        col = _col_map.get(sort_by, Listing.created_at)
         order_col = col.asc() if sort_dir == "asc" else col.desc()
 
         total = (await self.session.execute(
@@ -244,6 +182,16 @@ class ListingService(BaseService):
     ) -> Listing:
         self._require_manager(current_user["role"])
         listing = await self.get_listing(listing_id, tenant_id)
+
+        # Block edits when listing is locked for review — unless caller is the reviewer
+        if listing.status in LOCKED_FOR_EDIT_STATUSES:
+            caller_id = UUID(current_user["id"])
+            is_reviewer = listing.assigned_reviewer_id == caller_id
+            if not is_reviewer:
+                raise bad_request(
+                    f"Listing edits are blocked while status is '{listing.status.value}'. "
+                    "Only the assigned reviewer may make changes at this stage."
+                )
 
         new_purpose = updates.get("purpose", listing.purpose)
         new_rent = updates.get("rent_period", listing.rent_period)
@@ -361,25 +309,6 @@ class ListingService(BaseService):
     async def validate_video_upload(
         self, property_id: UUID, tenant_id: UUID, file_bytes: bytes, mime_type: str
     ) -> None:
-        """Raise bad_request if video limits are exceeded."""
-        if mime_type not in _ALLOWED_VIDEO_MIMES:
-            raise bad_request(
-                f"Unsupported video mime type '{mime_type}'. Allowed: {sorted(_ALLOWED_VIDEO_MIMES)}"
-            )
-        if len(file_bytes) > _MAX_VIDEO_BYTES:
-            raise bad_request("Video file exceeds 25 MB size limit")
-
-        # Count existing video media attached to this property's listing
+        """Raise bad_request if video limits are exceeded. Delegates to listing_video_validation."""
         await self._set_rls(tenant_id)
-        r = await self.session.execute(
-            select(func.count()).where(
-                Media.property_id == property_id,
-                Media.tenant_id == tenant_id,
-                Media.kind == MediaKind.VIDEO,
-            )
-        )
-        count = r.scalar_one()
-        if count >= _MAX_VIDEOS_PER_LISTING:
-            raise bad_request(
-                f"Property already has {_MAX_VIDEOS_PER_LISTING} video media items (maximum reached)"
-            )
+        await _validate_video(self.session, property_id, tenant_id, file_bytes, mime_type)

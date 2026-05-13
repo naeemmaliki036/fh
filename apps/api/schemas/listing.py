@@ -85,6 +85,13 @@ class ListingResponse(BaseModel):
     hero_media_url: str | None = None  # assembled by router/service
     thumbnail_url: str | None = None
     thumbnail_kind: str | None = None  # "image" | "video"
+    # Review workflow fields
+    submitted_for_review_at: datetime | None = None
+    submitted_for_review_by_user_id: uuid.UUID | None = None
+    assigned_reviewer_id: uuid.UUID | None = None
+    reviewed_at: datetime | None = None
+    reviewed_by_user_id: uuid.UUID | None = None
+    review_notes: str | None = None
     created_at: datetime
     updated_at: datetime
 

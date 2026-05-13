@@ -1,5 +1,6 @@
 """Shared thumbnail batch-fetch utility used by property and listing services."""
 
+from typing import TYPE_CHECKING
 from uuid import UUID
 
 from sqlalchemy import func, over, select
@@ -7,6 +8,9 @@ from sqlalchemy.ext.asyncio import AsyncSession
 
 from apps.api.models.media import Media
 from packages.common.storage import get_public_storage
+
+if TYPE_CHECKING:
+    from apps.api.models.listing import Listing
 
 
 def public_url(storage_key: str) -> str:
@@ -74,4 +78,37 @@ async def batch_first_media(
             "thumbnail_url": public_url(key),
             "thumbnail_kind": kind.value if hasattr(kind, "value") else str(kind),
         }
+    return result
+
+
+async def batch_fallback_thumbnails(
+    session: AsyncSession, listings: "list[Listing]"
+) -> dict[str, dict]:
+    """Return {listing_id_str: {thumbnail_url, thumbnail_kind}}.
+
+    Prefer listing.hero_media if already loaded. For listings without a
+    hero, delegates to batch_first_media for one SQL query — no N+1.
+    """
+    result: dict[str, dict] = {}
+    need_fallback: list[UUID] = []
+    listing_to_property: dict[str, UUID] = {}
+
+    for lst in listings:
+        m = lst.hero_media
+        if m is not None:
+            result[str(lst.id)] = {
+                "thumbnail_url": public_url(m.storage_key),
+                "thumbnail_kind": m.kind.value if hasattr(m.kind, "value") else str(m.kind),
+            }
+        else:
+            need_fallback.append(lst.property_id)
+            listing_to_property[str(lst.id)] = lst.property_id
+
+    if not need_fallback:
+        return result
+
+    prop_thumb = await batch_first_media(session, need_fallback)
+    for lid, pid in listing_to_property.items():
+        result[lid] = prop_thumb.get(pid, {"thumbnail_url": None, "thumbnail_kind": None})
+
     return result
