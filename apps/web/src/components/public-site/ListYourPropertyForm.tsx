@@ -4,6 +4,8 @@ import { useState } from "react";
 import { CITIES_BY_COUNTRY, AREAS_BY_CITY } from "@/lib/constants/locations";
 import { SearchableSelect } from "@/components/molecules/SearchableSelect";
 import { useCreatePublicLead } from "@/hooks/mutations/public-site/useCreatePublicLead";
+import { PhoneInput } from "@/components/molecules/PhoneInput";
+import { isValidPhone } from "@/lib/utils/phone";
 
 export type ListingIntent = "sell" | "rent_long" | "rent_short";
 
@@ -38,7 +40,6 @@ interface FormState {
 type FormErrors = Partial<Record<"name" | "phone" | "email" | "propertyType" | "message", string>>;
 
 const EMAIL_RE = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-const PHONE_RE = /^\+?[\d\s\-()]{7,20}$/;
 
 function buildMessage(form: FormState): string {
   const lines: string[] = [`Intent: ${INTENT_LABELS[form.intent]}`];
@@ -120,7 +121,7 @@ export function ListYourPropertyForm({
     if (form.name.trim().length < 2) errs.name = "Name must be at least 2 characters";
     else if (form.name.trim().length > 120) errs.name = "Name must be under 120 characters";
     if (!EMAIL_RE.test(form.email)) errs.email = "Enter a valid email address";
-    if (!PHONE_RE.test(form.phone)) errs.phone = "Enter a valid phone number (7-20 digits)";
+    if (!isValidPhone(form.phone)) errs.phone = "Enter a valid phone number (7-20 digits)";
     if (!form.propertyType) errs.propertyType = "Select a property type";
     if (form.message.length > 1000) errs.message = "Message must be under 1000 characters";
     setErrors(errs);
@@ -158,8 +159,16 @@ export function ListYourPropertyForm({
         </div>
         <div>
           <label className={labelCls}>Phone *</label>
-          <input type="tel" value={form.phone} onChange={set("phone")} placeholder="+971 50 000 0000" className={fieldCls} />
-          {errors.phone && <p className={errCls}>{errors.phone}</p>}
+          <PhoneInput
+            value={form.phone}
+            onChange={(v) => {
+              setForm((prev) => ({ ...prev, phone: v }));
+              setErrors((prev) => ({ ...prev, phone: undefined }));
+            }}
+            placeholder="+971 50 123 4567"
+            className={fieldCls}
+            error={errors.phone}
+          />
         </div>
       </div>
 

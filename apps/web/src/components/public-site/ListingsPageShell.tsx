@@ -10,6 +10,7 @@ import { ListingFilters } from "./ListingFilters";
 import { ListingsGrid } from "./ListingsGrid";
 import { TeamSection } from "./TeamSection";
 import { ContactSection } from "./ContactSection";
+import { PublicListingsSearchBar } from "./PublicListingsSearchBar";
 
 interface ListingsPageShellProps {
   profile: PublicTenantProfile;
@@ -50,20 +51,26 @@ export function ListingsPageShell({ profile, slug }: ListingsPageShellProps): Re
       {/* Listings section */}
       <section id="listings" className="py-14">
         <div className="mx-auto w-[min(100%-40px,1280px)]">
-          <div className="mb-8 flex flex-col justify-between gap-4 md:flex-row md:items-end">
-            <div>
-              <span className="text-sm font-black uppercase tracking-[0.16em]" style={{ color: "var(--accent)" }}>
-                Featured listings
-              </span>
-              <h2 className="mt-3 max-w-3xl text-4xl font-black tracking-tight text-slate-950 md:text-5xl">
-                Properties worth exploring.
-              </h2>
+          <div className="mb-8">
+            <div className="mb-6 flex flex-col justify-between gap-4 md:flex-row md:items-end">
+              <div>
+                <span className="text-sm font-black uppercase tracking-[0.16em]" style={{ color: "var(--accent)" }}>
+                  Featured listings
+                </span>
+                <h2 className="mt-3 max-w-3xl text-4xl font-black tracking-tight text-slate-950 md:text-5xl">
+                  Properties worth exploring.
+                </h2>
+              </div>
+              <ListingFilters
+                activeType={activeType}
+                onTypeChange={setActiveType}
+                params={filterParams}
+                onFilter={handleFilter}
+              />
             </div>
-            <ListingFilters
-              activeType={activeType}
-              onTypeChange={setActiveType}
-              params={filterParams}
+            <PublicListingsSearchBar
               onFilter={handleFilter}
+              operatingCountries={profile.operating_countries}
             />
           </div>
 

@@ -38,6 +38,8 @@ export interface Property {
   listing_count: number;
   thumbnail_url?: string | null;
   thumbnail_kind?: "image" | "video" | null;
+  first_active_listing_id?: string | null;
+  first_active_listing_title?: string | null;
   created_at: string;
   updated_at: string;
 }

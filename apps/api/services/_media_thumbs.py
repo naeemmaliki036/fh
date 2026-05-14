@@ -81,6 +81,72 @@ async def batch_first_media(
     return result
 
 
+async def batch_first_active_listing(
+    session: AsyncSession, property_ids: list[UUID]
+) -> dict[UUID, dict]:
+    """Return {property_id: {first_active_listing_id, first_active_listing_title}}
+    for the earliest ACTIVE listing per property. One SQL query — no N+1.
+
+    SQL shape:
+        SELECT property_id, id, title
+        FROM (
+          SELECT property_id, id, title,
+                 ROW_NUMBER() OVER (
+                   PARTITION BY property_id ORDER BY created_at ASC
+                 ) AS rn
+          FROM listings
+          WHERE property_id = ANY(:ids) AND status = 'active'
+        ) ranked
+        WHERE rn = 1
+    """
+    if not property_ids:
+        return {}
+
+    from apps.api.models.listing import Listing  # local import avoids circular
+    from apps.api.models.enums import ListingStatus
+
+    inner = (
+        select(
+            Listing.property_id,
+            Listing.id.label("listing_id"),
+            Listing.title.label("listing_title"),
+            Listing.created_at,
+        ).where(
+            Listing.property_id.in_(property_ids),
+            Listing.status == ListingStatus.ACTIVE,
+        )
+    ).subquery()
+
+    rn_col = over(
+        func.row_number(),
+        partition_by=inner.c.property_id,
+        order_by=inner.c.created_at.asc(),
+    ).label("rn")
+
+    ranked = select(
+        inner.c.property_id,
+        inner.c.listing_id,
+        inner.c.listing_title,
+        rn_col,
+    ).subquery()
+
+    rows = list((await session.execute(
+        select(
+            ranked.c.property_id,
+            ranked.c.listing_id,
+            ranked.c.listing_title,
+        ).where(ranked.c.rn == 1)
+    )).all())
+
+    result: dict[UUID, dict] = {}
+    for row in rows:
+        result[row.property_id] = {
+            "first_active_listing_id": row.listing_id,
+            "first_active_listing_title": row.listing_title,
+        }
+    return result
+
+
 async def batch_fallback_thumbnails(
     session: AsyncSession, listings: "list[Listing]"
 ) -> dict[str, dict]:

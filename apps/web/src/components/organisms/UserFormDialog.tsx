@@ -21,6 +21,8 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { useCreateUser, useUpdateUser } from "@/hooks/mutations/useUserMutations";
+import { PhoneInput } from "@/components/molecules/PhoneInput";
+import { isValidPhone } from "@/lib/utils/phone";
 import type { User, TenantRole } from "@/lib/types";
 
 const ASSIGNABLE_ROLES: { value: TenantRole; label: string }[] = [
@@ -46,13 +48,13 @@ const createSchema = z.object({
   password: z.string().min(8),
   full_name: z.string().min(2),
   role: z.enum(ROLE_ENUM),
-  phone: z.string().optional(),
+  phone: z.string().optional().refine((v) => !v || isValidPhone(v), "Invalid phone number"),
 });
 
 const editSchema = z.object({
   full_name: z.string().min(2),
   role: z.enum(ROLE_ENUM),
-  phone: z.string().optional(),
+  phone: z.string().optional().refine((v) => !v || isValidPhone(v), "Invalid phone number"),
 });
 
 type CreateValues = z.infer<typeof createSchema>;
@@ -97,6 +99,7 @@ interface CreateFormProps {
 function CreateForm({ onClose, onSubmit, isPending }: CreateFormProps): React.ReactElement {
   const { register, handleSubmit, control, formState: { errors } } = useForm<CreateValues>({
     resolver: zodResolver(createSchema),
+    defaultValues: { phone: "" },
   });
 
   return (
@@ -136,6 +139,20 @@ function CreateForm({ onClose, onSubmit, isPending }: CreateFormProps): React.Re
               )}
             />
             {errors.role && <p className="text-xs text-destructive">{errors.role.message}</p>}
+          </div>
+          <div className="space-y-1.5">
+            <Label>Phone</Label>
+            <Controller
+              name="phone"
+              control={control}
+              render={({ field }) => (
+                <PhoneInput
+                  value={field.value ?? ""}
+                  onChange={field.onChange}
+                  error={errors.phone?.message}
+                />
+              )}
+            />
           </div>
           <DialogFooter>
             <Button type="button" variant="outline" onClick={onClose}>Cancel</Button>
@@ -193,7 +210,17 @@ function EditForm({ user, onClose, onSubmit, isPending }: EditFormProps): React.
           </div>
           <div className="space-y-1.5">
             <Label>Phone</Label>
-            <Input {...register("phone")} />
+            <Controller
+              name="phone"
+              control={control}
+              render={({ field }) => (
+                <PhoneInput
+                  value={field.value ?? ""}
+                  onChange={field.onChange}
+                  error={errors.phone?.message}
+                />
+              )}
+            />
           </div>
           <DialogFooter>
             <Button type="button" variant="outline" onClick={onClose}>Cancel</Button>

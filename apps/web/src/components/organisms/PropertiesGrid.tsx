@@ -17,6 +17,7 @@ import { Input } from "@/components/ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { cn } from "@/lib/utils/cn";
 import { formatListingPrice } from "@/lib/utils/format-listing-price";
+import { listingHandle } from "@/lib/utils/listing-url";
 import { PROPERTY_OFF_MARKET_REASONS, PROPERTY_AVAILABLE_REASONS } from "@/lib/constants/status-reasons";
 import type { PropertyStatus, PropertyType, Property } from "@/lib/types/property";
 import type { PropertiesViewMode } from "@/lib/types/tenant";
@@ -183,21 +184,36 @@ export function PropertiesGrid({ filterParams }: PropertiesGridProps = {}): Reac
                     <span>{p.media_count} media</span>
                     <span>{p.listing_count} listings</span>
                   </div>
-                  {transitions.length > 0 && (
-                    <div className="flex gap-1">
-                      {transitions.map((t) => (
-                        <Button
-                          key={t.status}
-                          size="sm"
-                          variant={t.destructive ? "destructive" : "secondary"}
-                          className="text-xs h-6 px-2"
-                          onClick={() => setPending({ property: p, targetStatus: t.status })}
+                  <div className="flex gap-1 items-center">
+                    {p.first_active_listing_id && tenant?.slug && (
+                      <Button
+                        size="sm"
+                        variant="outline"
+                        className="text-xs h-6 px-2"
+                        asChild
+                        aria-label="View on website"
+                      >
+                        <a
+                          href={`/p/${tenant.slug}/listings/${listingHandle(p.first_active_listing_title ?? null, p.first_active_listing_id)}`}
+                          target="_blank"
+                          rel="noopener noreferrer"
                         >
-                          {t.label}
-                        </Button>
-                      ))}
-                    </div>
-                  )}
+                          <ExternalLink className="h-3.5 w-3.5" />
+                        </a>
+                      </Button>
+                    )}
+                    {transitions.map((t) => (
+                      <Button
+                        key={t.status}
+                        size="sm"
+                        variant={t.destructive ? "destructive" : "secondary"}
+                        className="text-xs h-6 px-2"
+                        onClick={() => setPending({ property: p, targetStatus: t.status })}
+                      >
+                        {t.label}
+                      </Button>
+                    ))}
+                  </div>
                 </div>
               </div>
             );

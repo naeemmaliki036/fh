@@ -15,6 +15,8 @@ import {
 } from "@/components/ui/select";
 import { NATIONALITIES, LANGUAGES } from "@/lib/constants/regions";
 import { Textarea } from "@/components/atoms/Textarea";
+import { PhoneInput } from "@/components/molecules/PhoneInput";
+import { isValidPhone } from "@/lib/utils/phone";
 import type { Customer, CustomerCreateRequest, CustomerUpdateRequest, CustomerSource } from "@/lib/types";
 import type { Agent } from "@/lib/types";
 
@@ -33,7 +35,7 @@ const SOURCE_VALUES = SOURCES.map((s) => s.value) as [CustomerSource, ...Custome
 const schema = z.object({
   full_name: z.string().min(2, "Name required"),
   email: z.string().email("Invalid email").optional().or(z.literal("")),
-  phone: z.string().optional(),
+  phone: z.string().optional().refine((v) => !v || isValidPhone(v), "Invalid phone number"),
   nationality: z.string().optional(),
   language: z.string().optional(),
   preferred_currency: z.string().optional(),
@@ -97,7 +99,18 @@ export function CustomerForm({ defaultValues, agents, isPending, submitLabel, on
         </div>
         <div className="space-y-1.5">
           <Label htmlFor="form-phone">Phone</Label>
-          <Input id="form-phone" {...register("phone")} placeholder="+971 50 123 4567" />
+          <Controller
+            name="phone"
+            control={control}
+            render={({ field }) => (
+              <PhoneInput
+                id="form-phone"
+                value={field.value ?? ""}
+                onChange={field.onChange}
+                error={errors.phone?.message}
+              />
+            )}
+          />
         </div>
         <div className="space-y-1.5">
           <Label>Nationality</Label>

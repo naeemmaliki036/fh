@@ -3,297 +3,276 @@
 import { useCallback, useEffect, useRef, useState } from "react";
 import { useRouter, useSearchParams, usePathname } from "next/navigation";
 import type { PublicListingsParams } from "@/lib/types/public-site";
+import { CITIES_BY_COUNTRY, AREAS_BY_CITY } from "@/lib/constants/locations";
+import { SearchSegment, type SegmentOption } from "./SearchSegment";
+import {
+  PublicListingsAdvancedFilters,
+  type AdvancedFilterValues,
+} from "./PublicListingsAdvancedFilters";
 
 // ---------------------------------------------------------------------------
 // Constants
 // ---------------------------------------------------------------------------
 
-const PURPOSES = [
+const PURPOSE_OPTIONS: SegmentOption[] = [
   { value: "", label: "All" },
-  { value: "sale", label: "Sale" },
-  { value: "rent_long", label: "Rent (long)" },
-  { value: "rent_short", label: "Rent (short)" },
-] as const;
-
-const PROPERTY_TYPES = [
-  { value: "", label: "All types" },
-  { value: "apartment", label: "Apartment" },
-  { value: "villa", label: "Villa" },
-  { value: "townhouse", label: "Townhouse" },
-  { value: "penthouse", label: "Penthouse" },
-  { value: "office", label: "Office" },
-  { value: "retail", label: "Retail" },
-  { value: "warehouse", label: "Warehouse" },
-  { value: "plot", label: "Plot" },
-  { value: "building", label: "Building" },
-  { value: "other", label: "Other" },
-] as const;
-
-const BED_OPTIONS = [
-  { value: "", label: "Any beds" },
-  { value: "0", label: "Studio" },
-  { value: "1", label: "1 bed" },
-  { value: "2", label: "2 beds" },
-  { value: "3", label: "3 beds" },
-  { value: "4", label: "4 beds" },
-  { value: "5", label: "5+ beds" },
-] as const;
+  { value: "sale", label: "Buy" },
+  { value: "rent_long", label: "Rent" },
+];
 
 const DEBOUNCE_MS = 400;
 
 // ---------------------------------------------------------------------------
 // Helpers
 // ---------------------------------------------------------------------------
-function buildParams(sp: URLSearchParams): PublicListingsParams {
-  const beds = sp.get("beds");
-  const minP = sp.get("min_price");
-  const maxP = sp.get("max_price");
+
+function buildParams(c: string, ar: string, p: string, adv: AdvancedFilterValues): PublicListingsParams {
   return {
-    q: sp.get("q") ?? undefined,
-    purpose: sp.get("purpose") ?? undefined,
-    property_type: sp.get("property_type") ?? undefined,
-    beds: beds !== null ? Number(beds) : undefined,
-    min_price: minP !== null ? Number(minP) : undefined,
-    max_price: maxP !== null ? Number(maxP) : undefined,
-    city: sp.get("city") ?? undefined,
     page: 1,
+    city: c || null, area: ar || null, purpose: p || null,
+    property_type: adv.propertyType || null,
+    beds: adv.beds !== "" ? Number(adv.beds) : null,
+    min_price: adv.minPrice !== "" ? Number(adv.minPrice) : null,
+    max_price: adv.maxPrice !== "" ? Number(adv.maxPrice) : null,
   };
+}
+
+function buildSearchParams(c: string, ar: string, p: string, adv: AdvancedFilterValues): URLSearchParams {
+  const sp = new URLSearchParams();
+  if (c) sp.set("city", c);
+  if (ar) sp.set("area", ar);
+  if (p) sp.set("purpose", p);
+  if (adv.propertyType) sp.set("property_type", adv.propertyType);
+  if (adv.beds !== "") sp.set("beds", adv.beds);
+  if (adv.minPrice !== "") sp.set("min_price", adv.minPrice);
+  if (adv.maxPrice !== "") sp.set("max_price", adv.maxPrice);
+  return sp;
 }
 
 // ---------------------------------------------------------------------------
 // Props
 // ---------------------------------------------------------------------------
+
 interface PublicListingsSearchBarProps {
   onFilter: (params: PublicListingsParams) => void;
+  /** ISO-3166-1 alpha-2 codes; first is used for city options */
+  operatingCountries?: string[];
 }
 
 // ---------------------------------------------------------------------------
 // Component
 // ---------------------------------------------------------------------------
+
 export function PublicListingsSearchBar({
   onFilter,
+  operatingCountries = [],
 }: PublicListingsSearchBarProps): React.ReactElement {
   const router = useRouter();
   const pathname = usePathname();
   const searchParams = useSearchParams();
 
-  const [q, setQ] = useState(searchParams.get("q") ?? "");
-  const [purpose, setPurpose] = useState(searchParams.get("purpose") ?? "");
-  const [propertyType, setPropertyType] = useState(searchParams.get("property_type") ?? "");
-  const [beds, setBeds] = useState(searchParams.get("beds") ?? "");
-  const [minPrice, setMinPrice] = useState(searchParams.get("min_price") ?? "");
-  const [maxPrice, setMaxPrice] = useState(searchParams.get("max_price") ?? "");
+  const primaryCountry = operatingCountries[0] ?? "AE";
+  const cityOptions: SegmentOption[] = [
+    { value: "", label: "All cities" },
+    ...(CITIES_BY_COUNTRY[primaryCountry] ?? []),
+  ];
+
+  // Core segment state
   const [city, setCity] = useState(searchParams.get("city") ?? "");
+  const [area, setArea] = useState(searchParams.get("area") ?? "");
+  const [purpose, setPurpose] = useState(searchParams.get("purpose") ?? "");
 
-  const debounceRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  // Advanced filter state
+  const [adv, setAdv] = useState<AdvancedFilterValues>({
+    propertyType: searchParams.get("property_type") ?? "",
+    beds: searchParams.get("beds") ?? "",
+    minPrice: searchParams.get("min_price") ?? "",
+    maxPrice: searchParams.get("max_price") ?? "",
+  });
 
-  // Push state to URL and notify parent on any filter change
-  const applyFilters = useCallback(
-    (overrides: {
-      q?: string;
-      purpose?: string;
-      propertyType?: string;
-      beds?: string;
-      minPrice?: string;
-      maxPrice?: string;
-      city?: string;
-    }) => {
-      const next = new URLSearchParams();
-      const vals = {
-        q,
-        purpose,
-        propertyType,
-        beds,
-        minPrice,
-        maxPrice,
-        city,
-        ...overrides,
-      };
-      if (vals.q) next.set("q", vals.q);
-      if (vals.purpose) next.set("purpose", vals.purpose);
-      if (vals.propertyType) next.set("property_type", vals.propertyType);
-      if (vals.beds !== "") next.set("beds", vals.beds);
-      if (vals.minPrice !== "") next.set("min_price", vals.minPrice);
-      if (vals.maxPrice !== "") next.set("max_price", vals.maxPrice);
-      if (vals.city) next.set("city", vals.city);
+  const [showAdvanced, setShowAdvanced] = useState(false);
+  const advDebounce = useRef<ReturnType<typeof setTimeout> | null>(null);
 
-      router.replace(`${pathname}?${next.toString()}`, { scroll: false });
+  // Area options — dropdown when mapped, free-text otherwise
+  const mappedAreas: SegmentOption[] | undefined = city
+    ? AREAS_BY_CITY[city]
+    : undefined;
+  const hasAreaDropdown = mappedAreas !== undefined && mappedAreas.length > 0;
+  const areaOptions: SegmentOption[] = hasAreaDropdown
+    ? [{ value: "", label: "All areas" }, ...mappedAreas]
+    : [];
 
-      const sp = next;
-      onFilter(buildParams(sp));
+  // Reset area when city changes
+  const handleCityChange = (v: string): void => {
+    setCity(v);
+    setArea("");
+  };
+
+  // Push to URL and notify parent
+  const apply = useCallback(
+    (c: string, ar: string, p: string, a: AdvancedFilterValues): void => {
+      const sp = buildSearchParams(c, ar, p, a);
+      router.replace(`${pathname}?${sp.toString()}`, { scroll: false });
+      onFilter(buildParams(c, ar, p, a));
     },
-    [q, purpose, propertyType, beds, minPrice, maxPrice, city, router, pathname, onFilter],
+    [router, pathname, onFilter],
   );
 
-  // Debounce text inputs
+  // Debounced apply (for free-text area input)
   const scheduleApply = useCallback(
-    (overrides: Parameters<typeof applyFilters>[0]) => {
-      if (debounceRef.current) clearTimeout(debounceRef.current);
-      debounceRef.current = setTimeout(() => applyFilters(overrides), DEBOUNCE_MS);
+    (c: string, ar: string, p: string, a: AdvancedFilterValues): void => {
+      if (advDebounce.current) clearTimeout(advDebounce.current);
+      advDebounce.current = setTimeout(() => apply(c, ar, p, a), DEBOUNCE_MS);
     },
-    [applyFilters],
+    [apply],
   );
 
   // Seed from URL on mount
   useEffect(() => {
     const sp = searchParams;
-    if (
-      sp.get("q") ||
-      sp.get("purpose") ||
-      sp.get("property_type") ||
-      sp.get("beds") ||
-      sp.get("min_price") ||
-      sp.get("max_price") ||
-      sp.get("city")
-    ) {
-      onFilter(buildParams(sp));
+    const hasAny = sp.get("city") || sp.get("area") || sp.get("purpose") ||
+      sp.get("property_type") || sp.get("beds") || sp.get("min_price") || sp.get("max_price");
+    if (hasAny) {
+      onFilter(buildParams(sp.get("city") ?? "", sp.get("area") ?? "", sp.get("purpose") ?? "", {
+        propertyType: sp.get("property_type") ?? "",
+        beds: sp.get("beds") ?? "",
+        minPrice: sp.get("min_price") ?? "",
+        maxPrice: sp.get("max_price") ?? "",
+      }));
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
+  const handleAdvChange = (next: AdvancedFilterValues): void => {
+    setAdv(next);
+    if (advDebounce.current) clearTimeout(advDebounce.current);
+    advDebounce.current = setTimeout(
+      () => apply(city, area, purpose, next),
+      DEBOUNCE_MS,
+    );
+  };
+
+  const handleSearch = (): void => {
+    if (advDebounce.current) clearTimeout(advDebounce.current);
+    apply(city, area, purpose, adv);
+  };
+
   const hasFilters =
-    q || purpose || propertyType || beds !== "" || minPrice !== "" || maxPrice !== "" || city;
+    city || area || purpose ||
+    adv.propertyType || adv.beds !== "" ||
+    adv.minPrice !== "" || adv.maxPrice !== "";
 
   const clearAll = (): void => {
-    setQ("");
-    setPurpose("");
-    setPropertyType("");
-    setBeds("");
-    setMinPrice("");
-    setMaxPrice("");
     setCity("");
+    setArea("");
+    setPurpose("");
+    setAdv({ propertyType: "", beds: "", minPrice: "", maxPrice: "" });
     router.replace(pathname, { scroll: false });
     onFilter({ page: 1 });
   };
 
   return (
-    <div className="mb-6 rounded-[2rem] border border-slate-200 bg-white p-4 shadow-sm">
-      {/* Row 1: text search */}
-      <div className="flex items-center gap-3">
-        <div className="flex flex-1 items-center gap-2 rounded-full border border-slate-200 bg-slate-50 px-4 py-2">
-          <svg
-            className="h-4 w-4 shrink-0 text-slate-400"
-            fill="none"
-            stroke="currentColor"
-            viewBox="0 0 24 24"
-          >
-            <path
-              strokeLinecap="round"
-              strokeLinejoin="round"
-              strokeWidth={2}
-              d="M21 21l-4.35-4.35M17 11A6 6 0 1 1 5 11a6 6 0 0 1 12 0z"
-            />
-          </svg>
-          <input
-            type="text"
-            placeholder="Search listings..."
-            value={q}
-            onChange={(e) => {
-              setQ(e.target.value);
-              scheduleApply({ q: e.target.value });
+    <div className="mb-6">
+      {/* Pill strip */}
+      <div className="flex flex-col items-stretch gap-0 rounded-full border border-border bg-card shadow-card-md sm:flex-row sm:items-center sm:gap-0 sm:p-1.5">
+        {/* City segment */}
+        <SearchSegment
+          label="City"
+          value={city}
+          placeholder="All cities"
+          options={cityOptions}
+          onChange={(v) => {
+            handleCityChange(v);
+            apply(v, "", purpose, adv);
+          }}
+        />
+
+        {/* Divider */}
+        <div className="hidden h-8 w-px shrink-0 bg-border sm:block" />
+
+        {/* Area segment */}
+        {hasAreaDropdown ? (
+          <SearchSegment
+            label="Area"
+            value={area}
+            placeholder="All areas"
+            options={areaOptions}
+            disabled={!city}
+            onChange={(v) => {
+              setArea(v);
+              apply(city, v, purpose, adv);
             }}
-            className="flex-1 bg-transparent text-sm text-slate-950 outline-none placeholder:text-slate-400"
           />
+        ) : (
+          <SearchSegment
+            label="Area"
+            value={area}
+            placeholder={city ? "Type area..." : "Select city first"}
+            options={[]}
+            disabled={!city}
+            freeText
+            onChange={(v) => {
+              setArea(v);
+              scheduleApply(city, v, purpose, adv);
+            }}
+          />
+        )}
+
+        {/* Divider */}
+        <div className="hidden h-8 w-px shrink-0 bg-border sm:block" />
+
+        {/* Purpose segment */}
+        <SearchSegment
+          label="Buy or Rent?"
+          value={purpose}
+          placeholder="All"
+          options={PURPOSE_OPTIONS}
+          onChange={(v) => {
+            setPurpose(v);
+            apply(city, area, v, adv);
+          }}
+        />
+
+        {/* Search button */}
+        <div className="flex shrink-0 items-center gap-2 p-1.5 sm:p-0">
+          <button
+            type="button"
+            onClick={handleSearch}
+            className="w-full rounded-full bg-slate-950 px-6 py-2.5 text-sm font-extrabold text-white transition hover:-translate-y-0.5 hover:bg-slate-800 sm:w-auto"
+          >
+            Search
+          </button>
         </div>
+      </div>
+
+      {/* Below-bar meta row */}
+      <div className="mt-2 flex items-center gap-4 px-1">
+        <button
+          type="button"
+          onClick={() => setShowAdvanced((v) => !v)}
+          className="text-xs font-medium text-muted-foreground underline-offset-2 hover:underline"
+        >
+          {showAdvanced ? "Hide filters" : "More filters"}
+        </button>
+
         {hasFilters && (
           <button
             type="button"
             onClick={clearAll}
-            className="shrink-0 rounded-full border border-slate-200 bg-white px-4 py-2 text-sm font-bold text-slate-600 transition hover:bg-slate-50"
+            className="text-xs font-medium text-muted-foreground underline-offset-2 hover:underline"
           >
             Clear all
           </button>
         )}
       </div>
 
-      {/* Row 2: filter chips */}
-      <div className="mt-3 flex flex-wrap gap-2">
-        {/* Purpose */}
-        <select
-          value={purpose}
-          onChange={(e) => {
-            setPurpose(e.target.value);
-            applyFilters({ purpose: e.target.value });
-          }}
-          className="rounded-full border border-slate-200 bg-slate-50 px-3 py-1.5 text-sm font-medium text-slate-700 outline-none transition hover:bg-slate-100"
-        >
-          {PURPOSES.map(({ value, label }) => (
-            <option key={value} value={value}>
-              {label}
-            </option>
-          ))}
-        </select>
-
-        {/* Property type */}
-        <select
-          value={propertyType}
-          onChange={(e) => {
-            setPropertyType(e.target.value);
-            applyFilters({ propertyType: e.target.value });
-          }}
-          className="rounded-full border border-slate-200 bg-slate-50 px-3 py-1.5 text-sm font-medium text-slate-700 outline-none transition hover:bg-slate-100"
-        >
-          {PROPERTY_TYPES.map(({ value, label }) => (
-            <option key={value} value={value}>
-              {label}
-            </option>
-          ))}
-        </select>
-
-        {/* Bedrooms */}
-        <select
-          value={beds}
-          onChange={(e) => {
-            setBeds(e.target.value);
-            applyFilters({ beds: e.target.value });
-          }}
-          className="rounded-full border border-slate-200 bg-slate-50 px-3 py-1.5 text-sm font-medium text-slate-700 outline-none transition hover:bg-slate-100"
-        >
-          {BED_OPTIONS.map(({ value, label }) => (
-            <option key={value} value={value}>
-              {label}
-            </option>
-          ))}
-        </select>
-
-        {/* Min price */}
-        <input
-          type="number"
-          placeholder="Min price"
-          value={minPrice}
-          min={0}
-          onChange={(e) => {
-            setMinPrice(e.target.value);
-            scheduleApply({ minPrice: e.target.value });
-          }}
-          className="w-28 rounded-full border border-slate-200 bg-slate-50 px-3 py-1.5 text-sm font-medium text-slate-700 outline-none placeholder:text-slate-400 transition hover:bg-slate-100"
+      {/* Advanced filters panel */}
+      {showAdvanced && (
+        <PublicListingsAdvancedFilters
+          values={adv}
+          onChange={handleAdvChange}
         />
-
-        {/* Max price */}
-        <input
-          type="number"
-          placeholder="Max price"
-          value={maxPrice}
-          min={0}
-          onChange={(e) => {
-            setMaxPrice(e.target.value);
-            scheduleApply({ maxPrice: e.target.value });
-          }}
-          className="w-28 rounded-full border border-slate-200 bg-slate-50 px-3 py-1.5 text-sm font-medium text-slate-700 outline-none placeholder:text-slate-400 transition hover:bg-slate-100"
-        />
-
-        {/* City */}
-        <input
-          type="text"
-          placeholder="City"
-          value={city}
-          onChange={(e) => {
-            setCity(e.target.value);
-            scheduleApply({ city: e.target.value });
-          }}
-          className="w-28 rounded-full border border-slate-200 bg-slate-50 px-3 py-1.5 text-sm font-medium text-slate-700 outline-none placeholder:text-slate-400 transition hover:bg-slate-100"
-        />
-      </div>
+      )}
     </div>
   );
 }

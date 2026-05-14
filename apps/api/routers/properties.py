@@ -40,6 +40,8 @@ def _to_response(data: dict) -> PropertyResponse:
         "listing_count": data["listing_count"],
         "thumbnail_url": data.get("thumbnail_url"),
         "thumbnail_kind": data.get("thumbnail_kind"),
+        "first_active_listing_id": data.get("first_active_listing_id"),
+        "first_active_listing_title": data.get("first_active_listing_title"),
     })
 
 

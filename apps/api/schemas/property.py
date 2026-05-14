@@ -128,6 +128,8 @@ class PropertyResponse(BaseModel):
     listing_count: int = 0
     thumbnail_url: str | None = None
     thumbnail_kind: str | None = None  # "image" | "video"
+    first_active_listing_id: uuid.UUID | None = None
+    first_active_listing_title: str | None = None
     created_at: datetime
     updated_at: datetime
 

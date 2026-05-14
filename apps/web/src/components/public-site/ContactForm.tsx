@@ -3,6 +3,8 @@
 import { useState } from "react";
 import { z } from "zod";
 import { useCreatePublicLead } from "@/hooks/mutations/public-site/useCreatePublicLead";
+import { PhoneInput } from "@/components/molecules/PhoneInput";
+import { isValidPhone } from "@/lib/utils/phone";
 
 interface ContactFormProps {
   slug: string;
@@ -16,7 +18,7 @@ const contactSchema = z.object({
   phone: z
     .string()
     .optional()
-    .refine((v) => !v || /^\+?[\d\s\-() ]{7,20}$/.test(v), "Invalid phone number"),
+    .refine((v) => !v || isValidPhone(v), "Invalid phone number"),
   message: z
     .string()
     .min(1, "Message is required")
@@ -62,6 +64,11 @@ export function ContactForm({ slug, listingId, compact = false }: ContactFormPro
       setForm((prev) => ({ ...prev, [field]: e.target.value }));
       if (field in errors) setErrors((prev) => ({ ...prev, [field]: undefined }));
     };
+
+  const setPhone = (v: string): void => {
+    setForm((prev) => ({ ...prev, phone: v }));
+    setErrors((prev) => ({ ...prev, phone: undefined }));
+  };
 
   const validate = (): boolean => {
     const result = contactSchema.safeParse({
@@ -126,8 +133,13 @@ export function ContactForm({ slug, listingId, compact = false }: ContactFormPro
           {errors.email && <p className={errCls}>{errors.email}</p>}
         </div>
         <div>
-          <input type="tel" value={form.phone} onChange={set("phone")} placeholder="+971 50 000 0000" className={fieldCls} />
-          {errors.phone && <p className={errCls}>{errors.phone}</p>}
+          <PhoneInput
+            value={form.phone}
+            onChange={setPhone}
+            placeholder="+971 50 123 4567"
+            className={fieldCls}
+            error={errors.phone}
+          />
         </div>
         <div>
           <textarea rows={3} value={form.message} onChange={set("message")} placeholder="Your message" className={`${fieldCls} resize-y`} />
@@ -151,8 +163,13 @@ export function ContactForm({ slug, listingId, compact = false }: ContactFormPro
         {errors.name && <p className={errCls}>{errors.name}</p>}
       </div>
       <div>
-        <input type="tel" value={form.phone} onChange={set("phone")} placeholder="Phone / WhatsApp" className={fieldCls} />
-        {errors.phone && <p className={errCls}>{errors.phone}</p>}
+        <PhoneInput
+          value={form.phone}
+          onChange={setPhone}
+          placeholder="+971 50 123 4567"
+          className={fieldCls}
+          error={errors.phone}
+        />
       </div>
       <div>
         <input type="email" value={form.email} onChange={set("email")} placeholder="Email address" className={fieldCls} />

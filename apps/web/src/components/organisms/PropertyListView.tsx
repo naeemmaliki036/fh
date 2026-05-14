@@ -1,10 +1,12 @@
 "use client";
 
 import Link from "next/link";
-import { Play } from "lucide-react";
+import { ExternalLink, Play } from "lucide-react";
 import { PropertyTypeBadge } from "@/components/atoms/PropertyTypeBadge";
 import { PropertyStatusBadge } from "@/components/atoms/PropertyStatusBadge";
 import { Button } from "@/components/ui/button";
+import { useMyTenant } from "@/hooks/queries/useTenants";
+import { listingHandle } from "@/lib/utils/listing-url";
 import type { Property, PropertyStatus } from "@/lib/types/property";
 
 type TransitionDef = { label: string; status: PropertyStatus; destructive: boolean };
@@ -51,6 +53,8 @@ interface PropertyListViewProps {
 }
 
 export function PropertyListView({ items, onStatusChange }: PropertyListViewProps): React.ReactElement {
+  const { data: tenant } = useMyTenant();
+
   return (
     <div className="overflow-x-auto rounded-md border">
       <table className="w-full text-sm">
@@ -69,6 +73,10 @@ export function PropertyListView({ items, onStatusChange }: PropertyListViewProp
         <tbody>
           {items.map((p) => {
             const transitions = getPropertyTransitions(p);
+            const websiteUrl =
+              p.first_active_listing_id && tenant?.slug
+                ? `/p/${tenant.slug}/listings/${listingHandle(p.first_active_listing_title ?? null, p.first_active_listing_id)}`
+                : null;
             return (
               <tr key={p.id} className="border-b hover:bg-muted/30">
                 <td className="px-3 py-2.5">
@@ -99,10 +107,17 @@ export function PropertyListView({ items, onStatusChange }: PropertyListViewProp
                   <PropertyStatusBadge status={p.status} />
                 </td>
                 <td className="px-3 py-2.5">
-                  <div className="flex gap-1.5 flex-wrap">
+                  <div className="flex gap-1.5 flex-wrap items-center">
                     <Button size="sm" variant="outline" asChild>
                       <Link href={`/properties/${p.id}`}>View</Link>
                     </Button>
+                    {websiteUrl && (
+                      <Button size="sm" variant="outline" asChild aria-label="View on website">
+                        <a href={websiteUrl} target="_blank" rel="noopener noreferrer">
+                          <ExternalLink className="h-3.5 w-3.5" />
+                        </a>
+                      </Button>
+                    )}
                     {transitions.map((t) => (
                       <Button
                         key={t.status}

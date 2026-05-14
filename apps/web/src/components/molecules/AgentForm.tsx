@@ -14,6 +14,8 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { Controller } from "react-hook-form";
+import { PhoneInput } from "@/components/molecules/PhoneInput";
+import { isValidPhone } from "@/lib/utils/phone";
 import type { Agent, AgentCreateRequest, AgentUpdateRequest } from "@/lib/types";
 
 const schema = z.object({
@@ -22,7 +24,7 @@ const schema = z.object({
   phone: z
     .string()
     .optional()
-    .refine((v) => !v || /^\+?[\d\s\-()]{7,20}$/.test(v), "Invalid phone number"),
+    .refine((v) => !v || isValidPhone(v), "Invalid phone number"),
   license_id: z.string().optional(),
   license_expiry_at: z.string().optional(),
   default_commission_type: z.enum(["percentage", "fixed"]),
@@ -90,7 +92,18 @@ export function AgentForm({ defaultValues, isPending, submitLabel, onSubmit, onC
         </div>
         <div className="space-y-1.5">
           <Label htmlFor="form-phone">Phone</Label>
-          <Input id="form-phone" {...register("phone")} placeholder="+971 50 123 4567" />
+          <Controller
+            name="phone"
+            control={control}
+            render={({ field }) => (
+              <PhoneInput
+                id="form-phone"
+                value={field.value ?? ""}
+                onChange={field.onChange}
+                error={errors.phone?.message}
+              />
+            )}
+          />
         </div>
         <div className="space-y-1.5">
           <Label htmlFor="form-license_id">License ID</Label>

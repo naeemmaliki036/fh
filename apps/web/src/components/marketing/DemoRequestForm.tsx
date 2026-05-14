@@ -1,7 +1,7 @@
 "use client";
 
 import React, { useState } from "react";
-import { useForm } from "react-hook-form";
+import { useForm, Controller } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
 import { toast } from "sonner";
@@ -9,12 +9,14 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { cn } from "@/lib/utils/cn";
+import { PhoneInput } from "@/components/molecules/PhoneInput";
+import { isValidPhone } from "@/lib/utils/phone";
 
 const demoSchema = z.object({
   full_name: z.string().min(2, "Full name is required"),
   company_name: z.string().min(1, "Company name is required"),
   email: z.string().email("Valid email required"),
-  phone: z.string().min(7, "Phone number required"),
+  phone: z.string().refine(isValidPhone, "Invalid phone number"),
   country: z.enum(["UAE", "KSA", "Other"], { required_error: "Select a country" }),
   team_size: z.enum(["1-5", "6-20", "21-50", "50+"], { required_error: "Select team size" }),
   message: z.string().optional(),
@@ -59,9 +61,11 @@ export function DemoRequestForm(): React.ReactElement {
     register,
     handleSubmit,
     reset,
+    control,
     formState: { errors, isSubmitting },
   } = useForm<DemoFormValues>({
     resolver: zodResolver(demoSchema),
+    defaultValues: { phone: "" },
   });
 
   async function onSubmit(data: DemoFormValues): Promise<void> {
@@ -134,8 +138,18 @@ export function DemoRequestForm(): React.ReactElement {
         <Label htmlFor="phone" className="text-sm font-medium text-[#0a0a0a]">
           Phone <span className="text-red-500">*</span>
         </Label>
-        <Input id="phone" type="tel" placeholder="+971 50 000 0000" {...register("phone")} className={errors.phone ? "border-red-400" : ""} />
-        {errors.phone && <p className="text-xs text-red-500">{errors.phone.message}</p>}
+        <Controller
+          name="phone"
+          control={control}
+          render={({ field }) => (
+            <PhoneInput
+              id="phone"
+              value={field.value}
+              onChange={field.onChange}
+              error={errors.phone?.message}
+            />
+          )}
+        />
       </div>
 
       <div className="grid sm:grid-cols-2 gap-4">
