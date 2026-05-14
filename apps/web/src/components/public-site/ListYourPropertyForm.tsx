@@ -24,7 +24,7 @@ const COUNTRY_LABELS: Record<string, string> = { AE: "UAE", SA: "Saudi Arabia" }
 const CURRENCY_BY_COUNTRY: Record<string, string> = { AE: "AED", SA: "SAR" };
 
 interface FormState {
-  intent: ListingIntent;
+  intent: ListingIntent | "";
   name: string;
   phone: string;
   email: string;
@@ -37,17 +37,22 @@ interface FormState {
   message: string;
 }
 
-type FormErrors = Partial<Record<"name" | "phone" | "email" | "propertyType" | "message", string>>;
+type FormErrors = Partial<Record<"intent" | "name" | "phone" | "email" | "propertyType" | "message", string>>;
+
+const NON_RESIDENTIAL_TYPES = new Set(["office", "retail", "warehouse", "plot", "building"]);
 
 const EMAIL_RE = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 
 function buildMessage(form: FormState): string {
-  const lines: string[] = [`Intent: ${INTENT_LABELS[form.intent]}`];
+  const lines: string[] = [];
+  if (form.intent) lines.push(`Intent: ${INTENT_LABELS[form.intent]}`);
   if (form.propertyType) lines.push(`Property type: ${form.propertyType}`);
   if (form.country) lines.push(`Country: ${COUNTRY_LABELS[form.country] ?? form.country}`);
   if (form.city) lines.push(`City: ${form.city}`);
   if (form.area) lines.push(`Area: ${form.area}`);
-  if (form.bedrooms) lines.push(`Bedrooms: ${form.bedrooms}`);
+  if (form.bedrooms && !NON_RESIDENTIAL_TYPES.has(form.propertyType)) {
+    lines.push(`Bedrooms: ${form.bedrooms}`);
+  }
   if (form.price) lines.push(`Approx price/rent: ${form.price}`);
   if (form.message) lines.push(`Additional info: ${form.message}`);
   return lines.join("\n");
@@ -60,14 +65,13 @@ export const labelCls = "mb-1 block text-xs font-semibold uppercase tracking-wid
 
 export interface ListYourPropertyFormProps {
   slug: string;
-  initialIntent: ListingIntent;
+  initialIntent?: ListingIntent;  // ignored — user must explicitly pick
   operatingCountries: string[];
   onSuccess: (name: string) => void;
 }
 
 export function ListYourPropertyForm({
   slug,
-  initialIntent,
   operatingCountries,
   onSuccess,
 }: ListYourPropertyFormProps): React.ReactElement {
@@ -75,7 +79,7 @@ export function ListYourPropertyForm({
   const implicitCountry = multiCountry ? "" : (operatingCountries[0] ?? "");
 
   const [form, setForm] = useState<FormState>({
-    intent: initialIntent,
+    intent: "",
     name: "",
     phone: "",
     email: "",
@@ -104,7 +108,7 @@ export function ListYourPropertyForm({
         if (field === "city") { next.area = ""; }
         return next;
       });
-      if (field === "name" || field === "phone" || field === "email" ||
+      if (field === "intent" || field === "name" || field === "phone" || field === "email" ||
           field === "propertyType" || field === "message") {
         setErrors((prev) => ({ ...prev, [field]: undefined }));
       }
@@ -118,6 +122,7 @@ export function ListYourPropertyForm({
 
   function validate(): boolean {
     const errs: FormErrors = {};
+    if (!form.intent) errs.intent = "Please choose what you'd like to do";
     if (form.name.trim().length < 2) errs.name = "Name must be at least 2 characters";
     else if (form.name.trim().length > 120) errs.name = "Name must be under 120 characters";
     if (!EMAIL_RE.test(form.email)) errs.email = "Enter a valid email address";
@@ -143,12 +148,14 @@ export function ListYourPropertyForm({
   return (
     <form onSubmit={handleSubmit} className="space-y-4">
       <div>
-        <label className={labelCls}>I want to...</label>
+        <label className={labelCls}>I want to... *</label>
         <select value={form.intent} onChange={set("intent")} className={fieldCls}>
+          <option value="">Select what you&apos;d like to do</option>
           {(Object.keys(INTENT_LABELS) as ListingIntent[]).map((k) => (
             <option key={k} value={k}>{INTENT_LABELS[k]}</option>
           ))}
         </select>
+        {errors.intent && <p className={errCls}>{errors.intent}</p>}
       </div>
 
       <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
@@ -237,11 +244,13 @@ export function ListYourPropertyForm({
         </div>
       </div>
 
-      <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
-        <div>
-          <label className={labelCls}>Bedrooms</label>
-          <input type="number" min={0} value={form.bedrooms} onChange={set("bedrooms")} placeholder="e.g. 3" className={fieldCls} />
-        </div>
+      <div className={`grid grid-cols-1 gap-4 ${NON_RESIDENTIAL_TYPES.has(form.propertyType) ? "" : "sm:grid-cols-2"}`}>
+        {!NON_RESIDENTIAL_TYPES.has(form.propertyType) && (
+          <div>
+            <label className={labelCls}>Bedrooms (optional)</label>
+            <input type="number" min={0} value={form.bedrooms} onChange={set("bedrooms")} placeholder="e.g. 3" className={fieldCls} />
+          </div>
+        )}
         <div>
           <label className={labelCls}>Approx price / rent</label>
           <div className="relative">
