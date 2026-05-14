@@ -22,3 +22,4 @@ export { ListingPriceRepository, listingPriceRepository } from "./listing-price.
 export { ListingDocumentRepository, listingDocumentRepository } from "./listing-document.repository";
 export { AuditLogRepository, auditLogRepository } from "./audit-log.repository";
 export { OffMarketReasonRepository, offMarketReasonRepository } from "./off-market-reason.repository";
+export { locationsRepository, adminLocationsRepository } from "./locations.repository";

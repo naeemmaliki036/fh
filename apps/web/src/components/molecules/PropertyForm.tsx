@@ -12,8 +12,8 @@ import { TagsInput } from "@/components/molecules/TagsInput";
 import { Textarea } from "@/components/atoms/Textarea";
 import { SearchableSelect } from "@/components/molecules/SearchableSelect";
 import { CURRENCIES } from "@/lib/constants/regions";
-import { CITIES_BY_COUNTRY, AREAS_BY_CITY } from "@/lib/constants/locations";
 import { useMyTenant } from "@/hooks/queries/useTenants";
+import { useLocationData } from "@/hooks/useLocationData";
 import {
   propertyFormSchema, blank,
   TYPES, STATUSES, PLOT_TYPES, COMMERCIAL_TYPES, BUILDING_TYPES,
@@ -174,11 +174,12 @@ export function PropertyForm({ defaultValues, showStatus, isPending, submitLabel
     },
   });
 
+  const { citiesByCountry, areasByCity } = useLocationData();
   const selectedCountry = watch("country");
   const selectedCity = watch("city");
   const selectedType = watch("property_type");
-  const cityOptions = selectedCountry ? (CITIES_BY_COUNTRY[selectedCountry] ?? []) : [];
-  const areaOptions = selectedCity ? (AREAS_BY_CITY[selectedCity] ?? []) : [];
+  const cityOptions = selectedCountry ? (citiesByCountry[selectedCountry] ?? []) : [];
+  const areaOptions = selectedCity ? (areasByCity[selectedCity] ?? []) : [];
 
   const isPlot = PLOT_TYPES.includes(selectedType);
   const isCommercial = COMMERCIAL_TYPES.includes(selectedType);

@@ -16,6 +16,7 @@ from apps.api.middleware.logging import LoggingMiddleware
 from apps.api.middleware.security_headers import SecurityHeadersMiddleware
 from apps.api.middleware.tenant_suspension import TenantSuspensionMiddleware
 from apps.api.routers import (
+    admin_locations,
     agents,
     audit_logs,
     auth,
@@ -30,6 +31,7 @@ from apps.api.routers import (
     listing_price_routes,
     listing_review_routes,
     listings,
+    locations,
     marketing,
     media,
     notifications,
@@ -151,6 +153,8 @@ app.include_router(email_templates.router, prefix="/admin/email-templates", tags
 app.include_router(email_outbox.router, prefix="/admin/email-outbox", tags=["email-outbox"])
 app.include_router(off_market_reasons.router, prefix="/off-market-reasons", tags=["off-market-reasons"])
 app.include_router(leaderboard.router, prefix="/leaderboard", tags=["leaderboard"])
+app.include_router(locations.router, prefix="/locations", tags=["locations"])
+app.include_router(admin_locations.router, prefix="/admin/locations", tags=["admin-locations"])
 
 
 @app.get("/health", tags=["health"])

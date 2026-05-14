@@ -1,7 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import { CITIES_BY_COUNTRY, AREAS_BY_CITY } from "@/lib/constants/locations";
+import { useLocationData } from "@/hooks/useLocationData";
 import { SearchableSelect } from "@/components/molecules/SearchableSelect";
 import { useCreatePublicLead } from "@/hooks/mutations/public-site/useCreatePublicLead";
 import { PhoneInput } from "@/components/molecules/PhoneInput";
@@ -92,6 +92,7 @@ export function ListYourPropertyForm({
     message: "",
   });
   const [errors, setErrors] = useState<FormErrors>({});
+  const { citiesByCountry, areasByCity } = useLocationData();
 
   const { mutate, isPending } = useCreatePublicLead({
     slug,
@@ -115,9 +116,9 @@ export function ListYourPropertyForm({
     };
 
   const activeCountry = multiCountry ? form.country : implicitCountry;
-  const cityOptions = activeCountry ? (CITIES_BY_COUNTRY[activeCountry] ?? []) : [];
+  const cityOptions = activeCountry ? (citiesByCountry[activeCountry] ?? []) : [];
   const cityValue = cityOptions.find((c) => c.label === form.city)?.value ?? "";
-  const areaOptions = cityValue ? (AREAS_BY_CITY[cityValue] ?? []) : [];
+  const areaOptions = cityValue ? (areasByCity[cityValue] ?? []) : [];
   const currency = operatingCountries.map((c) => CURRENCY_BY_COUNTRY[c]).find(Boolean) ?? "USD";
 
   function validate(): boolean {

@@ -101,4 +101,13 @@ export const queryKeys = {
   offMarketReasons: {
     all: ["off-market-reasons"] as const,
   },
+  locations: {
+    tree: ["locations", "tree"] as const,
+    countries: ["locations", "countries"] as const,
+    adminCountries: ["locations", "admin", "countries"] as const,
+    cities: (countryId: string) => ["locations", "cities", countryId] as const,
+    adminCities: (countryId: string) => ["locations", "admin", "cities", countryId] as const,
+    areas: (cityId: string) => ["locations", "areas", cityId] as const,
+    adminAreas: (cityId: string) => ["locations", "admin", "areas", cityId] as const,
+  },
 } as const;

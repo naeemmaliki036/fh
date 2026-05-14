@@ -14,7 +14,7 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { useAgents } from "@/hooks/queries/useAgents";
-import { CITIES_BY_COUNTRY, AREAS_BY_CITY } from "@/lib/constants/locations";
+import { useLocationData } from "@/hooks/useLocationData";
 import { SearchableSelect } from "@/components/molecules/SearchableSelect";
 import type { PropertyStatus, PropertyType } from "@/lib/types/property";
 
@@ -50,13 +50,14 @@ export function PropertyFiltersBar(): ReactElement {
   const [open, setOpen] = useState(false);
   const { data: agentsData } = useAgents();
   const agents = agentsData?.items ?? [];
+  const { citiesByCountry, areasByCity } = useLocationData();
 
   const get = (key: string): string => searchParams.get(key) ?? "";
 
   const country = get("country");
   const city = get("city");
-  const cityOptions = country ? (CITIES_BY_COUNTRY[country] ?? []) : [];
-  const areaOptions = city ? (AREAS_BY_CITY[city] ?? []) : [];
+  const cityOptions = country ? (citiesByCountry[country] ?? []) : [];
+  const areaOptions = city ? (areasByCity[city] ?? []) : [];
 
   const apply = useCallback((overrides: Record<string, string>): void => {
     const params = new URLSearchParams(searchParams.toString());

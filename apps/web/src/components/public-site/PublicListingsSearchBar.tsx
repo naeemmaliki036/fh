@@ -3,7 +3,7 @@
 import { useCallback, useEffect, useRef, useState } from "react";
 import { useRouter, useSearchParams, usePathname } from "next/navigation";
 import type { PublicListingsParams } from "@/lib/types/public-site";
-import { CITIES_BY_COUNTRY, AREAS_BY_CITY } from "@/lib/constants/locations";
+import { useLocationData } from "@/hooks/useLocationData";
 import { SearchSegment, type SegmentOption } from "./SearchSegment";
 import {
   PublicListingsAdvancedFilters,
@@ -71,10 +71,11 @@ export function PublicListingsSearchBar({
   const pathname = usePathname();
   const searchParams = useSearchParams();
 
+  const { citiesByCountry, areasByCity } = useLocationData();
   const primaryCountry = operatingCountries[0] ?? "AE";
   const cityOptions: SegmentOption[] = [
     { value: "", label: "All cities" },
-    ...(CITIES_BY_COUNTRY[primaryCountry] ?? []),
+    ...(citiesByCountry[primaryCountry] ?? []),
   ];
 
   // Core segment state
@@ -95,7 +96,7 @@ export function PublicListingsSearchBar({
 
   // Area options — dropdown when mapped, free-text otherwise
   const mappedAreas: SegmentOption[] | undefined = city
-    ? AREAS_BY_CITY[city]
+    ? areasByCity[city]
     : undefined;
   const hasAreaDropdown = mappedAreas !== undefined && mappedAreas.length > 0;
   const areaOptions: SegmentOption[] = hasAreaDropdown
