@@ -122,6 +122,11 @@ class AuditAction(str, enum.Enum):
     OFF_MARKET_REASON_UPDATED = "off_market_reason_updated"
     OFF_MARKET_REASON_DELETED = "off_market_reason_deleted"
 
+    # Location management
+    LOCATION_CREATED = "location_created"
+    LOCATION_UPDATED = "location_updated"
+    LOCATION_DELETED = "location_deleted"
+
     # Catch-all for ad-hoc events
     OTHER = "other"
 

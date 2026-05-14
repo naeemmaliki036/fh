@@ -47,10 +47,10 @@ export function PublicSiteHeader({ profile, slug, isDirect = false }: PublicSite
             <Link href={`${homeHref}#listings`} className="transition hover:text-slate-950">
               Listings
             </Link>
-            <Link href={`${homeHref}#team`} className="transition hover:text-slate-950">
+            <Link href={`${homeHref}/team`} className="transition hover:text-slate-950">
               Team
             </Link>
-            <Link href={`${homeHref}#contact`} className="transition hover:text-slate-950">
+            <Link href={`${homeHref}/contact`} className="transition hover:text-slate-950">
               Contact
             </Link>
           </nav>
@@ -65,7 +65,7 @@ export function PublicSiteHeader({ profile, slug, isDirect = false }: PublicSite
             List Your Property
           </button>
           <Link
-            href={`${homeHref}#contact`}
+            href={`${homeHref}/contact`}
             className="hidden rounded-full bg-slate-950 px-5 py-2.5 text-sm font-bold text-white transition hover:-translate-y-0.5 hover:bg-slate-800 sm:inline-flex"
           >
             Talk to us
@@ -87,10 +87,10 @@ export function PublicSiteHeader({ profile, slug, isDirect = false }: PublicSite
             <Link href={`${homeHref}#listings`} onClick={() => setOpen(false)}>
               Listings
             </Link>
-            <Link href={`${homeHref}#team`} onClick={() => setOpen(false)}>
+            <Link href={`${homeHref}/team`} onClick={() => setOpen(false)}>
               Team
             </Link>
-            <Link href={`${homeHref}#contact`} onClick={() => setOpen(false)}>
+            <Link href={`${homeHref}/contact`} onClick={() => setOpen(false)}>
               Contact
             </Link>
             <button
@@ -100,7 +100,7 @@ export function PublicSiteHeader({ profile, slug, isDirect = false }: PublicSite
               List Your Property
             </button>
             <Link
-              href={`${homeHref}#contact`}
+              href={`${homeHref}/contact`}
               onClick={() => setOpen(false)}
               className="inline-flex w-fit rounded-full bg-slate-950 px-6 py-2.5 text-sm text-white"
             >

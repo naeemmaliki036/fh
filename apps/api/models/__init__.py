@@ -35,6 +35,7 @@ from .enums import (
     UserStatus,
 )
 from .lead import Lead
+from .location import Area, City, Country
 from .off_market_reason import OffMarketReason
 from .lead_activity import LeadActivity
 from .listing import Listing
@@ -98,4 +99,7 @@ __all__ = [
     "Deal",
     "Notification",
     "OffMarketReason",
+    "Country",
+    "City",
+    "Area",
 ]

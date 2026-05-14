@@ -8,8 +8,6 @@ import { HeroSection } from "./HeroSection";
 import { ServicesGrid } from "./ServicesGrid";
 import { ListingFilters } from "./ListingFilters";
 import { ListingsGrid } from "./ListingsGrid";
-import { TeamSection } from "./TeamSection";
-import { ContactSection } from "./ContactSection";
 import { PublicListingsSearchBar } from "./PublicListingsSearchBar";
 
 interface ListingsPageShellProps {
@@ -125,9 +123,6 @@ export function ListingsPageShell({ profile, slug }: ListingsPageShellProps): Re
         </div>
       </section>
 
-      {cfg.sections.team_enabled && <TeamSection slug={slug} cfg={cfg.team} />}
-
-      {cfg.sections.contact_enabled && <ContactSection slug={slug} profile={profile} cfg={cfg.contact} />}
     </div>
   );
 }
