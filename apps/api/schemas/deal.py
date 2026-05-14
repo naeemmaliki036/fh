@@ -4,7 +4,7 @@ import uuid
 from datetime import date, datetime
 from decimal import Decimal
 
-from pydantic import BaseModel, ConfigDict, Field
+from pydantic import BaseModel, ConfigDict, Field, model_validator
 
 from apps.api.models.enums import (
     CommissionPayoutStatus,
@@ -20,6 +20,7 @@ class DealCreateRequest(BaseModel):
     property_id: uuid.UUID
     listing_id: uuid.UUID | None = None
     primary_agent_id: uuid.UUID
+    secondary_agent_id: uuid.UUID | None = None
     lead_id: uuid.UUID | None = None
     transaction_value: Decimal
     transaction_currency: str
@@ -28,6 +29,12 @@ class DealCreateRequest(BaseModel):
     commission_type: CommissionType | None = None
     commission_value: Decimal | None = None
     commission_override_reason: str | None = None
+    primary_commission_pct: int = Field(default=100, ge=0, le=100)
+    secondary_commission_pct: int = Field(default=0, ge=0, le=100)
+
+    @property
+    def pct_sum_valid(self) -> bool:
+        return self.primary_commission_pct + self.secondary_commission_pct == 100
 
 
 class DealUpdateRequest(BaseModel):
@@ -36,6 +43,9 @@ class DealUpdateRequest(BaseModel):
     listing_id: uuid.UUID | None = None
     transaction_value: Decimal | None = None
     transaction_currency: str | None = None
+    secondary_agent_id: uuid.UUID | None = None
+    primary_commission_pct: int | None = Field(default=None, ge=0, le=100)
+    secondary_commission_pct: int | None = Field(default=None, ge=0, le=100)
 
 
 class DealTransitionRequest(BaseModel):
@@ -89,6 +99,7 @@ class DealResponse(BaseModel):
     property_id: uuid.UUID
     listing_id: uuid.UUID | None = None
     primary_agent_id: uuid.UUID
+    secondary_agent_id: uuid.UUID | None = None
     lead_id: uuid.UUID | None = None
     stage: DealStage
     transaction_value: Decimal
@@ -104,6 +115,12 @@ class DealResponse(BaseModel):
     commission_payout_status: CommissionPayoutStatus
     commission_paid_amount: Decimal
     commission_paid_at: datetime | None = None
+    primary_commission_pct: int = 100
+    secondary_commission_pct: int = 0
+    admin_confirmed_at: datetime | None = None
+    admin_confirmed_by_user_id: uuid.UUID | None = None
+    agent_confirmed_at: datetime | None = None
+    agent_confirmed_by_user_id: uuid.UUID | None = None
     created_by_user_id: uuid.UUID | None = None
     customer: CustomerSummary | None = None
     primary_agent: AgentSummary | None = None

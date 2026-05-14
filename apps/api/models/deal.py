@@ -22,7 +22,7 @@ closed_at is set by the service layer on closed_won or closed_lost transition.
 import uuid
 from datetime import date, datetime
 
-from sqlalchemy import Boolean, Date, DateTime, Enum, ForeignKey, Numeric, String, Text
+from sqlalchemy import Boolean, CheckConstraint, Date, DateTime, Enum, ForeignKey, Integer, Numeric, String, Text
 from sqlalchemy.dialects.postgresql import UUID
 from sqlalchemy.orm import Mapped, mapped_column
 
@@ -35,6 +35,11 @@ _ev = lambda x: [e.value for e in x]  # noqa: E731
 
 class Deal(Base, UUIDMixin, TimestampMixin, TenantMixin):
     __tablename__ = "deals"
+    __table_args__ = (
+        CheckConstraint("primary_commission_pct BETWEEN 0 AND 100", name="ck_deals_primary_pct_range"),
+        CheckConstraint("secondary_commission_pct BETWEEN 0 AND 100", name="ck_deals_secondary_pct_range"),
+        CheckConstraint("primary_commission_pct + secondary_commission_pct = 100", name="ck_deals_pct_sum"),
+    )
 
     deal_type: Mapped[DealType] = mapped_column(
         Enum(DealType, name="deal_type", create_type=False, values_callable=_ev),
@@ -133,6 +138,45 @@ class Deal(Base, UUIDMixin, TimestampMixin, TenantMixin):
     )
 
     created_by_user_id: Mapped[uuid.UUID | None] = mapped_column(
+        UUID(as_uuid=True),
+        ForeignKey("users.id", ondelete="SET NULL"),
+        nullable=True,
+    )
+
+    # ------------------------------------------------------------------
+    # Secondary agent + split commission (migration 0032)
+    # ------------------------------------------------------------------
+
+    secondary_agent_id: Mapped[uuid.UUID | None] = mapped_column(
+        UUID(as_uuid=True),
+        ForeignKey("agents.id", ondelete="SET NULL"),
+        nullable=True,
+    )
+
+    primary_commission_pct: Mapped[int] = mapped_column(
+        Integer, nullable=False, default=100, server_default="100"
+    )
+
+    secondary_commission_pct: Mapped[int] = mapped_column(
+        Integer, nullable=False, default=0, server_default="0"
+    )
+
+    # Dual-confirmation workflow
+    admin_confirmed_at: Mapped[datetime | None] = mapped_column(
+        DateTime(timezone=True), nullable=True
+    )
+
+    admin_confirmed_by_user_id: Mapped[uuid.UUID | None] = mapped_column(
+        UUID(as_uuid=True),
+        ForeignKey("users.id", ondelete="SET NULL"),
+        nullable=True,
+    )
+
+    agent_confirmed_at: Mapped[datetime | None] = mapped_column(
+        DateTime(timezone=True), nullable=True
+    )
+
+    agent_confirmed_by_user_id: Mapped[uuid.UUID | None] = mapped_column(
         UUID(as_uuid=True),
         ForeignKey("users.id", ondelete="SET NULL"),
         nullable=True,

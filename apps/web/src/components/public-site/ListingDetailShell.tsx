@@ -41,7 +41,7 @@ export function ListingDetailShell({ listing, slug }: ListingDetailShellProps): 
     : [];
 
   return (
-    <div className="bg-[#f7f5ef] min-h-screen">
+    <div className="bg-white min-h-screen">
       {/* Preview banner — shown only when listing is not active */}
       {listing.status !== "active" && (
         <div className="bg-amber-50 border-b border-amber-200 px-4 py-2.5 text-center text-sm text-amber-900">
@@ -52,7 +52,7 @@ export function ListingDetailShell({ listing, slug }: ListingDetailShellProps): 
       )}
 
       {/* Sticky breadcrumb */}
-      <div className="sticky top-[61px] z-10 border-b border-slate-200/60 bg-[#f7f5ef]/90 backdrop-blur-md">
+      <div className="sticky top-[61px] z-10 border-b border-slate-200/60 bg-white/90 backdrop-blur-md">
         <div className="mx-auto w-[min(100%-40px,1280px)] py-2.5">
           <nav className="flex items-center gap-2 text-xs text-slate-400">
             <Link href={`/p/${slug}`} className="hover:text-slate-700 transition-colors font-medium">

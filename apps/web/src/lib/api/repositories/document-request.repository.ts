@@ -36,6 +36,11 @@ export class DocumentRequestRepository extends BaseRepository<
     );
     return res.data;
   }
+
+  async reopen(id: string): Promise<DocumentRequest> {
+    const res = await this.client.post<DocumentRequest>(`${this.basePath}/${id}/reopen`);
+    return res.data;
+  }
 }
 
 export const documentRequestRepository = new DocumentRequestRepository();

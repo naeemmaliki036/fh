@@ -93,3 +93,27 @@ export function useCancelCommissionPayout(id: string) {
     onError: (e: Error) => { toast.error(e.message); },
   });
 }
+
+export function useAdminConfirmDeal(id: string) {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: (): Promise<Deal> => dealRepository.adminConfirm(id),
+    onSuccess: (data) => {
+      qc.setQueryData(queryKeys.deals.detail(id), data);
+      toast.success("Deal confirmed — agent can now acknowledge");
+    },
+    onError: (e: Error) => { toast.error(e.message); },
+  });
+}
+
+export function useAgentConfirmDeal(id: string) {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: (): Promise<Deal> => dealRepository.agentConfirm(id),
+    onSuccess: (data) => {
+      qc.setQueryData(queryKeys.deals.detail(id), data);
+      toast.success("Commission acknowledged — deal is ready for payout");
+    },
+    onError: (e: Error) => { toast.error(e.message); },
+  });
+}

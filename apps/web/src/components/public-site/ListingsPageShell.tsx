@@ -43,7 +43,7 @@ export function ListingsPageShell({ profile, slug }: ListingsPageShellProps): Re
   };
 
   return (
-    <div className="bg-[#f7f5ef]">
+    <div className="bg-white">
       <HeroSection profile={profile} firstListing={firstListing} onSearch={handleSearch} cfg={cfg.hero} />
 
       {cfg.sections.services_enabled && <ServicesGrid cfg={cfg.services} />}

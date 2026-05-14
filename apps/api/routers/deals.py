@@ -180,3 +180,27 @@ async def cancel_payout(
         deal.commission_type, Decimal(str(deal.commission_value)), Decimal(str(deal.transaction_value))
     )
     return _deal_from_deal(deal, commission_amount)
+
+
+# ------------------------------------------------------------------
+# Confirmation workflow
+# ------------------------------------------------------------------
+
+@router.post("/{deal_id}/admin-confirm", response_model=DealResponse)
+async def admin_confirm(
+    deal_id: UUID,
+    current_user: CurrentUser,
+    tenant_id: TenantContext,
+    svc: DealService = Depends(_svc),
+) -> DealResponse:
+    return _to_response(await svc.admin_confirm(deal_id, tenant_id, current_user))
+
+
+@router.post("/{deal_id}/agent-confirm", response_model=DealResponse)
+async def agent_confirm(
+    deal_id: UUID,
+    current_user: CurrentUser,
+    tenant_id: TenantContext,
+    svc: DealService = Depends(_svc),
+) -> DealResponse:
+    return _to_response(await svc.agent_confirm(deal_id, tenant_id, current_user))

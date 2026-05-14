@@ -54,3 +54,17 @@ export function useRegenerateDocumentRequestCode() {
     onError: (e: Error) => { toast.error(e.message); },
   });
 }
+
+export function useReopenDocumentRequest() {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: (id: string): Promise<DocumentRequest> =>
+      documentRequestRepository.reopen(id),
+    onSuccess: (data) => {
+      qc.setQueryData(queryKeys.docRequests.detail(data.id), data);
+      qc.invalidateQueries({ queryKey: queryKeys.docRequests.all });
+      toast.success("Request reopened — customer can upload more documents");
+    },
+    onError: (e: Error) => { toast.error(e.message); },
+  });
+}

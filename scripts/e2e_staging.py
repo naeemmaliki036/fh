@@ -473,15 +473,23 @@ def s8_property_media() -> None:
         if data:
             items = data.get("items", [])
             record("pass", f"returned {len(items)} properties")
-            if items:
-                prop_id = str(items[0]["id"])
-                thumb = items[0].get("thumbnail_url")
+            # Pick the first property that has media (media_count > 0) for reorder test
+            for item in items:
+                thumb = item.get("thumbnail_url")
                 if thumb and "//images.unsplash.com//images.unsplash.com" in thumb:
                     record("fail", "thumbnail_url not double-prefixed", thumb[:120])
                 elif thumb:
                     record("pass", f"thumbnail_url looks clean: {thumb[:80]}")
+                    if item.get("media_count", 0) >= 2 and prop_id is None:
+                        prop_id = str(item["id"])
                 else:
+                    if prop_id is None and items:
+                        prop_id = str(items[0]["id"])
                     record("pass", "thumbnail_url is null (no media yet)")
+                if prop_id:
+                    break
+            if not prop_id and items:
+                prop_id = str(items[0]["id"])
     except Exception as exc:
         record("fail", "GET /properties", str(exc))
 

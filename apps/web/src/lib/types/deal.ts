@@ -33,6 +33,7 @@ export interface Deal {
   property_id: string;
   listing_id: string | null;
   primary_agent_id: string;
+  secondary_agent_id: string | null;
   lead_id: string | null;
   stage: DealStage;
   transaction_value: string;
@@ -48,9 +49,15 @@ export interface Deal {
   commission_payout_status: CommissionPayoutStatus;
   commission_paid_amount: string;
   commission_paid_at: string | null;
+  primary_commission_pct: number | null;
+  secondary_commission_pct: number | null;
+  admin_confirmed_at: string | null;
+  admin_confirmed_by_user_id: string | null;
+  agent_confirmed_at: string | null;
   created_by_user_id: string;
   customer: DealCustomerSummary | null;
   primary_agent: DealAgentSummary | null;
+  secondary_agent: DealAgentSummary | null;
   interest_property: DealPropertySummary | null;
   created_at: string;
   updated_at: string;
@@ -61,6 +68,9 @@ export interface DealCreateRequest {
   customer_id: string;
   property_id: string;
   primary_agent_id: string;
+  secondary_agent_id?: string | null;
+  primary_commission_pct?: number | null;
+  secondary_commission_pct?: number | null;
   transaction_value: string | number;
   transaction_currency: string;
   listing_id?: string | null;
@@ -106,10 +116,30 @@ export interface DealListParams {
   deal_type?: DealType;
   primary_agent_id?: string;
   customer_id?: string;
+  property_id?: string;
   q?: string;
   skip?: number;
   limit?: number;
 }
+
+export interface LeaderboardRow {
+  agent_id: string;
+  agent_name: string;
+  deals_won_count: number;
+  sold_count: number;
+  rented_count: number;
+  total_transaction_value: number;
+  total_commission_value: number;
+  paid_commission: number;
+  pending_commission: number;
+}
+
+export interface LeaderboardResponse {
+  rows: LeaderboardRow[];
+  period: string;
+}
+
+export type LeaderboardPeriod = "this_month" | "this_quarter" | "this_year" | "custom";
 
 export const DEAL_STAGE_TRANSITIONS: Record<DealStage, DealStage[]> = {
   initiated: ["documents_pending", "canceled", "closed_lost"],

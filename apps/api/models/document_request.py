@@ -101,3 +101,12 @@ class DocumentRequest(Base, UUIDMixin, TimestampMixin, TenantMixin):
         ForeignKey("users.id", ondelete="RESTRICT"),
         nullable=False,
     )
+
+    # Added in migration 0034
+    property_id: Mapped[uuid.UUID | None] = mapped_column(
+        UUID(as_uuid=True),
+        ForeignKey("properties.id", ondelete="SET NULL"),
+        nullable=True,
+    )
+
+    agent_note: Mapped[str | None] = mapped_column(Text, nullable=True)

@@ -112,6 +112,16 @@ class AuditAction(str, enum.Enum):
     PLATFORM_USER_ROLE_CHANGED = "platform_user_role_changed"
     PLATFORM_USER_PASSWORD_RESET = "platform_user_password_reset"
 
+    # Deal confirmation workflow
+    DEAL_ADMIN_CONFIRMED = "deal_admin_confirmed"
+    DEAL_AGENT_CONFIRMED = "deal_agent_confirmed"
+    DEAL_SECONDARY_AGENT_CHANGED = "deal_secondary_agent_changed"
+
+    # Off-market reason CRUD
+    OFF_MARKET_REASON_CREATED = "off_market_reason_created"
+    OFF_MARKET_REASON_UPDATED = "off_market_reason_updated"
+    OFF_MARKET_REASON_DELETED = "off_market_reason_deleted"
+
     # Catch-all for ad-hoc events
     OTHER = "other"
 
@@ -143,6 +153,25 @@ class PrivateDocumentKind(str, enum.Enum):
     CONTRACT = "contract"
     KYC = "kyc"
     OTHER = "other"
+    # Pseudo-field items (text-type document items for UI)
+    DATE_OF_BIRTH = "date_of_birth"
+    NATIONALITY = "nationality"
+    PHONE = "phone"
+    EMAIL = "email"
+    # Identity / travel
+    VISA = "visa"
+    RESIDENCE_VISA = "residence_visa"
+    DRIVERS_LICENSE = "drivers_license"
+    NATIONAL_ID = "national_id"
+    # Financial
+    SALARY_CERTIFICATE = "salary_certificate"
+    BANK_STATEMENT = "bank_statement"
+    SOURCE_OF_FUNDS = "source_of_funds"
+    MORTGAGE_APPROVAL = "mortgage_approval"
+    # Property
+    EJARI = "ejari"
+    MAKANI = "makani"
+    TITLE_DEED = "title_deed"
 
 
 class CustomerSource(str, enum.Enum):

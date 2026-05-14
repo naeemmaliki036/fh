@@ -35,6 +35,7 @@ from .enums import (
     UserStatus,
 )
 from .lead import Lead
+from .off_market_reason import OffMarketReason
 from .lead_activity import LeadActivity
 from .listing import Listing
 from .listing_document import ListingDocument
@@ -96,4 +97,5 @@ __all__ = [
     "DocumentRequestItem",
     "Deal",
     "Notification",
+    "OffMarketReason",
 ]

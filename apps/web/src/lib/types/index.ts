@@ -180,6 +180,13 @@ export type {
   DealListParams,
 } from "./deal";
 export { DEAL_STAGE_TRANSITIONS, DEAL_TERMINAL_STAGES } from "./deal";
+export type { LeaderboardRow, LeaderboardResponse, LeaderboardPeriod } from "./deal";
+
+export type {
+  OffMarketReason,
+  OffMarketReasonCreateRequest,
+  OffMarketReasonUpdateRequest,
+} from "./off-market-reason";
 
 export type {
   DocumentRequestStatus,

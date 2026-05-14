@@ -19,8 +19,10 @@ class DocumentRequestCreate(BaseModel):
     customer_id: uuid.UUID
     lead_id: uuid.UUID | None = None
     deal_id: uuid.UUID | None = None
+    property_id: uuid.UUID | None = None
     title: str
     instructions: str | None = None
+    agent_note: str | None = None
     items: list[DocumentRequestItemCreate] = Field(min_length=1)
     expires_in_days: int = Field(default=7, ge=1, le=90)
 
@@ -44,8 +46,10 @@ class DocumentRequestResponse(BaseModel):
     customer_id: uuid.UUID
     lead_id: uuid.UUID | None = None
     deal_id: uuid.UUID | None = None
+    property_id: uuid.UUID | None = None
     title: str
     instructions: str | None = None
+    agent_note: str | None = None
     token: str
     status: DocumentRequestStatus
     expires_at: datetime

@@ -17,6 +17,8 @@ from apps.api.services.base import BaseService
 from apps.api.utils.commission import compute_commission_amount
 from packages.common.utils.error_handlers import bad_request, forbidden, not_found
 
+_ADMIN_ROLES = {TenantRole.COMPANY_OWNER.value, TenantRole.COMPANY_ADMIN.value}
+
 _D = DealStage  # alias for compact transition table
 _TRANSITIONS: dict[DealStage, set[DealStage]] = {
     _D.INITIATED:         {_D.DOCUMENTS_PENDING, _D.CANCELED, _D.CLOSED_LOST},
@@ -136,12 +138,19 @@ class DealService(BaseService):
             if overridden and not override_reason:
                 raise bad_request("commission_override_reason is required when commission differs from agent default")
 
+        primary_pct = fields.pop("primary_commission_pct", 100)
+        secondary_pct = fields.pop("secondary_commission_pct", 0)
+        if primary_pct + secondary_pct != 100:
+            raise bad_request("primary_commission_pct + secondary_commission_pct must equal 100")
+
         deal = Deal(
             tenant_id=tenant_id,
             commission_type=commission_type,
             commission_value=commission_value,
             commission_overridden=overridden,
             commission_override_reason=override_reason if overridden else None,
+            primary_commission_pct=primary_pct,
+            secondary_commission_pct=secondary_pct,
             created_by_user_id=UUID(current_user["id"]),
             **fields,
         )
@@ -172,10 +181,93 @@ class DealService(BaseService):
     async def update_deal(self, deal_id: UUID, tenant_id: UUID, updates: dict) -> dict:
         data = await self.get_deal(deal_id, tenant_id)
         deal = data["deal"]
+        secondary_agent_id = updates.pop("secondary_agent_id", ...)
+        primary_pct = updates.pop("primary_commission_pct", None)
+        secondary_pct = updates.pop("secondary_commission_pct", None)
+
         for k, v in updates.items():
             if k in {"notes", "expected_close_at", "listing_id", "transaction_value", "transaction_currency"}:
                 setattr(deal, k, v)
+
+        # Handle secondary agent change
+        if secondary_agent_id is not ...:
+            old_id = deal.secondary_agent_id
+            if secondary_agent_id is not None:
+                agent = await self.session.get(Agent, secondary_agent_id)
+                if not agent or agent.tenant_id != tenant_id:
+                    raise not_found("Agent")
+            deal.secondary_agent_id = secondary_agent_id
+            if old_id != secondary_agent_id:
+                await self._audit.record(
+                    AuditAction.DEAL_SECONDARY_AGENT_CHANGED, tenant_id=tenant_id,
+                    entity_type="deal", entity_id=deal.id,
+                    before={"secondary_agent_id": str(old_id) if old_id else None},
+                    after={"secondary_agent_id": str(secondary_agent_id) if secondary_agent_id else None},
+                )
+
+        # Handle pct split update
+        if primary_pct is not None or secondary_pct is not None:
+            new_primary = primary_pct if primary_pct is not None else deal.primary_commission_pct
+            new_secondary = secondary_pct if secondary_pct is not None else deal.secondary_commission_pct
+            if new_primary + new_secondary != 100:
+                raise bad_request("primary_commission_pct + secondary_commission_pct must equal 100")
+            deal.primary_commission_pct = new_primary
+            deal.secondary_commission_pct = new_secondary
+
         await self.session.flush()
+        await self.session.refresh(deal)
+        return await self._enrich(deal)
+
+    async def admin_confirm(self, deal_id: UUID, tenant_id: UUID, current_user: dict) -> dict:
+        if current_user["role"] not in _ADMIN_ROLES:
+            raise forbidden("company_owner or company_admin required")
+        data = await self.get_deal(deal_id, tenant_id)
+        deal = data["deal"]
+        if deal.stage != DealStage.CLOSED_WON:
+            raise bad_request("Deal must be in closed_won stage to confirm")
+        deal.admin_confirmed_at = datetime.now(UTC).replace(tzinfo=None)
+        deal.admin_confirmed_by_user_id = UUID(current_user["id"])
+        await self.session.flush()
+        await self._audit.record(
+            AuditAction.DEAL_ADMIN_CONFIRMED, tenant_id=tenant_id,
+            actor_user_id=UUID(current_user["id"]),
+            entity_type="deal", entity_id=deal.id,
+            after={"admin_confirmed_at": deal.admin_confirmed_at.isoformat()},
+        )
+        await self.session.refresh(deal)
+        return await self._enrich(deal)
+
+    async def agent_confirm(self, deal_id: UUID, tenant_id: UUID, current_user: dict) -> dict:
+        data = await self.get_deal(deal_id, tenant_id)
+        deal = data["deal"]
+        user_uuid = UUID(current_user["id"])
+        # Resolve the calling user to an agent
+        from sqlalchemy import select as sa_select
+        from apps.api.models.agent import Agent as AgentModel
+        agents_q = await self.session.execute(
+            sa_select(AgentModel).where(
+                AgentModel.linked_user_id == user_uuid,
+                AgentModel.tenant_id == tenant_id,
+            )
+        )
+        agent_row = agents_q.scalars().first()
+        if not agent_row:
+            raise forbidden("No agent linked to this user account")
+        is_primary = agent_row.id == deal.primary_agent_id
+        is_secondary = agent_row.id == deal.secondary_agent_id
+        if not is_primary and not is_secondary:
+            raise forbidden("Only the primary or secondary agent of this deal can confirm")
+        if deal.admin_confirmed_at is None:
+            raise bad_request("Awaiting admin confirmation first")
+        deal.agent_confirmed_at = datetime.now(UTC).replace(tzinfo=None)
+        deal.agent_confirmed_by_user_id = user_uuid
+        await self.session.flush()
+        await self._audit.record(
+            AuditAction.DEAL_AGENT_CONFIRMED, tenant_id=tenant_id,
+            actor_user_id=user_uuid,
+            entity_type="deal", entity_id=deal.id,
+            after={"agent_confirmed_at": deal.agent_confirmed_at.isoformat()},
+        )
         await self.session.refresh(deal)
         return await self._enrich(deal)
 

@@ -66,7 +66,7 @@ export default async function SlugLayout({ children, params }: SlugLayoutProps):
   } as React.CSSProperties;
 
   return (
-    <div className="flex min-h-screen flex-col bg-[#f7f5ef]" style={themeStyle}>
+    <div className="flex min-h-screen flex-col bg-white" style={themeStyle}>
       <PublicSiteHeader profile={profile} slug={slug} isDirect={isDirect} />
       <main className="flex-1">
         {children}

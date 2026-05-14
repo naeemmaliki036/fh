@@ -35,8 +35,9 @@ class DocumentRequestService(BaseService):
             raise forbidden("Insufficient role to manage document requests")
 
     def _gen_code(self) -> tuple[str, str]:
-        """Return (plaintext_6digit, bcrypt_hash)."""
-        code = f"{secrets.randbelow(10**6):06d}"
+        """Return (plaintext_4digit, bcrypt_hash)."""
+        import random
+        code = f"{random.randint(0, 9999):04d}"
         return code, hash_password(code)
 
     # ------------------------------------------------------------------
@@ -48,6 +49,8 @@ class DocumentRequestService(BaseService):
         customer_id: UUID, lead_id: UUID | None, deal_id: UUID | None,
         title: str, instructions: str | None,
         items_data: list[dict], expires_in_days: int,
+        property_id: UUID | None = None,
+        agent_note: str | None = None,
     ) -> tuple[DocumentRequest, list[DocumentRequestItem], str]:
         self._require_role(current_user["role"])
         await self._set_rls(tenant_id)
@@ -60,6 +63,8 @@ class DocumentRequestService(BaseService):
             customer_id=customer_id,
             lead_id=lead_id,
             deal_id=deal_id,
+            property_id=property_id,
+            agent_note=agent_note,
             title=title,
             instructions=instructions,
             token=token,

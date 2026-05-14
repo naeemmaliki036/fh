@@ -94,4 +94,11 @@ export const queryKeys = {
     list: (params?: Record<string, unknown>) => ["email-outbox", "list", params] as const,
     detail: (id: string) => ["email-outbox", id] as const,
   },
+  leaderboard: {
+    all: ["leaderboard"] as const,
+    agents: (params?: Record<string, unknown>) => ["leaderboard", "agents", params] as const,
+  },
+  offMarketReasons: {
+    all: ["off-market-reasons"] as const,
+  },
 } as const;

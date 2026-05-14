@@ -101,6 +101,8 @@ class DealCommissionService(BaseService):
         paid_at: datetime | None = None,
     ) -> Deal:
         deal = await self._get_deal(deal_id, tenant_id)
+        if deal.agent_confirmed_at is None:
+            raise bad_request("Awaiting agent confirmation")
         total = self._commission_amount(deal)
         paid_at_dt = (paid_at or datetime.now(UTC)).replace(tzinfo=None)
 

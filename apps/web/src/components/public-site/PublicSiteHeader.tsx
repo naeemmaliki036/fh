@@ -20,7 +20,7 @@ export function PublicSiteHeader({ profile, slug, isDirect = false }: PublicSite
   const homeHref = `/p/${slug}`;
 
   return (
-    <header className="sticky top-0 z-20 border-b border-slate-200/70 bg-[#f7f5ef]/90 backdrop-blur-xl">
+    <header className="sticky top-0 z-20 border-b border-slate-200/70 bg-white/90 backdrop-blur-xl">
       <div className="mx-auto flex w-[min(100%-40px,1280px)] items-center justify-between gap-6 py-3.5">
         {/* Brand */}
         <Link href={homeHref} className="flex items-center gap-3 shrink-0">
@@ -82,7 +82,7 @@ export function PublicSiteHeader({ profile, slug, isDirect = false }: PublicSite
 
       {/* Mobile drawer */}
       {open && (
-        <div className="border-t border-slate-200 bg-[#f7f5ef] px-5 pb-6 pt-4 md:hidden">
+        <div className="border-t border-slate-200 bg-white px-5 pb-6 pt-4 md:hidden">
           <nav className="flex flex-col gap-5 text-base font-bold text-slate-700">
             <Link href={`${homeHref}#listings`} onClick={() => setOpen(false)}>
               Listings

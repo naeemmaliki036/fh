@@ -35,7 +35,7 @@ const SOURCE_VALUES = SOURCES.map((s) => s.value) as [CustomerSource, ...Custome
 const schema = z.object({
   full_name: z.string().min(2, "Name required"),
   email: z.string().email("Invalid email").optional().or(z.literal("")),
-  phone: z.string().optional().refine((v) => !v || isValidPhone(v), "Invalid phone number"),
+  phone: z.string().min(1, "Phone required").refine((v) => isValidPhone(v), "Invalid phone number"),
   nationality: z.string().optional(),
   language: z.string().optional(),
   preferred_currency: z.string().optional(),
@@ -75,7 +75,7 @@ export function CustomerForm({ defaultValues, agents, isPending, submitLabel, on
     onSubmit({
       ...values,
       email: values.email || null,
-      phone: values.phone || null,
+      phone: values.phone,
       nationality: values.nationality || null,
       language: values.language || null,
       preferred_currency: values.preferred_currency || null,
@@ -98,7 +98,7 @@ export function CustomerForm({ defaultValues, agents, isPending, submitLabel, on
           {errors.email && <p className="text-xs text-destructive">{errors.email.message}</p>}
         </div>
         <div className="space-y-1.5">
-          <Label htmlFor="form-phone">Phone</Label>
+          <Label htmlFor="form-phone">Phone *</Label>
           <Controller
             name="phone"
             control={control}

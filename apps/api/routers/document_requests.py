@@ -46,8 +46,10 @@ async def create_document_request(
         customer_id=body.customer_id,
         lead_id=body.lead_id,
         deal_id=body.deal_id,
+        property_id=body.property_id,
         title=body.title,
         instructions=body.instructions,
+        agent_note=body.agent_note,
         items_data=[it.model_dump() for it in body.items],
         expires_in_days=body.expires_in_days,
     )

@@ -1,16 +1,20 @@
 "use client";
 
-import { use } from "react";
+import { use, useState } from "react";
 import Link from "next/link";
 import { ArrowLeft } from "lucide-react";
 import { useDeal } from "@/hooks/queries/useDeals";
 import { DealOverviewPanel } from "@/components/organisms/DealOverviewPanel";
 import { DealCommissionPanel } from "@/components/organisms/DealCommissionPanel";
 import { DealDocumentsPanel } from "@/components/organisms/DealDocumentsPanel";
+import { DealHandshakePanel } from "@/components/organisms/DealHandshakePanel";
 import { DealStageBadge } from "@/components/atoms/DealStageBadge";
 import { DealTypeBadge } from "@/components/atoms/DealTypeBadge";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Button } from "@/components/ui/button";
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
+import { PayoutForm } from "@/components/molecules/PayoutForm";
+import { usePayoutCommission } from "@/hooks/mutations/useDealMutations";
 
 interface PageProps { params: Promise<{ id: string }> }
 
@@ -23,6 +27,8 @@ function fmt(value: string, currency: string): string {
 export default function DealDetailPage({ params }: PageProps): React.ReactElement {
   const { id } = use(params);
   const { data: deal, isLoading, error } = useDeal(id);
+  const [showPayout, setShowPayout] = useState(false);
+  const { mutate: payout, isPending: payingOut } = usePayoutCommission(id);
 
   if (isLoading) return <p className="text-sm text-muted-foreground p-6">Loading deal…</p>;
 
@@ -36,6 +42,8 @@ export default function DealDetailPage({ params }: PageProps): React.ReactElemen
       </div>
     );
   }
+
+  const remaining = String(Math.max(0, Number(deal.commission_amount) - Number(deal.commission_paid_amount)));
 
   return (
     <div className="space-y-6 max-w-5xl">
@@ -60,12 +68,17 @@ export default function DealDetailPage({ params }: PageProps): React.ReactElemen
       <Tabs defaultValue="overview">
         <TabsList>
           <TabsTrigger value="overview">Overview</TabsTrigger>
+          <TabsTrigger value="handshake">Handshake</TabsTrigger>
           <TabsTrigger value="commission">Commission</TabsTrigger>
           <TabsTrigger value="documents">Documents</TabsTrigger>
         </TabsList>
 
         <TabsContent value="overview" className="pt-4">
           <DealOverviewPanel deal={deal} />
+        </TabsContent>
+
+        <TabsContent value="handshake" className="pt-4">
+          <DealHandshakePanel deal={deal} onRecordPayout={() => setShowPayout(true)} />
         </TabsContent>
 
         <TabsContent value="commission" className="pt-4">
@@ -76,6 +89,19 @@ export default function DealDetailPage({ params }: PageProps): React.ReactElemen
           <DealDocumentsPanel dealId={deal.id} customerId={deal.customer_id} />
         </TabsContent>
       </Tabs>
+
+      <Dialog open={showPayout} onOpenChange={setShowPayout}>
+        <DialogContent>
+          <DialogHeader><DialogTitle>Record Payout</DialogTitle></DialogHeader>
+          <PayoutForm
+            remaining={remaining}
+            currency={deal.transaction_currency}
+            isPending={payingOut}
+            onSubmit={(data) => { payout(data, { onSuccess: () => setShowPayout(false) }); }}
+            onCancel={() => setShowPayout(false)}
+          />
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }
