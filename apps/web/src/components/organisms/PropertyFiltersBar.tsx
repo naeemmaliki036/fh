@@ -15,6 +15,7 @@ import {
 } from "@/components/ui/select";
 import { useAgents } from "@/hooks/queries/useAgents";
 import { CITIES_BY_COUNTRY, AREAS_BY_CITY } from "@/lib/constants/locations";
+import { SearchableSelect } from "@/components/molecules/SearchableSelect";
 import type { PropertyStatus, PropertyType } from "@/lib/types/property";
 
 const STATUSES: PropertyStatus[] = ["draft", "available", "reserved", "sold", "rented", "off_market"];
@@ -138,14 +139,16 @@ export function PropertyFiltersBar(): ReactElement {
             </SelectContent>
           </Select>
 
-          {areaOptions.length > 0 && (
-            <Select value={get("area")} onValueChange={(v) => apply({ area: v === "_all" ? "" : v })} disabled={!city}>
-              <SelectTrigger className="h-8 text-xs"><SelectValue placeholder="Area" /></SelectTrigger>
-              <SelectContent>
-                <SelectItem value="_all">All areas</SelectItem>
-                {areaOptions.map((a) => <SelectItem key={a.value} value={a.value}>{a.label}</SelectItem>)}
-              </SelectContent>
-            </Select>
+          {(areaOptions.length > 0 || city) && (
+            <SearchableSelect
+              value={get("area") || null}
+              onChange={(v) => apply({ area: v })}
+              options={areaOptions}
+              placeholder="Area"
+              disabled={!city}
+              allowFreeText
+              className="h-8 text-xs"
+            />
           )}
 
           <Select value={get("assigned_agent_id")} onValueChange={(v) => apply({ assigned_agent_id: v === "_all" ? "" : v })}>

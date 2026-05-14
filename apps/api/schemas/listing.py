@@ -4,7 +4,7 @@ import uuid
 from datetime import date, datetime
 from decimal import Decimal
 
-from pydantic import BaseModel, ConfigDict, model_validator
+from pydantic import BaseModel, ConfigDict, Field, model_validator
 
 from apps.api.models.enums import ListingPurpose, ListingStatus, ListingTier, RentPeriod
 
@@ -14,6 +14,7 @@ _RENT_PURPOSES = {ListingPurpose.RENT_SHORT, ListingPurpose.RENT_LONG}
 class ListingCreateRequest(BaseModel):
     purpose: ListingPurpose
     title: str
+    short_description: str | None = Field(None, max_length=250)
     description: str | None = None
     price: Decimal
     currency: str
@@ -35,6 +36,7 @@ class ListingCreateRequest(BaseModel):
 class ListingUpdateRequest(BaseModel):
     purpose: ListingPurpose | None = None
     title: str | None = None
+    short_description: str | None = Field(None, max_length=250)
     description: str | None = None
     # price intentionally omitted — use PATCH /{id}/price (audited price history)
     currency: str | None = None
@@ -72,6 +74,7 @@ class ListingResponse(BaseModel):
     property_id: uuid.UUID
     purpose: ListingPurpose
     title: str
+    short_description: str | None = None
     description: str | None = None
     price: Decimal
     currency: str

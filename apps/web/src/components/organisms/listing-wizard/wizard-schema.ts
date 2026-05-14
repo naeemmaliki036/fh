@@ -18,6 +18,7 @@ export const wizardSchema = z
     currency: z.string().min(1),
     listing_tier: z.enum(TIERS).default("standard"),
     title: z.string().min(2, "Title required"),
+    short_description: z.string().max(250).optional().nullable(),
     description: z.string().optional().nullable(),
     tags: z.array(z.string()).optional().nullable(),
   })

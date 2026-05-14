@@ -50,6 +50,7 @@ export function ListingDetailShell({ listing, slug }: ListingDetailShellProps): 
           visible on the public site listing index.
         </div>
       )}
+
       {/* Sticky breadcrumb */}
       <div className="sticky top-[61px] z-10 border-b border-slate-200/60 bg-[#f7f5ef]/90 backdrop-blur-md">
         <div className="mx-auto w-[min(100%-40px,1280px)] py-2.5">
@@ -64,40 +65,44 @@ export function ListingDetailShell({ listing, slug }: ListingDetailShellProps): 
       </div>
 
       <div className="mx-auto w-[min(100%-40px,1280px)] py-8">
-        {/* Gallery */}
+        {/* 1. Title + tag chips */}
+        <div className="mb-6">
+          <h1 className="text-4xl font-black leading-tight tracking-tight text-slate-950 md:text-5xl">
+            {listing.title}
+          </h1>
+          <div className="mt-3 flex flex-wrap items-center gap-2">
+            <span className="rounded-full border border-amber-200 bg-amber-100 px-3 py-1 text-xs font-bold text-amber-800">
+              {purposeLabel(listing.purpose)}
+            </span>
+            <span className="rounded-full border border-slate-200 bg-white px-3 py-1 text-xs font-bold text-slate-600 capitalize">
+              {listing.property_type.replace(/_/g, " ")}
+            </span>
+          </div>
+          {listing.address && (
+            <p className="mt-3 text-sm text-slate-500">{listing.address}</p>
+          )}
+
+          {/* 2. Short description — prominent, below title */}
+          {listing.short_description && (
+            <p className="mt-3 max-w-2xl text-lg text-slate-700 leading-snug">
+              {listing.short_description}
+            </p>
+          )}
+        </div>
+
+        {/* 3. Gallery */}
         <ListingGallery urls={listing.media_urls} title={listing.title} />
 
         {/* 2-column layout */}
         <div className="mt-8 grid grid-cols-1 gap-8 lg:grid-cols-[1fr_360px]">
           {/* LEFT: details */}
           <div className="space-y-6">
-            {/* Title + tag chips */}
-            <div>
-              <h1 className="text-4xl font-black leading-tight tracking-tight text-slate-950 md:text-5xl">
-                {listing.title}
-              </h1>
-
-              {/* Tag chips row */}
-              <div className="mt-3 flex flex-wrap items-center gap-2">
-                <span className="rounded-full border border-amber-200 bg-amber-100 px-3 py-1 text-xs font-bold text-amber-800">
-                  {purposeLabel(listing.purpose)}
-                </span>
-                <span className="rounded-full border border-slate-200 bg-white px-3 py-1 text-xs font-bold text-slate-600 capitalize">
-                  {listing.property_type.replace(/_/g, " ")}
-                </span>
-              </div>
-
-              {listing.address && (
-                <p className="mt-3 text-sm text-slate-500">{listing.address}</p>
-              )}
-            </div>
-
-            {/* Price — shown on mobile below title, hidden on desktop (shown in right col) */}
+            {/* 4a. Price — mobile only (desktop in right col) */}
             <div className="lg:hidden rounded-2xl border border-slate-200 bg-white p-5 shadow-card">
               <p className="text-3xl font-black text-slate-950">{formatAed(listing.price)}</p>
             </div>
 
-            {/* Stat tiles */}
+            {/* 4b. Stat tiles */}
             <div className="grid grid-cols-2 gap-3 sm:grid-cols-4">
               {listing.beds != null && (
                 <StatTile icon={BedDouble} value={listing.beds} label="Bedrooms" />
@@ -119,7 +124,7 @@ export function ListingDetailShell({ listing, slug }: ListingDetailShellProps): 
               />
             </div>
 
-            {/* Description */}
+            {/* 5. Full description */}
             {listing.description && (
               <div className="rounded-2xl bg-white p-6 shadow-card">
                 <h2 className="text-base font-black text-slate-950">Description</h2>
@@ -146,7 +151,7 @@ export function ListingDetailShell({ listing, slug }: ListingDetailShellProps): 
               </div>
             )}
 
-            {/* Mobile: agent + contact form */}
+            {/* 6. Mobile: agent + contact form */}
             <div className="space-y-4 lg:hidden">
               {listing.agent && <AgentCard agent={listing.agent} />}
               <ContactForm slug={slug} listingId={listing.id} compact />

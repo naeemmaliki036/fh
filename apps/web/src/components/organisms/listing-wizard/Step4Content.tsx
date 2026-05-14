@@ -1,6 +1,6 @@
 "use client";
 
-import { Controller } from "react-hook-form";
+import { Controller, useWatch } from "react-hook-form";
 import type { Control, UseFormRegister, FieldErrors } from "react-hook-form";
 import { Label } from "@/components/ui/label";
 import { Input } from "@/components/ui/input";
@@ -15,6 +15,9 @@ interface Step4ContentProps {
 }
 
 export function Step4Content({ control, register, errors, disabled }: Step4ContentProps): React.ReactElement {
+  const shortDesc = useWatch({ control, name: "short_description" });
+  const shortDescLen = shortDesc?.length ?? 0;
+
   return (
     <div className="space-y-4">
       <div>
@@ -35,6 +38,26 @@ export function Step4Content({ control, register, errors, disabled }: Step4Conte
           />
           {errors.title && (
             <p className="text-xs text-destructive">{errors.title.message}</p>
+          )}
+        </div>
+
+        <div className="space-y-1.5">
+          <Label htmlFor="wizard-short-description">Short description</Label>
+          <p className="text-xs text-muted-foreground -mt-0.5">
+            Shown prominently below the title on the public listing page (max 250 chars).
+          </p>
+          <Input
+            id="wizard-short-description"
+            {...register("short_description")}
+            disabled={disabled}
+            maxLength={250}
+            placeholder="e.g. Bright corner unit with panoramic sea views and a private pool."
+          />
+          <p className="text-xs text-muted-foreground text-right">
+            {shortDescLen}/250
+          </p>
+          {errors.short_description && (
+            <p className="text-xs text-destructive">{errors.short_description.message}</p>
           )}
         </div>
 

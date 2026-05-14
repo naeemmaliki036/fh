@@ -1,62 +1,145 @@
 "use client";
 
-import { useForm, Controller } from "react-hook-form";
+import { useForm, Controller, type Control, type UseFormRegister, type UseFormSetValue } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
-import { z } from "zod";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
+  Select, SelectContent, SelectItem, SelectTrigger, SelectValue,
 } from "@/components/ui/select";
 import { TagsInput } from "@/components/molecules/TagsInput";
 import { Textarea } from "@/components/atoms/Textarea";
+import { SearchableSelect } from "@/components/molecules/SearchableSelect";
 import { CURRENCIES } from "@/lib/constants/regions";
 import { CITIES_BY_COUNTRY, AREAS_BY_CITY } from "@/lib/constants/locations";
 import { useMyTenant } from "@/hooks/queries/useTenants";
+import {
+  propertyFormSchema, blank,
+  TYPES, STATUSES, PLOT_TYPES, COMMERCIAL_TYPES, BUILDING_TYPES,
+  type PropertyFormValues,
+} from "@/components/molecules/PropertyForm.config";
 import type {
-  Property,
-  PropertyCreateRequest,
-  PropertyUpdateRequest,
-  PropertyType,
-  PropertyStatus,
+  Property, PropertyCreateRequest, PropertyUpdateRequest,
 } from "@/lib/types/property";
 
-const TYPES: PropertyType[] = [
-  "apartment","villa","townhouse","penthouse",
-  "office","retail","warehouse","plot","building","other",
-];
-const STATUSES: PropertyStatus[] = ["draft","available","reserved","sold","rented","off_market"];
-const PLOT_TYPES: PropertyType[] = ["plot"];
-const COMMERCIAL_TYPES: PropertyType[] = ["office","retail","warehouse"];
-const BUILDING_TYPES: PropertyType[] = ["building"];
+// ── Shared layout primitives ──────────────────────────────────────────────────
+function SectionHeader({ label }: { label: string }): React.ReactElement {
+  return <h3 className="text-xs font-mono uppercase tracking-widest text-muted-foreground">{label}</h3>;
+}
+function Divider(): React.ReactElement {
+  return <div className="border-t pt-4" />;
+}
 
-const schema = z.object({
-  title: z.string().min(2, "Title required"),
-  country: z.string().optional().nullable(),
-  city: z.string().optional().nullable(),
-  area: z.string().optional().nullable(),
-  property_type: z.enum(TYPES as [PropertyType, ...PropertyType[]]),
-  bedrooms: z.coerce.number().int().min(0).optional().nullable(),
-  bathrooms: z.coerce.number().int().min(0).optional().nullable(),
-  size_sqft: z.string().optional().nullable()
-    .refine((v) => !v || /^\d+(\.\d+)?$/.test(v), "Must be a number"),
-  price: z.string().optional().nullable()
-    .refine((v) => !v || /^\d+(\.\d+)?$/.test(v), "Must be a number"),
-  currency: z.string().optional().nullable(),
-  internal_reference: z.string().optional().nullable(),
-  address_line: z.string().optional().nullable(),
-  tags: z.array(z.string()).max(5).optional(),
-  description: z.string().optional(),
-  status: z.enum(STATUSES as [PropertyStatus, ...PropertyStatus[]]).optional(),
-});
+// ── Basic info section ────────────────────────────────────────────────────────
+interface BasicInfoProps {
+  register: UseFormRegister<PropertyFormValues>;
+  control: Control<PropertyFormValues>;
+  showStatus?: boolean;
+  titleError?: string;
+}
+function BasicInfoSection({ register, control, showStatus, titleError }: BasicInfoProps): React.ReactElement {
+  return (
+    <div className="space-y-1.5">
+      <SectionHeader label="Basic info" />
+      <div className="grid grid-cols-2 md:grid-cols-3 gap-3">
+        <div className="space-y-1 col-span-2 md:col-span-3">
+          <Label htmlFor="form-title">Title *</Label>
+          <Input id="form-title" {...register("title")} />
+          {titleError && <p className="text-xs text-destructive">{titleError}</p>}
+        </div>
+        <div className="space-y-1">
+          <Label>Type *</Label>
+          <Controller name="property_type" control={control} render={({ field }) => (
+            <Select value={field.value} onValueChange={field.onChange}>
+              <SelectTrigger><SelectValue /></SelectTrigger>
+              <SelectContent>{TYPES.map((t) => <SelectItem key={t} value={t}>{t.charAt(0).toUpperCase()+t.slice(1)}</SelectItem>)}</SelectContent>
+            </Select>
+          )} />
+        </div>
+        {showStatus && (
+          <div className="space-y-1">
+            <Label>Status</Label>
+            <Controller name="status" control={control} render={({ field }) => (
+              <Select value={field.value ?? ""} onValueChange={field.onChange}>
+                <SelectTrigger><SelectValue /></SelectTrigger>
+                <SelectContent>{STATUSES.map((s) => <SelectItem key={s} value={s}>{s.replace("_"," ")}</SelectItem>)}</SelectContent>
+              </Select>
+            )} />
+          </div>
+        )}
+        <div className="space-y-1">
+          <Label>Internal Ref <span className="text-xs text-muted-foreground">(optional)</span></Label>
+          <Input {...register("internal_reference")} />
+        </div>
+        <div className="space-y-1 col-span-2 md:col-span-3">
+          <Label>Tags <span className="text-xs text-muted-foreground">(max 5)</span></Label>
+          <Controller name="tags" control={control} render={({ field }) => (
+            <TagsInput value={field.value ?? []} onChange={field.onChange} />
+          )} />
+        </div>
+      </div>
+    </div>
+  );
+}
 
-type FormValues = z.infer<typeof schema>;
+// ── Location section ──────────────────────────────────────────────────────────
+interface LocationProps {
+  register: UseFormRegister<PropertyFormValues>;
+  control: Control<PropertyFormValues>;
+  setValue: UseFormSetValue<PropertyFormValues>;
+  operatingCountries: string[];
+  cityOptions: { value: string; label: string }[];
+  areaOptions: { value: string; label: string }[];
+  selectedCountry: string | null | undefined;
+  selectedCity: string | null | undefined;
+}
+function LocationSection({
+  register, control, setValue, operatingCountries,
+  cityOptions, areaOptions, selectedCountry, selectedCity,
+}: LocationProps): React.ReactElement {
+  return (
+    <div className="space-y-1.5">
+      <SectionHeader label="Location" />
+      <div className="grid grid-cols-2 md:grid-cols-3 gap-3">
+        <div className="space-y-1">
+          <Label>Country</Label>
+          <Controller name="country" control={control} render={({ field }) => (
+            <Select value={field.value ?? ""} onValueChange={(v) => { field.onChange(v); setValue("city",""); setValue("area",""); }}>
+              <SelectTrigger><SelectValue placeholder="Country" /></SelectTrigger>
+              <SelectContent>
+                {(operatingCountries.length > 0 ? operatingCountries : ["AE","SA"]).map(
+                  (c) => <SelectItem key={c} value={c}>{c}</SelectItem>
+                )}
+              </SelectContent>
+            </Select>
+          )} />
+        </div>
+        <div className="space-y-1">
+          <Label>City</Label>
+          <Controller name="city" control={control} render={({ field }) => (
+            <Select value={field.value ?? ""} onValueChange={(v) => { field.onChange(v); setValue("area",""); }} disabled={!selectedCountry || cityOptions.length === 0}>
+              <SelectTrigger><SelectValue placeholder="City" /></SelectTrigger>
+              <SelectContent>{cityOptions.map((c) => <SelectItem key={c.value} value={c.value}>{c.label}</SelectItem>)}</SelectContent>
+            </Select>
+          )} />
+        </div>
+        <div className="space-y-1">
+          <Label>Area <span className="text-xs text-muted-foreground">(optional)</span></Label>
+          <Controller name="area" control={control} render={({ field }) => (
+            <SearchableSelect value={field.value ?? ""} onChange={field.onChange} options={areaOptions} placeholder="Area" disabled={!selectedCity} allowFreeText />
+          )} />
+        </div>
+        <div className="space-y-1 col-span-2 md:col-span-3">
+          <Label>Address <span className="text-xs text-muted-foreground">(optional)</span></Label>
+          <Input {...register("address_line")} />
+        </div>
+      </div>
+    </div>
+  );
+}
 
+// ── Public API ────────────────────────────────────────────────────────────────
 interface PropertyFormProps {
   defaultValues?: Partial<Property>;
   showStatus?: boolean;
@@ -66,15 +149,12 @@ interface PropertyFormProps {
   onCancel?: () => void;
 }
 
-const blank = (s: string | null | undefined): string | null =>
-  s == null || s === "" ? null : s;
-
 export function PropertyForm({ defaultValues, showStatus, isPending, submitLabel, onSubmit, onCancel }: PropertyFormProps): React.ReactElement {
   const { data: tenant } = useMyTenant();
   const operatingCountries = tenant?.operating_countries ?? [];
 
-  const { register, handleSubmit, control, reset, watch, setValue, formState: { errors } } = useForm<FormValues>({
-    resolver: zodResolver(schema),
+  const { register, handleSubmit, control, reset, watch, setValue, formState: { errors } } = useForm<PropertyFormValues>({
+    resolver: zodResolver(propertyFormSchema),
     defaultValues: {
       title: defaultValues?.title ?? "",
       country: defaultValues?.country ?? (operatingCountries[0] ?? "AE"),
@@ -106,7 +186,7 @@ export function PropertyForm({ defaultValues, showStatus, isPending, submitLabel
   const showBedrooms = !isPlot && !isCommercial && !isBuilding;
   const showBathrooms = !isPlot && !isBuilding;
 
-  const handleFormSubmit = (v: FormValues): void => {
+  const handleFormSubmit = (v: PropertyFormValues): void => {
     onSubmit({
       ...v,
       bedrooms: showBedrooms ? (v.bedrooms ?? null) : null,
@@ -121,109 +201,54 @@ export function PropertyForm({ defaultValues, showStatus, isPending, submitLabel
 
   return (
     <form onSubmit={handleSubmit(handleFormSubmit)} className="space-y-4">
-      <div className="grid grid-cols-2 gap-4">
-        <div className="space-y-1.5 col-span-2">
-          <Label htmlFor="form-title">Title *</Label>
-          <Input id="form-title" {...register("title")} />
-          {errors.title && <p className="text-xs text-destructive">{errors.title.message}</p>}
-        </div>
+      <BasicInfoSection register={register} control={control} showStatus={showStatus} titleError={errors.title?.message} />
+      <Divider />
+      <LocationSection register={register} control={control} setValue={setValue} operatingCountries={operatingCountries} cityOptions={cityOptions} areaOptions={areaOptions} selectedCountry={selectedCountry} selectedCity={selectedCity} />
+      <Divider />
 
-        {/* Country → City → Area (cascading) */}
-        <div className="space-y-1.5">
-          <Label>Country</Label>
-          <Controller name="country" control={control} render={({ field }) => (
-            <Select value={field.value ?? ""} onValueChange={(v) => { field.onChange(v); setValue("city", ""); setValue("area", ""); }}>
-              <SelectTrigger><SelectValue placeholder="Country" /></SelectTrigger>
-              <SelectContent>
-                {(operatingCountries.length > 0 ? operatingCountries : ["AE","SA"]).map((c) => (
-                  <SelectItem key={c} value={c}>{c}</SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
-          )} />
+      {/* ── Property details ── */}
+      <div className="space-y-1.5">
+        <SectionHeader label="Property details" />
+        <div className="grid grid-cols-2 md:grid-cols-3 gap-3">
+          {showBedrooms && <div className="space-y-1"><Label>Bedrooms <span className="text-xs text-muted-foreground">(optional)</span></Label><Input type="number" {...register("bedrooms")} /></div>}
+          {showBathrooms && <div className="space-y-1"><Label>Bathrooms <span className="text-xs text-muted-foreground">(optional)</span></Label><Input type="number" {...register("bathrooms")} /></div>}
+          <div className="space-y-1">
+            <Label>{isPlot ? "Plot area (sqft)" : "Size (sqft)"} <span className="text-xs text-muted-foreground">(optional)</span></Label>
+            <Input {...register("size_sqft")} />
+            {errors.size_sqft && <p className="text-xs text-destructive">{errors.size_sqft.message}</p>}
+          </div>
         </div>
-        <div className="space-y-1.5">
-          <Label>City</Label>
-          <Controller name="city" control={control} render={({ field }) => (
-            <Select value={field.value ?? ""} onValueChange={(v) => { field.onChange(v); setValue("area", ""); }} disabled={!selectedCountry || cityOptions.length === 0}>
-              <SelectTrigger><SelectValue placeholder="City" /></SelectTrigger>
-              <SelectContent>{cityOptions.map((c) => <SelectItem key={c.value} value={c.value}>{c.label}</SelectItem>)}</SelectContent>
-            </Select>
-          )} />
-        </div>
-        <div className="space-y-1.5">
-          <Label>Area <span className="text-xs text-muted-foreground">(optional)</span></Label>
-          {areaOptions.length > 0 ? (
-            <Controller name="area" control={control} render={({ field }) => (
-              <Select value={field.value ?? ""} onValueChange={field.onChange} disabled={!selectedCity}>
-                <SelectTrigger><SelectValue placeholder="Area" /></SelectTrigger>
-                <SelectContent>{areaOptions.map((a) => <SelectItem key={a.value} value={a.value}>{a.label}</SelectItem>)}</SelectContent>
-              </Select>
-            )} />
-          ) : (
-            <Input {...register("area")} placeholder="Free-text area" disabled={!selectedCity} />
-          )}
-        </div>
+      </div>
+      <Divider />
 
-        {/* Type + optional Status */}
-        <div className="space-y-1.5">
-          <Label>Type *</Label>
-          <Controller name="property_type" control={control} render={({ field }) => (
-            <Select value={field.value} onValueChange={field.onChange}>
-              <SelectTrigger><SelectValue /></SelectTrigger>
-              <SelectContent>{TYPES.map((t) => <SelectItem key={t} value={t}>{t.charAt(0).toUpperCase()+t.slice(1)}</SelectItem>)}</SelectContent>
-            </Select>
-          )} />
-        </div>
-        {showStatus && (
-          <div className="space-y-1.5">
-            <Label>Status</Label>
-            <Controller name="status" control={control} render={({ field }) => (
+      {/* ── Pricing ── */}
+      <div className="space-y-1.5">
+        <SectionHeader label="Pricing" />
+        <div className="grid grid-cols-2 gap-3">
+          <div className="space-y-1">
+            <Label>Price <span className="text-xs text-muted-foreground">(optional)</span></Label>
+            <Input {...register("price")} />
+            {errors.price && <p className="text-xs text-destructive">{errors.price.message}</p>}
+          </div>
+          <div className="space-y-1">
+            <Label>Currency</Label>
+            <Controller name="currency" control={control} render={({ field }) => (
               <Select value={field.value ?? ""} onValueChange={field.onChange}>
-                <SelectTrigger><SelectValue /></SelectTrigger>
-                <SelectContent>{STATUSES.map((s) => <SelectItem key={s} value={s}>{s.replace("_"," ")}</SelectItem>)}</SelectContent>
+                <SelectTrigger><SelectValue placeholder="Currency" /></SelectTrigger>
+                <SelectContent>{CURRENCIES.map((c) => <SelectItem key={c.value} value={c.value}>{c.label}</SelectItem>)}</SelectContent>
               </Select>
             )} />
           </div>
-        )}
-
-        {/* Conditional bedroom/bathroom fields */}
-        {showBedrooms && <div className="space-y-1.5"><Label>Bedrooms <span className="text-xs text-muted-foreground">(optional)</span></Label><Input type="number" {...register("bedrooms")} /></div>}
-        {showBathrooms && <div className="space-y-1.5"><Label>Bathrooms <span className="text-xs text-muted-foreground">(optional)</span></Label><Input type="number" {...register("bathrooms")} /></div>}
-
-        <div className="space-y-1.5">
-          <Label>{isPlot ? "Plot area (sqft)" : "Size (sqft)"} <span className="text-xs text-muted-foreground">(optional)</span></Label>
-          <Input {...register("size_sqft")} />
-          {errors.size_sqft && <p className="text-xs text-destructive">{errors.size_sqft.message}</p>}
-        </div>
-        <div className="space-y-1.5">
-          <Label>Price <span className="text-xs text-muted-foreground">(optional)</span></Label>
-          <Input {...register("price")} />
-          {errors.price && <p className="text-xs text-destructive">{errors.price.message}</p>}
-        </div>
-        <div className="space-y-1.5">
-          <Label>Currency</Label>
-          <Controller name="currency" control={control} render={({ field }) => (
-            <Select value={field.value ?? ""} onValueChange={field.onChange}>
-              <SelectTrigger><SelectValue placeholder="Currency" /></SelectTrigger>
-              <SelectContent>{CURRENCIES.map((c) => <SelectItem key={c.value} value={c.value}>{c.label}</SelectItem>)}</SelectContent>
-            </Select>
-          )} />
-        </div>
-        <div className="space-y-1.5"><Label>Internal Ref <span className="text-xs text-muted-foreground">(optional)</span></Label><Input {...register("internal_reference")} /></div>
-        <div className="space-y-1.5 col-span-2"><Label>Address <span className="text-xs text-muted-foreground">(optional)</span></Label><Input {...register("address_line")} /></div>
-
-        <div className="space-y-1.5 col-span-2">
-          <Label>Tags <span className="text-xs text-muted-foreground">(max 5)</span></Label>
-          <Controller name="tags" control={control} render={({ field }) => (
-            <TagsInput value={field.value ?? []} onChange={field.onChange} />
-          )} />
-        </div>
-        <div className="space-y-1.5 col-span-2">
-          <Label>Description <span className="text-xs text-muted-foreground">(optional)</span></Label>
-          <Textarea {...register("description")} rows={3} />
         </div>
       </div>
+      <Divider />
+
+      {/* ── Description ── */}
+      <div className="space-y-1.5">
+        <SectionHeader label="Description" />
+        <Textarea {...register("description")} rows={3} />
+      </div>
+
       <div className="flex gap-2 justify-end pt-2">
         {onCancel && <Button type="button" variant="outline" onClick={() => { reset(); onCancel(); }}>Discard changes</Button>}
         <Button type="submit" disabled={isPending}>{isPending ? "Saving..." : submitLabel}</Button>

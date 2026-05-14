@@ -110,6 +110,7 @@ export interface PublicTenantProfile {
 export interface PublicListingItem {
   id: string;
   title: string;
+  short_description: string | null;
   price: number;
   currency: string;
   beds: number | null;
@@ -142,6 +143,7 @@ export interface PublicAgentSnippet {
 export interface PublicListingDetail {
   id: string;
   title: string;
+  short_description: string | null;
   description: string | null;
   price: number;
   currency: string;

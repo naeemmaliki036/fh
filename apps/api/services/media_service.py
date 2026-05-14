@@ -9,24 +9,20 @@ from sqlalchemy.ext.asyncio import AsyncSession
 
 from apps.api.models.enums import MediaKind, TenantRole
 from apps.api.models.media import Media
+from apps.api.models.tenant import Tenant
 from apps.api.services.base import BaseService
 from packages.common.storage import get_public_storage
 from packages.common.utils.error_handlers import bad_request, forbidden, not_found
 
 logger = logging.getLogger(__name__)
 
-_MAX_IMAGE = 15 * 1024 * 1024
-_MAX_VIDEO = 25 * 1024 * 1024   # 25 MB per video (listing cap)
 _MAX_PDF = 25 * 1024 * 1024
 
-_MIME_LIMITS: dict[str, int] = {
-    "image/jpeg": _MAX_IMAGE,
-    "image/png": _MAX_IMAGE,
-    "image/webp": _MAX_IMAGE,
-    "video/mp4": _MAX_VIDEO,
-    "video/webm": _MAX_VIDEO,
+# Mime-type → allowed kinds mapping (unchanged)
+_MIME_LIMITS_STATIC: dict[str, int] = {
     "application/pdf": _MAX_PDF,
 }
+# Mime-type for PDF (size limit is static; images/videos use per-tenant caps)
 _MIME_KINDS: dict[str, set[MediaKind]] = {
     "image/jpeg": {MediaKind.IMAGE, MediaKind.FLOORPLAN},
     "image/png": {MediaKind.IMAGE, MediaKind.FLOORPLAN},
@@ -35,6 +31,8 @@ _MIME_KINDS: dict[str, set[MediaKind]] = {
     "video/webm": {MediaKind.VIDEO},
     "application/pdf": {MediaKind.FLOORPLAN, MediaKind.BROCHURE},
 }
+_IMAGE_MIMES = {"image/jpeg", "image/png", "image/webp"}
+_VIDEO_MIMES = {"video/mp4", "video/webm"}
 _MANAGER_ROLES = {
     TenantRole.COMPANY_OWNER.value,
     TenantRole.COMPANY_ADMIN.value,

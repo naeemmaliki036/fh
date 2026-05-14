@@ -2,6 +2,7 @@
 
 import { useState } from "react";
 import { CITIES_BY_COUNTRY, AREAS_BY_CITY } from "@/lib/constants/locations";
+import { SearchableSelect } from "@/components/molecules/SearchableSelect";
 import { useCreatePublicLead } from "@/hooks/mutations/public-site/useCreatePublicLead";
 
 export type ListingIntent = "sell" | "rent_long" | "rent_short";
@@ -215,21 +216,15 @@ export function ListYourPropertyForm({
 
         <div>
           <label className={labelCls}>Area</label>
-          {areaOptions.length > 0 ? (
-            <select
-              value={form.area}
-              onChange={set("area")}
-              disabled={!form.city}
-              className={fieldCls}
-            >
-              <option value="">Select area</option>
-              {areaOptions.map((a) => (
-                <option key={a.value} value={a.label}>{a.label}</option>
-              ))}
-            </select>
-          ) : (
-            <input value={form.area} onChange={set("area")} placeholder="Area / community" className={fieldCls} disabled={!form.city && cityOptions.length > 0} />
-          )}
+          <SearchableSelect
+            value={form.area || null}
+            onChange={(v) => setForm((prev) => ({ ...prev, area: v }))}
+            options={areaOptions}
+            placeholder="Area / community"
+            disabled={!form.city}
+            allowFreeText
+            className={fieldCls}
+          />
         </div>
       </div>
 

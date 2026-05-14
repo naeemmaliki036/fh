@@ -186,6 +186,44 @@ class TenantService(BaseService):
         await self.session.refresh(tenant)
         return tenant
 
+    async def update_media_limits(
+        self,
+        tenant_id: UUID,
+        actor_id: UUID,
+        *,
+        max_images_per_property: int,
+        max_videos_per_property: int,
+        max_image_mb: int,
+        max_video_mb: int,
+        ip_address: str | None = None,
+        user_agent: str | None = None,
+    ) -> Tenant:
+        """Set per-tenant media caps (platform admin only, >= floor enforced by schema)."""
+        tenant = await self.get_tenant(tenant_id)
+        before = {
+            "max_images_per_property": tenant.max_images_per_property,
+            "max_videos_per_property": tenant.max_videos_per_property,
+            "max_image_mb": tenant.max_image_mb,
+            "max_video_mb": tenant.max_video_mb,
+        }
+        tenant.max_images_per_property = max_images_per_property
+        tenant.max_videos_per_property = max_videos_per_property
+        tenant.max_image_mb = max_image_mb
+        tenant.max_video_mb = max_video_mb
+        await self.session.flush()
+        after = {
+            "max_images_per_property": tenant.max_images_per_property,
+            "max_videos_per_property": tenant.max_videos_per_property,
+            "max_image_mb": tenant.max_image_mb,
+            "max_video_mb": tenant.max_video_mb,
+        }
+        await self._rls_and_audit(
+            tenant_id, AuditAction.OTHER, actor_id, before, after,
+            ip_address, user_agent,
+        )
+        await self.session.refresh(tenant)
+        return tenant
+
     async def _rls_and_audit(
         self, tenant_id: UUID, action: AuditAction, actor_id: UUID | None,
         before: dict, after: dict, ip_address: str | None, user_agent: str | None,

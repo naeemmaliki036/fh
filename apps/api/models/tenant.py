@@ -11,7 +11,7 @@ operating_countries is a Postgres TEXT[] column added in 0017.
 import uuid
 from datetime import datetime
 
-from sqlalchemy import Boolean, Enum, ForeignKey, String, Text, text
+from sqlalchemy import Boolean, Enum, ForeignKey, Integer, String, Text, text
 from sqlalchemy.dialects.postgresql import ARRAY, JSONB, UUID
 from sqlalchemy.orm import Mapped, mapped_column
 
@@ -110,6 +110,22 @@ class Tenant(Base, UUIDMixin, TimestampMixin):
     approved_by_id: Mapped[uuid.UUID | None] = mapped_column(
         UUID(as_uuid=True),
         nullable=True,
+    )
+
+    # Per-tenant media upload caps — platform admins can raise above the floor.
+    # Floors are enforced at DB level (CHECK constraints in migration 0030) and
+    # at application level (TenantMediaLimitsRequest validators).
+    max_images_per_property: Mapped[int] = mapped_column(
+        Integer, nullable=False, default=20, server_default="20"
+    )
+    max_videos_per_property: Mapped[int] = mapped_column(
+        Integer, nullable=False, default=2, server_default="2"
+    )
+    max_image_mb: Mapped[int] = mapped_column(
+        Integer, nullable=False, default=10, server_default="10"
+    )
+    max_video_mb: Mapped[int] = mapped_column(
+        Integer, nullable=False, default=25, server_default="25"
     )
 
     # Suspension audit trail — populated when status transitions to SUSPENDED.

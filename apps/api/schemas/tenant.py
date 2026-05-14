@@ -38,6 +38,15 @@ def _validate_countries(v: list[str]) -> list[str]:
 # ---------------------------------------------------------------------------
 
 
+# Floors shared between schema validators and service-layer checks.
+MEDIA_LIMITS_FLOOR = {
+    "max_images_per_property": 20,
+    "max_videos_per_property": 2,
+    "max_image_mb": 10,
+    "max_video_mb": 25,
+}
+
+
 class TenantResponse(BaseModel):
     model_config = ConfigDict(from_attributes=True)
 
@@ -58,6 +67,11 @@ class TenantResponse(BaseModel):
     suspended_at: datetime | None = None
     suspended_reason: str | None = None
     suspended_by_platform_user_id: uuid.UUID | None = None
+    # Media caps
+    max_images_per_property: int = 20
+    max_videos_per_property: int = 2
+    max_image_mb: int = 10
+    max_video_mb: int = 25
     created_at: datetime
     updated_at: datetime
 
@@ -114,6 +128,27 @@ class TenantApproveRequest(BaseModel):
 
 class TenantRejectRequest(BaseModel):
     reason_note: str = Field(..., min_length=1, max_length=1000)
+
+
+class TenantMediaLimitsRequest(BaseModel):
+    """POST /tenants/{id}/media-limits — admin-only cap overrides (>= floor)."""
+
+    max_images_per_property: int = Field(
+        ..., ge=MEDIA_LIMITS_FLOOR["max_images_per_property"],
+        description=f"Min {MEDIA_LIMITS_FLOOR['max_images_per_property']}",
+    )
+    max_videos_per_property: int = Field(
+        ..., ge=MEDIA_LIMITS_FLOOR["max_videos_per_property"],
+        description=f"Min {MEDIA_LIMITS_FLOOR['max_videos_per_property']}",
+    )
+    max_image_mb: int = Field(
+        ..., ge=MEDIA_LIMITS_FLOOR["max_image_mb"],
+        description=f"Min {MEDIA_LIMITS_FLOOR['max_image_mb']}",
+    )
+    max_video_mb: int = Field(
+        ..., ge=MEDIA_LIMITS_FLOOR["max_video_mb"],
+        description=f"Min {MEDIA_LIMITS_FLOOR['max_video_mb']}",
+    )
 
 
 # ---------------------------------------------------------------------------

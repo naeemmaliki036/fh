@@ -124,3 +124,8 @@ class Listing(Base, UUIDMixin, TimestampMixin, TenantMixin):
         nullable=True,
     )
     review_notes: Mapped[str | None] = mapped_column(Text, nullable=True)
+
+    # ------------------------------------------------------------------
+    # Short description (added in migration 0029)
+    # ------------------------------------------------------------------
+    short_description: Mapped[str | None] = mapped_column(Text, nullable=True)

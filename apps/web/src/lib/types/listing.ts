@@ -20,6 +20,7 @@ export interface Listing {
   property_id: string;
   purpose: ListingPurpose;
   title: string;
+  short_description: string | null;
   description: string | null;
   price: string;
   currency: string;
@@ -56,6 +57,7 @@ export interface ReviewDecisionRequest {
 export interface ListingCreateRequest {
   purpose: ListingPurpose;
   title: string;
+  short_description?: string | null;
   price: string | number;
   currency: string;
   description?: string | null;
@@ -69,6 +71,7 @@ export interface ListingCreateRequest {
 export interface ListingUpdateRequest {
   purpose?: ListingPurpose | null;
   title?: string | null;
+  short_description?: string | null;
   description?: string | null;
   price?: string | number | null;
   currency?: string | null;

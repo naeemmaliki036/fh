@@ -18,6 +18,7 @@ const TIERS: ListingTier[] = ["standard", "premium", "featured"];
 const schema = z
   .object({
     title: z.string().min(2, "Title required"),
+    short_description: z.string().max(250).optional().nullable(),
     purpose: z.enum(PURPOSES as [ListingPurpose, ...ListingPurpose[]]),
     price: z
       .string()
@@ -51,10 +52,11 @@ interface ListingFormProps {
 }
 
 export function ListingForm({ defaultValues, isPending, submitLabel, onSubmit, onCancel }: ListingFormProps): React.ReactElement {
-  const { register, handleSubmit, control, formState: { errors } } = useForm<FormValues>({
+  const { register, handleSubmit, control, watch, formState: { errors } } = useForm<FormValues>({
     resolver: zodResolver(schema),
     defaultValues: {
       title: defaultValues?.title ?? "",
+      short_description: defaultValues?.short_description ?? null,
       purpose: defaultValues?.purpose ?? "sale",
       price: defaultValues?.price ?? "",
       currency: defaultValues?.currency ?? "AED",
@@ -65,6 +67,7 @@ export function ListingForm({ defaultValues, isPending, submitLabel, onSubmit, o
       valid_until: defaultValues?.valid_until?.slice(0, 10) ?? null,
     },
   });
+  const shortDescLen = (watch("short_description") ?? "").length;
 
   const purpose = useWatch({ control, name: "purpose" });
   const isRent = purpose === "rent_short" || purpose === "rent_long";
@@ -129,6 +132,19 @@ export function ListingForm({ defaultValues, isPending, submitLabel, onSubmit, o
           <Label>Valid Until</Label>
           <Input type="date" {...register("valid_until")} />
           <p className="text-xs text-muted-foreground mt-1">Leave blank for no expiry</p>
+        </div>
+        <div className="space-y-1.5 col-span-2">
+          <Label htmlFor="form-short-description">Short description</Label>
+          <Input
+            id="form-short-description"
+            {...register("short_description")}
+            maxLength={250}
+            placeholder="Brief headline shown on the public listing page (max 250 chars)"
+          />
+          <p className="text-xs text-muted-foreground text-right">{shortDescLen}/250</p>
+          {errors.short_description && (
+            <p className="text-xs text-destructive">{errors.short_description.message}</p>
+          )}
         </div>
         <div className="space-y-1.5 col-span-2">
           <Label>Description</Label>

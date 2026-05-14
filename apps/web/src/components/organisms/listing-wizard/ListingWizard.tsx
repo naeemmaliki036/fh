@@ -38,6 +38,7 @@ function buildDefaults(listing?: Listing): Partial<WizardFormValues> {
     currency: listing.currency,
     listing_tier: listing.listing_tier,
     title: listing.title,
+    short_description: listing.short_description ?? null,
     description: listing.description ?? null,
     tags: listing.tags ?? [],
   };
@@ -77,6 +78,7 @@ export function ListingWizard({ mode, initial, initialStep }: ListingWizardProps
         const created = await listingRepository.createForProperty(values.property_id, {
           purpose: values.purpose,
           title: values.title,
+          short_description: values.short_description,
           price: values.price,
           currency: values.currency,
           description: values.description,
@@ -93,6 +95,7 @@ export function ListingWizard({ mode, initial, initialStep }: ListingWizardProps
         await listingRepository.update(listingId, {
           purpose: values.purpose,
           title: values.title,
+          short_description: values.short_description,
           price: values.price,
           currency: values.currency,
           description: values.description,

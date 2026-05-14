@@ -201,7 +201,7 @@ class ListingService(BaseService):
         self._validate_purpose_rent(new_purpose, new_rent)
 
         allowed = {
-            "purpose", "title", "description", "currency",
+            "purpose", "title", "short_description", "description", "currency",
             "rent_period", "listing_tier", "valid_from", "valid_until",
             # "price" excluded — use PATCH /{id}/price (audited price history)
         }

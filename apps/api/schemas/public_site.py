@@ -55,6 +55,7 @@ class PublicListingItem(BaseModel):
 
     id: uuid.UUID
     title: str
+    short_description: str | None = None
     price: float
     currency: str
     beds: int | None = None
@@ -90,6 +91,7 @@ class PublicAgentSnippet(BaseModel):
 class PublicListingDetailResponse(BaseModel):
     id: uuid.UUID
     title: str
+    short_description: str | None = None
     description: str | None = None
     price: float
     currency: str
@@ -156,6 +158,11 @@ class PublicSiteSettingsResponse(BaseModel):
     public_site_tagline: str | None = None
     public_url_hint: str
     config: dict = Field(default_factory=dict)
+    # Per-tenant media limits (read-only for tenant owners)
+    max_images_per_property: int = 20
+    max_videos_per_property: int = 2
+    max_image_mb: int = 10
+    max_video_mb: int = 25
 
 
 class PublicSiteSettingsUpdate(BaseModel):

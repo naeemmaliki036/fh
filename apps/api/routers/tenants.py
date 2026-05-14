@@ -22,6 +22,7 @@ from apps.api.schemas.tenant import (
     TenantApproveRequest,
     TenantDetailResponse,
     TenantListResponse,
+    TenantMediaLimitsRequest,
     TenantReactivateRequest,
     TenantRejectRequest,
     TenantResponse,
@@ -194,6 +195,31 @@ async def reactivate_tenant(
         tenant_id,
         UUID(platform_user["id"]),
         reason_note=body.reason_note,
+        ip_address=ctx.ip_address,
+        user_agent=ctx.user_agent,
+    )
+
+
+@router.post("/{tenant_id}/media-limits", response_model=TenantResponse)
+async def set_tenant_media_limits(
+    tenant_id: UUID,
+    body: TenantMediaLimitsRequest,
+    platform_user: _OpsAndAbove,
+    ctx: ReqCtx,
+    svc: TenantService = Depends(_svc),
+) -> TenantResponse:
+    """Override per-tenant media upload caps (super/operations admin only).
+
+    All values must be >= their respective floor; the schema enforces this at
+    422 level. An audit log entry is written with before/after diff.
+    """
+    return await svc.update_media_limits(  # type: ignore[return-value]
+        tenant_id,
+        UUID(platform_user["id"]),
+        max_images_per_property=body.max_images_per_property,
+        max_videos_per_property=body.max_videos_per_property,
+        max_image_mb=body.max_image_mb,
+        max_video_mb=body.max_video_mb,
         ip_address=ctx.ip_address,
         user_agent=ctx.user_agent,
     )

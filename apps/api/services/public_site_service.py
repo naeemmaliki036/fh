@@ -161,6 +161,7 @@ class PublicSiteService(BaseService):
             items.append({
                 "id": listing.id,
                 "title": listing.title,
+                "short_description": listing.short_description,
                 "price": float(listing.price),
                 "currency": listing.currency,
                 "beds": prop.bedrooms,
@@ -218,6 +219,7 @@ class PublicSiteService(BaseService):
         return {
             "id": listing.id,
             "title": listing.title,
+            "short_description": listing.short_description,
             "description": listing.description,
             "price": float(listing.price),
             "currency": listing.currency,

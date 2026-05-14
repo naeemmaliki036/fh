@@ -47,6 +47,10 @@ class TenantPublicSiteService(BaseService):
             "public_site_tagline": tenant.public_site_tagline,
             "public_url_hint": f"/p/{tenant.slug}",
             "config": tenant.public_site_config or {},
+            "max_images_per_property": tenant.max_images_per_property,
+            "max_videos_per_property": tenant.max_videos_per_property,
+            "max_image_mb": tenant.max_image_mb,
+            "max_video_mb": tenant.max_video_mb,
         }
 
     # ------------------------------------------------------------------
@@ -124,4 +128,8 @@ class TenantPublicSiteService(BaseService):
             "public_site_tagline": tenant.public_site_tagline,
             "public_url_hint": f"/p/{tenant.slug}",
             "config": tenant.public_site_config or {},
+            "max_images_per_property": tenant.max_images_per_property,
+            "max_videos_per_property": tenant.max_videos_per_property,
+            "max_image_mb": tenant.max_image_mb,
+            "max_video_mb": tenant.max_video_mb,
         }
