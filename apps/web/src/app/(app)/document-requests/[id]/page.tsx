@@ -8,6 +8,7 @@ import { useDocumentRequest } from "@/hooks/queries/useDocumentRequests";
 import {
   useCancelDocumentRequest,
   useRegenerateDocumentRequestCode,
+  useReopenDocumentRequest,
 } from "@/hooks/mutations/useDocumentRequestMutations";
 import { DocRequestStatusBadge } from "@/components/atoms/DocRequestStatusBadge";
 import { KindBadge } from "@/components/atoms/KindBadge";
@@ -31,6 +32,7 @@ export default function DocumentRequestDetailPage({ params }: PageProps): React.
   const { data: request, isLoading, error } = useDocumentRequest(id);
   const { mutate: cancel, isPending: canceling } = useCancelDocumentRequest();
   const { mutate: regenerate, isPending: regenerating, data: regenData } = useRegenerateDocumentRequestCode();
+  const { mutate: reopen, isPending: reopening } = useReopenDocumentRequest();
   const [showCancelDialog, setShowCancelDialog] = useState(false);
 
   // One-time create data from query cache (set by mutation before redirect)
@@ -116,6 +118,16 @@ export default function DocumentRequestDetailPage({ params }: PageProps): React.
             Cancel Request
           </Button>
         </div>
+      )}
+
+      {request.status === "complete" && (
+        <Button
+          variant="outline"
+          disabled={reopening}
+          onClick={() => reopen(request.id)}
+        >
+          {reopening ? "Reopening…" : "Re-open for more documents"}
+        </Button>
       )}
 
       <Dialog open={showCancelDialog} onOpenChange={setShowCancelDialog}>

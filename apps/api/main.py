@@ -24,6 +24,7 @@ from apps.api.routers import (
     document_requests,
     email_outbox,
     email_templates,
+    leaderboard,
     leads,
     listing_document_routes,
     listing_price_routes,
@@ -32,6 +33,7 @@ from apps.api.routers import (
     marketing,
     media,
     notifications,
+    off_market_reasons,
     platform_users,
     properties,
     tenants,
@@ -147,6 +149,8 @@ app.include_router(audit_logs.router, prefix="/audit-logs", tags=["audit-logs"])
 app.include_router(marketing.router, prefix="/marketing", tags=["marketing"])
 app.include_router(email_templates.router, prefix="/admin/email-templates", tags=["email-templates"])
 app.include_router(email_outbox.router, prefix="/admin/email-outbox", tags=["email-outbox"])
+app.include_router(off_market_reasons.router, prefix="/off-market-reasons", tags=["off-market-reasons"])
+app.include_router(leaderboard.router, prefix="/leaderboard", tags=["leaderboard"])
 
 
 @app.get("/health", tags=["health"])

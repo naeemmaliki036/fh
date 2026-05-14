@@ -19,6 +19,7 @@ from apps.api.schemas.property import (
 from apps.api.schemas.status_change import PropertyStatusChangeRequest
 from apps.api.services.property_agent_service import PropertyAgentService
 from apps.api.services.property_service import PropertyService
+from apps.api.services.property_status_service import PropertyStatusService
 
 router = APIRouter()
 
@@ -29,6 +30,10 @@ def _prop_svc(db: DbSession) -> PropertyService:
 
 def _agent_svc(db: DbSession) -> PropertyAgentService:
     return PropertyAgentService(db)
+
+
+def _status_svc(db: DbSession) -> PropertyStatusService:
+    return PropertyStatusService(db)
 
 
 def _to_response(data: dict) -> PropertyResponse:
@@ -160,7 +165,7 @@ async def change_property_status(
     current_user: CurrentUser,
     tenant_id: TenantContext,
     ctx: ReqCtx,
-    svc: PropertyService = Depends(_prop_svc),
+    svc: PropertyStatusService = Depends(_status_svc),
 ) -> PropertyResponse:
     return _to_response(
         await svc.change_status(

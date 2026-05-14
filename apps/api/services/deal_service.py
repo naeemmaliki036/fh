@@ -17,8 +17,6 @@ from apps.api.services.base import BaseService
 from apps.api.utils.commission import compute_commission_amount
 from packages.common.utils.error_handlers import bad_request, forbidden, not_found
 
-_ADMIN_ROLES = {TenantRole.COMPANY_OWNER.value, TenantRole.COMPANY_ADMIN.value}
-
 _D = DealStage  # alias for compact transition table
 _TRANSITIONS: dict[DealStage, set[DealStage]] = {
     _D.INITIATED:         {_D.DOCUMENTS_PENDING, _D.CANCELED, _D.CLOSED_LOST},
@@ -215,59 +213,6 @@ class DealService(BaseService):
             deal.secondary_commission_pct = new_secondary
 
         await self.session.flush()
-        await self.session.refresh(deal)
-        return await self._enrich(deal)
-
-    async def admin_confirm(self, deal_id: UUID, tenant_id: UUID, current_user: dict) -> dict:
-        if current_user["role"] not in _ADMIN_ROLES:
-            raise forbidden("company_owner or company_admin required")
-        data = await self.get_deal(deal_id, tenant_id)
-        deal = data["deal"]
-        if deal.stage != DealStage.CLOSED_WON:
-            raise bad_request("Deal must be in closed_won stage to confirm")
-        deal.admin_confirmed_at = datetime.now(UTC).replace(tzinfo=None)
-        deal.admin_confirmed_by_user_id = UUID(current_user["id"])
-        await self.session.flush()
-        await self._audit.record(
-            AuditAction.DEAL_ADMIN_CONFIRMED, tenant_id=tenant_id,
-            actor_user_id=UUID(current_user["id"]),
-            entity_type="deal", entity_id=deal.id,
-            after={"admin_confirmed_at": deal.admin_confirmed_at.isoformat()},
-        )
-        await self.session.refresh(deal)
-        return await self._enrich(deal)
-
-    async def agent_confirm(self, deal_id: UUID, tenant_id: UUID, current_user: dict) -> dict:
-        data = await self.get_deal(deal_id, tenant_id)
-        deal = data["deal"]
-        user_uuid = UUID(current_user["id"])
-        # Resolve the calling user to an agent
-        from sqlalchemy import select as sa_select
-        from apps.api.models.agent import Agent as AgentModel
-        agents_q = await self.session.execute(
-            sa_select(AgentModel).where(
-                AgentModel.linked_user_id == user_uuid,
-                AgentModel.tenant_id == tenant_id,
-            )
-        )
-        agent_row = agents_q.scalars().first()
-        if not agent_row:
-            raise forbidden("No agent linked to this user account")
-        is_primary = agent_row.id == deal.primary_agent_id
-        is_secondary = agent_row.id == deal.secondary_agent_id
-        if not is_primary and not is_secondary:
-            raise forbidden("Only the primary or secondary agent of this deal can confirm")
-        if deal.admin_confirmed_at is None:
-            raise bad_request("Awaiting admin confirmation first")
-        deal.agent_confirmed_at = datetime.now(UTC).replace(tzinfo=None)
-        deal.agent_confirmed_by_user_id = user_uuid
-        await self.session.flush()
-        await self._audit.record(
-            AuditAction.DEAL_AGENT_CONFIRMED, tenant_id=tenant_id,
-            actor_user_id=user_uuid,
-            entity_type="deal", entity_id=deal.id,
-            after={"agent_confirmed_at": deal.agent_confirmed_at.isoformat()},
-        )
         await self.session.refresh(deal)
         return await self._enrich(deal)
 

@@ -21,6 +21,7 @@ from apps.api.schemas.deal import (
     PropertySummary,
 )
 from apps.api.services.deal_commission_service import DealCommissionService
+from apps.api.services.deal_confirm_service import DealConfirmService
 from apps.api.services.deal_service import DealService
 from apps.api.utils.commission import compute_commission_amount
 
@@ -33,6 +34,10 @@ def _svc(db: DbSession) -> DealService:
 
 def _com_svc(db: DbSession) -> DealCommissionService:
     return DealCommissionService(db)
+
+
+def _confirm_svc(db: DbSession) -> DealConfirmService:
+    return DealConfirmService(db)
 
 
 def _to_response(data: dict) -> DealResponse:
@@ -191,9 +196,13 @@ async def admin_confirm(
     deal_id: UUID,
     current_user: CurrentUser,
     tenant_id: TenantContext,
-    svc: DealService = Depends(_svc),
+    svc: DealConfirmService = Depends(_confirm_svc),
 ) -> DealResponse:
-    return _to_response(await svc.admin_confirm(deal_id, tenant_id, current_user))
+    deal = await svc.admin_confirm(deal_id, tenant_id, current_user)
+    commission_amount = compute_commission_amount(
+        deal.commission_type, Decimal(str(deal.commission_value)), Decimal(str(deal.transaction_value))
+    )
+    return _deal_from_deal(deal, commission_amount)
 
 
 @router.post("/{deal_id}/agent-confirm", response_model=DealResponse)
@@ -201,6 +210,10 @@ async def agent_confirm(
     deal_id: UUID,
     current_user: CurrentUser,
     tenant_id: TenantContext,
-    svc: DealService = Depends(_svc),
+    svc: DealConfirmService = Depends(_confirm_svc),
 ) -> DealResponse:
-    return _to_response(await svc.agent_confirm(deal_id, tenant_id, current_user))
+    deal = await svc.agent_confirm(deal_id, tenant_id, current_user)
+    commission_amount = compute_commission_amount(
+        deal.commission_type, Decimal(str(deal.commission_value)), Decimal(str(deal.transaction_value))
+    )
+    return _deal_from_deal(deal, commission_amount)

@@ -6,8 +6,7 @@ from uuid import UUID
 from sqlalchemy import func, or_, select, text
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from apps.api.models.deal import Deal
-from apps.api.models.enums import AuditAction, DealStage, PropertyStatus, PropertyType, TenantRole
+from apps.api.models.enums import AuditAction, PropertyStatus, PropertyType, TenantRole
 from apps.api.models.listing import Listing
 from apps.api.models.media import Media
 from apps.api.models.property import Property
@@ -15,7 +14,7 @@ from apps.api.models.property_agent import PropertyAgent
 from apps.api.services._media_thumbs import batch_first_active_listing, batch_first_media
 from apps.api.services.audit_service import AuditService
 from apps.api.services.base import BaseService
-from packages.common.utils.error_handlers import bad_request, conflict, forbidden, not_found
+from packages.common.utils.error_handlers import bad_request, forbidden, not_found
 
 _MANAGER_ROLES = {
     TenantRole.COMPANY_OWNER.value,
@@ -23,11 +22,6 @@ _MANAGER_ROLES = {
     TenantRole.PROPERTY_ADMIN.value,
 }
 
-
-_PROPERTY_ALLOWED_TRANSITIONS: dict[PropertyStatus, set[PropertyStatus]] = {
-    PropertyStatus.AVAILABLE: {PropertyStatus.OFF_MARKET, PropertyStatus.SOLD, PropertyStatus.RENTED},
-    PropertyStatus.OFF_MARKET: {PropertyStatus.AVAILABLE},
-}
 
 
 class PropertyService(BaseService):
@@ -296,85 +290,3 @@ class PropertyService(BaseService):
         data["property"].status = PropertyStatus.OFF_MARKET
         await self.session.flush()
 
-    async def _has_closed_won_deal(self, property_id: UUID, tenant_id: UUID) -> bool:
-        result = await self.session.execute(
-            select(func.count()).where(
-                Deal.property_id == property_id,
-                Deal.tenant_id == tenant_id,
-                Deal.stage == DealStage.CLOSED_WON,
-            )
-        )
-        return result.scalar_one() > 0
-
-    async def change_status(
-        self,
-        property_id: UUID,
-        tenant_id: UUID,
-        current_user: dict,
-        new_status: PropertyStatus,
-        reason_code: str,
-        reason_note: str | None = None,
-        ip_address: str | None = None,
-        user_agent: str | None = None,
-    ) -> dict:
-        _manual_only = {PropertyStatus.AVAILABLE, PropertyStatus.OFF_MARKET, PropertyStatus.SOLD, PropertyStatus.RENTED}
-        if new_status not in _manual_only:
-            raise bad_request(
-                f"Status '{new_status.value}' cannot be set manually; "
-                "reserved/draft are deal-flow transitions"
-            )
-        self._require_manager(current_user["role"])
-        data = await self.get_property(property_id, tenant_id)
-        prop = data["property"]
-
-        if prop.status == new_status:
-            raise conflict(f"Property is already {new_status.value}")
-
-        # Off-market gate: validate reason_code
-        if new_status == PropertyStatus.OFF_MARKET:
-            from apps.api.services.off_market_reason_service import OffMarketReasonService
-            omr_svc = OffMarketReasonService(self.session)
-            omr = await omr_svc.resolve_code(reason_code, tenant_id)
-            if not omr:
-                raise bad_request(f"reason_code '{reason_code}' is not a valid off-market reason for this tenant")
-            if omr.requires_note and not reason_note:
-                raise bad_request(f"reason_note is required for reason_code '{reason_code}'")
-
-        # Sold/rented gate: must have a closed_won deal
-        if new_status in {PropertyStatus.SOLD, PropertyStatus.RENTED}:
-            if not await self._has_closed_won_deal(property_id, tenant_id):
-                raise bad_request("Create a closed-won deal first")
-
-        allowed = _PROPERTY_ALLOWED_TRANSITIONS.get(prop.status, set())
-        if new_status not in allowed:
-            raise bad_request(
-                f"Transition {prop.status.value} → {new_status.value} is not allowed"
-            )
-
-        old_status = prop.status
-        prop.status = new_status
-        await self.session.flush()
-
-        await self._audit.record(
-            AuditAction.PROPERTY_STATUS_CHANGED,
-            tenant_id=tenant_id,
-            actor_user_id=UUID(current_user["id"]),
-            entity_type="property",
-            entity_id=prop.id,
-            after={
-                "from": old_status.value,
-                "to": new_status.value,
-                "reason_code": reason_code,
-                "reason_note": reason_note,
-            },
-            ip_address=ip_address,
-            user_agent=user_agent,
-        )
-        await self.session.refresh(prop)
-        agents = await self._get_agents(property_id)
-        return {
-            "property": prop,
-            "assigned_agents": agents,
-            "media_count": await self._media_count(property_id),
-            "listing_count": await self._listing_count(property_id),
-        }

@@ -9,10 +9,10 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { CustomerPicker } from "@/components/molecules/CustomerPicker";
 import type { CustomerSummary } from "@/lib/types/lead";
 import type { DocumentRequestCreate, DocumentRequestItemCreate } from "@/lib/types/document-request";
-import type { PrivateDocumentKind } from "@/lib/types/private-document";
 
-const KINDS: PrivateDocumentKind[] = ["rera_id","passport","emirates_id","trade_license","noc","contract","kyc","other"];
-const KIND_LABELS: Record<PrivateDocumentKind, string> = {
+const KINDS = ["rera_id","passport","emirates_id","trade_license","noc","contract","kyc","other"] as const;
+type LegacyKind = typeof KINDS[number];
+const KIND_LABELS: Record<LegacyKind, string> = {
   rera_id:"RERA ID", passport:"Passport", emirates_id:"Emirates ID",
   trade_license:"Trade License", noc:"NOC", contract:"Contract", kyc:"KYC", other:"Other",
 };

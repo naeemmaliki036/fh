@@ -19,6 +19,8 @@ import {
   CalendarDays,
   ListChecks,
   ClipboardList,
+  Trophy,
+  Wallet,
 } from "lucide-react";
 import { cn } from "@/lib/utils/cn";
 import { useAuth } from "@/contexts/AuthContext";
@@ -32,6 +34,7 @@ interface NavItem {
   icon: React.ComponentType<{ className?: string }>;
   adminOnly?: boolean;
   reviewerOnly?: boolean;
+  agentOnly?: boolean;
 }
 
 const MAIN_ITEMS: NavItem[] = [

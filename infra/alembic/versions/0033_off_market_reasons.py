@@ -34,7 +34,7 @@ _SEEDS = [
 
 
 def upgrade() -> None:
-    omr = op.create_table(
+    op.create_table(
         "off_market_reasons",
         sa.Column(
             "id",
@@ -77,22 +77,17 @@ def upgrade() -> None:
         postgresql_where=sa.text("tenant_id IS NULL"),
     )
 
-    # Seed platform defaults
-    op.bulk_insert(
-        omr,
-        [
-            {
-                "id": None,   # let server_default fire
-                "tenant_id": None,
-                "code": code,
-                "label": label,
-                "requires_note": requires_note,
-                "ordering": ordering,
-                "active": True,
-            }
-            for code, label, requires_note, ordering in _SEEDS
-        ],
-    )
+    # Seed platform defaults; omit id + tenant_id so the column defaults apply
+    conn = op.get_bind()
+    for code, label, requires_note, ordering in _SEEDS:
+        conn.execute(
+            sa.text(
+                "INSERT INTO off_market_reasons "
+                "(code, label, requires_note, ordering, active) "
+                "VALUES (:code, :label, :requires_note, :ordering, TRUE)"
+            ),
+            {"code": code, "label": label, "requires_note": requires_note, "ordering": ordering},
+        )
 
 
 def downgrade() -> None:

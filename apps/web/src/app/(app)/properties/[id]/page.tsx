@@ -1,6 +1,6 @@
 "use client";
 
-import { use } from "react";
+import { use, useState } from "react";
 import Link from "next/link";
 import { ArrowLeft } from "lucide-react";
 import { useProperty } from "@/hooks/queries/useProperties";
@@ -14,17 +14,16 @@ import { PropertyTypeBadge } from "@/components/atoms/PropertyTypeBadge";
 import { StatusHeaderBar } from "@/components/molecules/StatusHeaderBar";
 import { AuditTimelinePanel } from "@/components/organisms/AuditTimelinePanel";
 import { PropertyDescriptionPanel } from "@/components/organisms/PropertyDescriptionPanel";
+import { OffMarketStatusDialog } from "@/components/organisms/OffMarketStatusDialog";
+import { SoldRentedGuardDialog } from "@/components/organisms/SoldRentedGuardDialog";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Button } from "@/components/ui/button";
 import {
-  PROPERTY_OFF_MARKET_REASONS,
   PROPERTY_AVAILABLE_REASONS,
-  LISTING_SOLD_REASONS,
-  LISTING_RENTED_REASONS,
 } from "@/lib/constants/status-reasons";
 import type { PropertyStatus } from "@/lib/types/property";
 
-const PROPERTY_TRANSITIONS: Array<{
+const TRANSITIONS: Array<{
   fromStatuses: PropertyStatus[];
   status: PropertyStatus;
   label: string;
@@ -37,21 +36,15 @@ const PROPERTY_TRANSITIONS: Array<{
   { fromStatuses: ["available", "reserved"], status: "rented", label: "Mark Rented" },
 ];
 
-function getReasonOptions(status: PropertyStatus) {
-  if (status === "off_market") return PROPERTY_OFF_MARKET_REASONS;
-  if (status === "sold") return LISTING_SOLD_REASONS;
-  if (status === "rented") return LISTING_RENTED_REASONS;
-  return PROPERTY_AVAILABLE_REASONS;
-}
-
-interface PageProps {
-  params: Promise<{ id: string }>;
-}
+interface PageProps { params: Promise<{ id: string }> }
 
 export default function PropertyDetailPage({ params }: PageProps): React.ReactElement {
   const { id } = use(params);
   const { data: property, isLoading, error } = useProperty(id);
   const { mutateAsync: changeStatus } = useChangePropertyStatus();
+
+  const [showOffMarket, setShowOffMarket] = useState(false);
+  const [soldRentedTarget, setSoldRentedTarget] = useState<Extract<PropertyStatus, "sold" | "rented"> | null>(null);
 
   if (isLoading) {
     return <p className="text-sm text-muted-foreground p-6">Loading property...</p>;
@@ -68,13 +61,29 @@ export default function PropertyDetailPage({ params }: PageProps): React.ReactEl
     );
   }
 
-  const transitions = PROPERTY_TRANSITIONS
+  const handleChangeStatus = async (
+    status: PropertyStatus,
+    reasonCode: string,
+    reasonNote: string | null,
+  ): Promise<void> => {
+    if (status === "off_market") {
+      setShowOffMarket(true);
+      return;
+    }
+    if (status === "sold" || status === "rented") {
+      setSoldRentedTarget(status);
+      return;
+    }
+    await changeStatus({ id: property.id, status, reason_code: reasonCode, reason_note: reasonNote });
+  };
+
+  const transitions = TRANSITIONS
     .filter((t) => t.fromStatuses.includes(property.status))
     .map((t) => ({
       status: t.status,
       label: t.label,
       destructive: t.destructive,
-      reasonOptions: getReasonOptions(t.status),
+      reasonOptions: PROPERTY_AVAILABLE_REASONS,
     }));
 
   return (
@@ -90,9 +99,7 @@ export default function PropertyDetailPage({ params }: PageProps): React.ReactEl
             <StatusHeaderBar
               statusBadge={<PropertyStatusBadge status={property.status} />}
               transitions={transitions}
-              onChangeStatus={async (status, reasonCode, reasonNote) => {
-                await changeStatus({ id: property.id, status, reason_code: reasonCode, reason_note: reasonNote });
-              }}
+              onChangeStatus={handleChangeStatus}
             />
             {property.city && <span className="text-sm text-muted-foreground">{property.city}</span>}
           </div>
@@ -109,33 +116,35 @@ export default function PropertyDetailPage({ params }: PageProps): React.ReactEl
           <TabsTrigger value="activity">Activity</TabsTrigger>
         </TabsList>
 
-        <TabsContent value="overview" className="pt-4">
-          <PropertyOverviewPanel property={property} />
-        </TabsContent>
-
-        <TabsContent value="description" className="pt-4">
-          <PropertyDescriptionPanel property={property} />
-        </TabsContent>
-
-        <TabsContent value="media" className="pt-4">
-          <PropertyMediaGallery propertyId={property.id} />
-        </TabsContent>
-
-        <TabsContent value="listings" className="pt-4">
-          <PropertyListingsPanel propertyId={property.id} />
-        </TabsContent>
-
+        <TabsContent value="overview" className="pt-4"><PropertyOverviewPanel property={property} /></TabsContent>
+        <TabsContent value="description" className="pt-4"><PropertyDescriptionPanel property={property} /></TabsContent>
+        <TabsContent value="media" className="pt-4"><PropertyMediaGallery propertyId={property.id} /></TabsContent>
+        <TabsContent value="listings" className="pt-4"><PropertyListingsPanel propertyId={property.id} /></TabsContent>
         <TabsContent value="agents" className="pt-4">
-          <PropertyAgentsPanel
-            propertyId={property.id}
-            assignedAgents={property.assigned_agents}
-          />
+          <PropertyAgentsPanel propertyId={property.id} assignedAgents={property.assigned_agents} />
         </TabsContent>
-
         <TabsContent value="activity" className="pt-4">
           <AuditTimelinePanel entityType="property" entityId={property.id} />
         </TabsContent>
       </Tabs>
+
+      <OffMarketStatusDialog
+        open={showOffMarket}
+        onOpenChange={(o) => { if (!o) setShowOffMarket(false); }}
+        onConfirm={async (code, note) => {
+          await changeStatus({ id: property.id, status: "off_market", reason_code: code, reason_note: note });
+        }}
+      />
+
+      <SoldRentedGuardDialog
+        propertyId={property.id}
+        targetStatus={soldRentedTarget}
+        onClose={() => setSoldRentedTarget(null)}
+        onProceed={async (code, note) => {
+          if (!soldRentedTarget) return;
+          await changeStatus({ id: property.id, status: soldRentedTarget, reason_code: code, reason_note: note });
+        }}
+      />
     </div>
   );
 }

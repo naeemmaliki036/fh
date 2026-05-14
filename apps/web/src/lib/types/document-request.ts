@@ -1,12 +1,10 @@
-import type { PrivateDocumentKind } from "./private-document";
-
 export type DocumentRequestStatus =
   | "pending" | "partial" | "complete" | "expired" | "canceled";
 
 export interface DocumentRequestItemResponse {
   id: string;
   document_request_id: string;
-  kind: PrivateDocumentKind;
+  kind: string;
   label: string;
   is_required: boolean;
   ordering: number;
@@ -42,7 +40,7 @@ export interface DocumentRequestCreateResponse extends DocumentRequest {
 }
 
 export interface DocumentRequestItemCreate {
-  kind: PrivateDocumentKind;
+  kind: string;
   label: string;
   is_required?: boolean;
   ordering?: number;
@@ -54,6 +52,8 @@ export interface DocumentRequestCreate {
   items: DocumentRequestItemCreate[];
   lead_id?: string | null;
   deal_id?: string | null;
+  property_id?: string | null;
+  agent_note?: string | null;
   instructions?: string | null;
   expires_in_days?: number;
 }

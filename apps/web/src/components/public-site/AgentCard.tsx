@@ -17,7 +17,7 @@ export function AgentCard({ agent }: AgentCardProps): React.ReactElement {
   return (
     <article className="rounded-[2rem] bg-white p-6 text-center shadow-sm">
       {/* Photo */}
-      <div className="mx-auto h-24 w-24 overflow-hidden rounded-full ring-4 ring-[#f7f5ef]">
+      <div className="mx-auto h-24 w-24 overflow-hidden rounded-full ring-4 ring-slate-100">
         {agent.photo_url ? (
           <img
             src={agent.photo_url}

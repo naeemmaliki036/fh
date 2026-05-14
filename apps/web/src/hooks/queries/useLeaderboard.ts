@@ -13,7 +13,7 @@ interface LeaderboardParams {
 
 export function useLeaderboard(params: LeaderboardParams) {
   return useQuery({
-    queryKey: queryKeys.leaderboard.agents(params as Record<string, unknown>),
+    queryKey: queryKeys.leaderboard.agents({ ...params } as Record<string, unknown>),
     queryFn: (): Promise<LeaderboardResponse> => dealRepository.getLeaderboard(params),
     enabled: params.period !== "custom" || (!!params.from && !!params.to),
   });
