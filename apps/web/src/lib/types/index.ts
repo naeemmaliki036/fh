@@ -17,6 +17,7 @@ export type {
   PropertiesViewMode,
   Tenant,
   TenantUpdateRequest,
+  TenantMediaLimitsRequest,
   TenantListResponse,
   TenantListParams,
   TenantSubscriptionInfo,

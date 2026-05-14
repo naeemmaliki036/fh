@@ -4,6 +4,7 @@ import type {
   TenantListParams,
   TenantListResponse,
   TenantLifecycleRequest,
+  TenantMediaLimitsRequest,
   TenantSendMessageRequest,
   Tenant,
 } from "@/lib/types";
@@ -46,6 +47,14 @@ class TenantAdminRepository {
 
   async sendMessage(id: string, body: TenantSendMessageRequest): Promise<void> {
     await platformApiClient.post(`${this.basePath}/${id}/send-message`, body);
+  }
+
+  async setMediaLimits(id: string, body: TenantMediaLimitsRequest): Promise<Tenant> {
+    const res = await platformApiClient.post<Tenant>(
+      `${this.basePath}/${id}/media-limits`,
+      body,
+    );
+    return res.data;
   }
 }
 

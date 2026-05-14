@@ -1,6 +1,7 @@
 """Listing video upload validation — extracted from listing_service to stay under 300 LOC.
 
 Called by ListingService.validate_video_upload(). Not a public API.
+Size/count limits are read from the Tenant row so they are per-tenant configurable.
 """
 
 from uuid import UUID
@@ -10,10 +11,9 @@ from sqlalchemy.ext.asyncio import AsyncSession
 
 from apps.api.models.enums import MediaKind
 from apps.api.models.media import Media
-from packages.common.utils.error_handlers import bad_request
+from apps.api.models.tenant import Tenant
+from packages.common.utils.error_handlers import bad_request, not_found
 
-MAX_VIDEOS_PER_LISTING = 2
-MAX_VIDEO_BYTES = 25 * 1024 * 1024  # 25 MB
 ALLOWED_VIDEO_MIMES = {"video/mp4", "video/webm"}
 
 
@@ -28,16 +28,22 @@ async def validate_video_upload(
 
     Checks:
     1. mime type is allowed
-    2. file size ≤ 25 MB
-    3. property doesn't already have MAX_VIDEOS_PER_LISTING videos
+    2. file size <= tenant.max_video_mb
+    3. property doesn't already have tenant.max_videos_per_property videos
     """
     if mime_type not in ALLOWED_VIDEO_MIMES:
         raise bad_request(
             f"Unsupported video mime type '{mime_type}'. "
             f"Allowed: {sorted(ALLOWED_VIDEO_MIMES)}"
         )
-    if len(file_bytes) > MAX_VIDEO_BYTES:
-        raise bad_request("Video file exceeds 25 MB size limit")
+
+    tenant = await session.get(Tenant, tenant_id)
+    if not tenant:
+        raise not_found("Tenant")
+
+    max_bytes = tenant.max_video_mb * 1024 * 1024
+    if len(file_bytes) > max_bytes:
+        raise bad_request(f"Video file exceeds {tenant.max_video_mb} MB size limit")
 
     r = await session.execute(
         select(func.count()).where(
@@ -47,7 +53,8 @@ async def validate_video_upload(
         )
     )
     count = r.scalar_one()
-    if count >= MAX_VIDEOS_PER_LISTING:
+    if count >= tenant.max_videos_per_property:
         raise bad_request(
-            f"Property already has {MAX_VIDEOS_PER_LISTING} video media items (maximum reached)"
+            f"Property already has {tenant.max_videos_per_property} video media items "
+            f"(tenant cap reached)"
         )

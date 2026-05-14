@@ -179,6 +179,11 @@ export interface PublicSiteSettings {
   public_site_tagline: string | null;
   public_url_hint: string;
   config: RawSiteConfig;
+  // Per-tenant media limits (read-only for tenant owners)
+  max_images_per_property: number;
+  max_videos_per_property: number;
+  max_image_mb: number;
+  max_video_mb: number;
 }
 
 export interface PublicSiteSettingsUpdate {

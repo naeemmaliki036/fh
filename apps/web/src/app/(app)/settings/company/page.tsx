@@ -77,6 +77,15 @@ export default function CompanyPage(): React.ReactElement {
 
   if (isLoading) return <p className="text-sm text-muted-foreground">Loading...</p>;
 
+  const mediaLimits = tenant
+    ? [
+        { label: "Max images / property", value: tenant.max_images_per_property },
+        { label: "Max videos / property", value: tenant.max_videos_per_property },
+        { label: "Max image size", value: `${tenant.max_image_mb} MB` },
+        { label: "Max video size", value: `${tenant.max_video_mb} MB` },
+      ]
+    : [];
+
   return (
     <div className="space-y-6">
       <h1 className="text-2xl font-semibold tracking-tight">Company Settings</h1>
@@ -189,6 +198,27 @@ export default function CompanyPage(): React.ReactElement {
           </form>
         </CardContent>
       </Card>
+
+      {tenant && (
+        <Card className="max-w-md">
+          <CardHeader>
+            <CardTitle>Media Limits</CardTitle>
+            <CardDescription>
+              Upload caps set by your account manager. Need higher limits? Contact your account manager.
+            </CardDescription>
+          </CardHeader>
+          <CardContent>
+            <dl className="grid grid-cols-2 gap-x-6 gap-y-2 text-sm">
+              {mediaLimits.map(({ label, value }) => (
+                <div key={label} className="contents">
+                  <dt className="text-muted-foreground">{label}</dt>
+                  <dd className="font-medium">{value}</dd>
+                </div>
+              ))}
+            </dl>
+          </CardContent>
+        </Card>
+      )}
     </div>
   );
 }

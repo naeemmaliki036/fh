@@ -28,6 +28,7 @@ from apps.api.models.property_agent import PropertyAgent
 from apps.api.models.tenant import Tenant
 from apps.api.services.audit_service import AuditService
 from apps.api.services.base import BaseService
+from apps.api.services.public_site_visibility import resolve_visibility
 from fastapi import HTTPException
 from packages.common.storage import get_public_storage
 from packages.common.utils.error_handlers import not_found

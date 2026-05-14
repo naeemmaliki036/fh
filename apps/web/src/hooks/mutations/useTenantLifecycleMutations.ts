@@ -3,7 +3,7 @@
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { toast } from "sonner";
 import { tenantAdminRepository } from "@/lib/api/repositories";
-import type { Tenant, TenantLifecycleRequest } from "@/lib/types";
+import type { Tenant, TenantLifecycleRequest, TenantMediaLimitsRequest } from "@/lib/types";
 import { queryKeys } from "../queryKeys";
 
 function invalidateTenantQueries(qc: ReturnType<typeof useQueryClient>, id: string): void {
@@ -62,6 +62,24 @@ export function useReactivateTenant() {
     onSuccess: (data) => {
       invalidateTenantQueries(qc, data.id);
       toast.success("Tenant reactivated");
+    },
+    onError: (err: Error) => toast.error(err.message),
+  });
+}
+
+export function useSetTenantMediaLimits() {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: ({
+      id,
+      body,
+    }: {
+      id: string;
+      body: TenantMediaLimitsRequest;
+    }): Promise<Tenant> => tenantAdminRepository.setMediaLimits(id, body),
+    onSuccess: (data) => {
+      invalidateTenantQueries(qc, data.id);
+      toast.success("Media limits updated");
     },
     onError: (err: Error) => toast.error(err.message),
   });

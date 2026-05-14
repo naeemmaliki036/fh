@@ -15,8 +15,20 @@ export interface Tenant {
   approved_by_id: string | null;
   suspended_at: string | null;
   suspended_reason: string | null;
+  // Per-tenant media caps (admin-set, read-only for tenants)
+  max_images_per_property: number;
+  max_videos_per_property: number;
+  max_image_mb: number;
+  max_video_mb: number;
   created_at: string;
   updated_at: string;
+}
+
+export interface TenantMediaLimitsRequest {
+  max_images_per_property: number;
+  max_videos_per_property: number;
+  max_image_mb: number;
+  max_video_mb: number;
 }
 
 export interface TenantUpdateRequest {

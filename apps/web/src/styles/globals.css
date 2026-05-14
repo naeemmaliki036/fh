@@ -30,14 +30,14 @@
     --chart-3: 197 37% 24%;
     --chart-4: 43 74% 66%;
     --chart-5: 27 87% 67%;
-    /* Sidebar — white in light mode */
-    --sidebar-background: 255 255 255;
+    /* Sidebar — mid-light warm tone (slightly darker than cream main bg) */
+    --sidebar-background: 240 238 232;
     --sidebar-foreground: 30 30 30;
     --sidebar-primary: 160 94% 64%;
     --sidebar-primary-foreground: 10 10 10;
-    --sidebar-accent: 245 244 240;
+    --sidebar-accent: 228 226 218;
     --sidebar-accent-foreground: 10 10 10;
-    --sidebar-border: 0 0% 90%;
+    --sidebar-border: 220 218 210;
     --sidebar-ring: 160 94% 64%;
   }
 

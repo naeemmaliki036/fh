@@ -4,7 +4,7 @@ import logging
 import uuid as uuid_mod
 from uuid import UUID
 
-from sqlalchemy import select, text
+from sqlalchemy import func, select, text
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from apps.api.models.enums import MediaKind, TenantRole
@@ -84,6 +84,12 @@ class MediaService(BaseService):
     # Upload
     # ------------------------------------------------------------------
 
+    async def _fetch_tenant(self, tenant_id: UUID) -> Tenant:
+        tenant = await self.session.get(Tenant, tenant_id)
+        if not tenant:
+            raise not_found("Tenant")
+        return tenant
+
     async def upload(
         self,
         property_id: UUID,
@@ -97,14 +103,57 @@ class MediaService(BaseService):
     ) -> tuple[Media, str]:
         self._require_manager(current_user["role"])
 
-        max_size = _MIME_LIMITS.get(mime_type)
-        if max_size is None:
+        valid_kinds = _MIME_KINDS.get(mime_type)
+        if valid_kinds is None:
             raise bad_request(f"Unsupported mime type '{mime_type}'")
-        if len(file_bytes) > max_size:
-            raise bad_request(f"File exceeds size limit for {mime_type}")
-        valid_kinds = _MIME_KINDS.get(mime_type, set())
         if kind not in valid_kinds:
             raise bad_request(f"Kind '{kind.value}' is not valid for mime type '{mime_type}'")
+
+        # Per-tenant size + count enforcement
+        tenant = await self._fetch_tenant(tenant_id)
+        file_size = len(file_bytes)
+
+        if mime_type in _IMAGE_MIMES:
+            max_bytes = tenant.max_image_mb * 1024 * 1024
+            if file_size > max_bytes:
+                raise bad_request(
+                    f"Image exceeds {tenant.max_image_mb} MB limit for this tenant"
+                )
+            if kind == MediaKind.IMAGE:
+                r = await self.session.execute(
+                    select(func.count()).where(
+                        Media.property_id == property_id,
+                        Media.tenant_id == tenant_id,
+                        Media.kind == MediaKind.IMAGE,
+                    )
+                )
+                if r.scalar_one() >= tenant.max_images_per_property:
+                    raise bad_request(
+                        f"Property already has {tenant.max_images_per_property} images "
+                        f"(tenant cap reached)"
+                    )
+        elif mime_type in _VIDEO_MIMES:
+            max_bytes = tenant.max_video_mb * 1024 * 1024
+            if file_size > max_bytes:
+                raise bad_request(
+                    f"Video exceeds {tenant.max_video_mb} MB limit for this tenant"
+                )
+            r = await self.session.execute(
+                select(func.count()).where(
+                    Media.property_id == property_id,
+                    Media.tenant_id == tenant_id,
+                    Media.kind == MediaKind.VIDEO,
+                )
+            )
+            if r.scalar_one() >= tenant.max_videos_per_property:
+                raise bad_request(
+                    f"Property already has {tenant.max_videos_per_property} videos "
+                    f"(tenant cap reached)"
+                )
+        else:
+            # PDF — static cap
+            if file_size > _MAX_PDF:
+                raise bad_request("File exceeds 25 MB size limit")
 
         storage = get_public_storage()
         file_id = uuid_mod.uuid4()

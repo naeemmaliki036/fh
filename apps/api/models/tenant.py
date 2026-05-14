@@ -63,8 +63,24 @@ class Tenant(Base, UUIDMixin, TimestampMixin):
         nullable=False,
     )
 
-    # Public site settings — master toggle + branding.
+    # Public site settings — two-gate visibility + branding.
+    # Gate 1 (platform): platform admin master switch. When FALSE nothing public
+    # works regardless of tenant setting.
+    public_site_feature_enabled: Mapped[bool] = mapped_column(
+        Boolean,
+        nullable=False,
+        default=False,
+        server_default="false",
+    )
+    # Gate 2a (tenant): tenant-level on/off toggle.
     public_site_enabled: Mapped[bool] = mapped_column(
+        Boolean,
+        nullable=False,
+        default=False,
+        server_default="false",
+    )
+    # Gate 2b (tenant): fine-grain — when TRUE only listing-detail resolves.
+    public_site_direct_links_only: Mapped[bool] = mapped_column(
         Boolean,
         nullable=False,
         default=False,
