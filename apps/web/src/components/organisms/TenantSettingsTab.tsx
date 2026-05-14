@@ -16,7 +16,11 @@ import {
 import { OPERATING_COUNTRIES } from "@/lib/constants/operating-countries";
 import { cn } from "@/lib/utils/cn";
 import type { TenantDetailResponse } from "@/lib/types";
-import { useSetTenantMediaLimits } from "@/hooks/mutations/useTenantLifecycleMutations";
+import {
+  useSetPublicSiteFeature,
+  useSetTenantMediaLimits,
+} from "@/hooks/mutations/useTenantLifecycleMutations";
+import { ToggleSwitch } from "@/components/ui/toggle-switch";
 
 // Floors must match server-side MEDIA_LIMITS_FLOOR
 const FLOORS = {
@@ -33,9 +37,40 @@ interface TenantSettingsTabProps {
 export function TenantSettingsTab({ tenant }: TenantSettingsTabProps): ReactElement {
   const active = new Set(tenant.operating_countries);
   const [editOpen, setEditOpen] = useState(false);
+  const { mutate: setFeature, isPending: featurePending } = useSetPublicSiteFeature();
 
   return (
     <div className="space-y-4">
+      <Card>
+        <CardHeader>
+          <CardTitle className="text-base">Public Website Feature</CardTitle>
+          <CardDescription>
+            Platform master switch. When disabled, the tenant cannot enable their public website
+            regardless of their own settings.
+          </CardDescription>
+        </CardHeader>
+        <CardContent className="space-y-3">
+          <div className="flex items-center justify-between gap-4">
+            <div>
+              <p className="text-sm font-medium">
+                {tenant.public_site_feature_enabled ? "Enabled" : "Disabled"}
+              </p>
+              <p className="text-xs text-muted-foreground mt-0.5">
+                {tenant.public_site_feature_enabled
+                  ? "Tenant can manage their own public-website visibility."
+                  : "When disabled, this tenant cannot enable their public website regardless of their own settings."}
+              </p>
+            </div>
+            <ToggleSwitch
+              checked={tenant.public_site_feature_enabled}
+              onCheckedChange={(v) =>
+                setFeature({ id: tenant.id, body: { enabled: v } })
+              }
+              disabled={featurePending}
+            />
+          </div>
+        </CardContent>
+      </Card>
       <Card>
         <CardHeader>
           <CardTitle className="text-base">Operating Countries</CardTitle>

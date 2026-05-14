@@ -156,7 +156,15 @@ export interface PublicListingDetail {
   property_type: string;
   amenities: unknown[] | null;
   media_urls: string[];
+  hero_media_url?: string | null;
   agent: PublicAgentSnippet | null;
+  // Branding — always present; used by listing-detail page in direct_only mode
+  // without requiring a separate profile fetch.
+  tenant_name: string | null;
+  tenant_logo_url: string | null;
+  tenant_tagline: string | null;
+  tenant_contact_email: string | null;
+  tenant_contact_phone: string | null;
 }
 
 export interface PublicLeadCreate {
@@ -174,7 +182,11 @@ export interface PublicLeadResponse {
 // Admin: public-site settings
 export interface PublicSiteSettings {
   slug: string;
+  /** Platform master switch (read-only for tenants). */
+  public_site_feature_enabled: boolean;
   public_site_enabled: boolean;
+  /** When true, only listing-detail URLs resolve. */
+  public_site_direct_links_only: boolean;
   public_site_logo_url: string | null;
   public_site_tagline: string | null;
   public_url_hint: string;
@@ -188,6 +200,8 @@ export interface PublicSiteSettings {
 
 export interface PublicSiteSettingsUpdate {
   public_site_enabled?: boolean | null;
+  /** Tenant fine-grain: direct-link-only mode. */
+  public_site_direct_links_only?: boolean | null;
   public_site_logo_url?: string | null;
   public_site_tagline?: string | null;
   config?: RawSiteConfig | null;

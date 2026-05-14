@@ -18,6 +18,7 @@ export type {
   Tenant,
   TenantUpdateRequest,
   TenantMediaLimitsRequest,
+  PublicSiteFeatureRequest,
   TenantListResponse,
   TenantListParams,
   TenantSubscriptionInfo,

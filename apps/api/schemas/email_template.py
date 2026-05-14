@@ -13,7 +13,8 @@ class EmailTemplateCreateRequest(BaseModel):
     subject: str = Field(min_length=1)
     body_html: str = Field(min_length=1)
     body_text: str | None = None
-    variables: dict = Field(default_factory=dict)
+    # Accepts list[str] (seed format) or dict[str, str] (editor format).
+    variables: list | dict = Field(default_factory=list)
     active: bool = True
 
 
@@ -22,7 +23,7 @@ class EmailTemplateUpdateRequest(BaseModel):
     subject: str | None = None
     body_html: str | None = None
     body_text: str | None = None
-    variables: dict | None = None
+    variables: list | dict | None = None
     active: bool | None = None
 
 
@@ -36,7 +37,8 @@ class EmailTemplateResponse(BaseModel):
     subject: str
     body_html: str
     body_text: str | None
-    variables: dict
+    # list[str] when seeded; dict[str, str] for custom templates.
+    variables: list | dict
     active: bool
     created_at: datetime
     updated_at: datetime

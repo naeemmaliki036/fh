@@ -107,6 +107,13 @@ class PublicListingDetailResponse(BaseModel):
     media_urls: list[str] = Field(default_factory=list)
     hero_media_url: str | None = None
     agent: PublicAgentSnippet | None = None
+    # Branding — present in all visibility states (including direct_only)
+    # so the listing-detail page can render without a separate profile call.
+    tenant_name: str | None = None
+    tenant_logo_url: str | None = None
+    tenant_tagline: str | None = None
+    tenant_contact_email: str | None = None
+    tenant_contact_phone: str | None = None
 
 
 # ---------------------------------------------------------------------------
@@ -153,7 +160,9 @@ class PublicSiteSettingsResponse(BaseModel):
     model_config = ConfigDict(from_attributes=True)
 
     slug: str
+    public_site_feature_enabled: bool = False
     public_site_enabled: bool
+    public_site_direct_links_only: bool = False
     public_site_logo_url: str | None = None
     public_site_tagline: str | None = None
     public_url_hint: str
@@ -166,9 +175,14 @@ class PublicSiteSettingsResponse(BaseModel):
 
 
 class PublicSiteSettingsUpdate(BaseModel):
-    """PATCH /tenants/me/public-site — all fields optional."""
+    """PATCH /tenants/me/public-site — all fields optional.
+
+    Tenants may set public_site_enabled and public_site_direct_links_only.
+    public_site_feature_enabled is platform-only; sending it raises 422.
+    """
 
     public_site_enabled: bool | None = None
+    public_site_direct_links_only: bool | None = None
     public_site_logo_url: str | None = None
     public_site_tagline: str | None = Field(default=None, max_length=200)
     config: PublicSiteConfig | None = None

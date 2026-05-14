@@ -61,7 +61,9 @@ class TenantResponse(BaseModel):
     operating_countries: list[str] = Field(default_factory=lambda: ["AE"])
     contact_email: str
     contact_phone: str
+    public_site_feature_enabled: bool = False
     public_site_enabled: bool
+    public_site_direct_links_only: bool = False
     approved_at: datetime | None = None
     approved_by_id: uuid.UUID | None = None
     suspended_at: datetime | None = None
@@ -128,6 +130,12 @@ class TenantApproveRequest(BaseModel):
 
 class TenantRejectRequest(BaseModel):
     reason_note: str = Field(..., min_length=1, max_length=1000)
+
+
+class PublicSiteFeatureRequest(BaseModel):
+    """POST /tenants/{id}/public-site-feature — platform admin only."""
+
+    enabled: bool
 
 
 class TenantMediaLimitsRequest(BaseModel):

@@ -19,6 +19,7 @@ from apps.api.dependencies import (
 )
 from apps.api.models.enums import PlatformRole, TenantStatus
 from apps.api.schemas.tenant import (
+    PublicSiteFeatureRequest,
     TenantApproveRequest,
     TenantDetailResponse,
     TenantListResponse,
@@ -195,6 +196,28 @@ async def reactivate_tenant(
         tenant_id,
         UUID(platform_user["id"]),
         reason_note=body.reason_note,
+        ip_address=ctx.ip_address,
+        user_agent=ctx.user_agent,
+    )
+
+
+@router.post("/{tenant_id}/public-site-feature", response_model=TenantResponse)
+async def set_public_site_feature(
+    tenant_id: UUID,
+    body: PublicSiteFeatureRequest,
+    platform_user: _OpsAndAbove,
+    ctx: ReqCtx,
+    svc: TenantService = Depends(_svc),
+) -> TenantResponse:
+    """Toggle platform master switch for tenant public site (super/operations admin).
+
+    When disabled, the tenant's own public_site_enabled setting is overridden
+    and nothing public resolves. An audit log entry is written.
+    """
+    return await svc.set_public_site_feature(  # type: ignore[return-value]
+        tenant_id,
+        UUID(platform_user["id"]),
+        enabled=body.enabled,
         ip_address=ctx.ip_address,
         user_agent=ctx.user_agent,
     )

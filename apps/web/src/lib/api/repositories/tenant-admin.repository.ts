@@ -1,12 +1,13 @@
 import { platformApiClient } from "../client";
 import type {
+  PublicSiteFeatureRequest,
+  Tenant,
   TenantDetailResponse,
+  TenantLifecycleRequest,
   TenantListParams,
   TenantListResponse,
-  TenantLifecycleRequest,
   TenantMediaLimitsRequest,
   TenantSendMessageRequest,
-  Tenant,
 } from "@/lib/types";
 
 class TenantAdminRepository {
@@ -52,6 +53,14 @@ class TenantAdminRepository {
   async setMediaLimits(id: string, body: TenantMediaLimitsRequest): Promise<Tenant> {
     const res = await platformApiClient.post<Tenant>(
       `${this.basePath}/${id}/media-limits`,
+      body,
+    );
+    return res.data;
+  }
+
+  async setPublicSiteFeature(id: string, body: PublicSiteFeatureRequest): Promise<Tenant> {
+    const res = await platformApiClient.post<Tenant>(
+      `${this.basePath}/${id}/public-site-feature`,
       body,
     );
     return res.data;

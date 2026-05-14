@@ -12,15 +12,17 @@ import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/com
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { ToggleSwitch } from "@/components/ui/toggle-switch";
 import { PublicSiteUrlPanel } from "@/components/public-site/PublicSiteUrlPanel";
 import { ImageUploadField } from "@/components/molecules/ImageUploadField";
 import { CustomizeSection } from "./CustomizeSection";
 
 const OWNER_ROLES = new Set(["company_owner", "company_admin"]);
 
-const baseSchema = z.object({
-  public_site_enabled: z.boolean(),
+/** The three visibility modes presented to tenants. */
+type VisibilityMode = "public" | "direct_only" | "off";
+
+const schema = z.object({
+  visibility: z.enum(["public", "direct_only", "off"]),
   public_site_logo_url: z
     .string()
     .url("Must be a valid URL")
@@ -29,7 +31,32 @@ const baseSchema = z.object({
     .optional(),
   public_site_tagline: z.string().max(200, "Max 200 characters").optional(),
 });
-type BaseFormValues = z.infer<typeof baseSchema>;
+type FormValues = z.infer<typeof schema>;
+
+function settingsToVisibility(enabled: boolean, directOnly: boolean): VisibilityMode {
+  if (!enabled) return "off";
+  if (directOnly) return "direct_only";
+  return "public";
+}
+
+const VISIBILITY_OPTIONS: { value: VisibilityMode; label: string; description: string }[] = [
+  {
+    value: "public",
+    label: "Public",
+    description: "Anyone can browse your listings, profile, and agents.",
+  },
+  {
+    value: "direct_only",
+    label: "Direct links only",
+    description:
+      "Listings are hidden from the index but accessible via a direct shared link.",
+  },
+  {
+    value: "off",
+    label: "Off",
+    description: "Disable your public website entirely.",
+  },
+];
 
 export default function PublicSiteSettingsPage(): React.ReactElement {
   const { currentUser } = useAuth();
@@ -38,37 +65,45 @@ export default function PublicSiteSettingsPage(): React.ReactElement {
   const { data: settings, isLoading } = usePublicSiteSettings();
   const { mutate: save, isPending } = useUpdatePublicSiteSettings();
 
-  const { register, handleSubmit, control, setValue, watch, reset, formState: { errors } } =
-    useForm<BaseFormValues>({
-      resolver: zodResolver(baseSchema),
-      defaultValues: {
-        public_site_enabled: false,
-        public_site_logo_url: "",
-        public_site_tagline: "",
-      },
-    });
+  const {
+    register,
+    handleSubmit,
+    control,
+    setValue,
+    watch,
+    reset,
+    formState: { errors },
+  } = useForm<FormValues>({
+    resolver: zodResolver(schema),
+    defaultValues: { visibility: "off", public_site_logo_url: "", public_site_tagline: "" },
+  });
 
   useEffect(() => {
     if (settings) {
       reset({
-        public_site_enabled: settings.public_site_enabled,
+        visibility: settingsToVisibility(
+          settings.public_site_enabled,
+          settings.public_site_direct_links_only,
+        ),
         public_site_logo_url: settings.public_site_logo_url ?? "",
         public_site_tagline: settings.public_site_tagline ?? "",
       });
     }
   }, [settings, reset]);
 
-  const enabled = watch("public_site_enabled");
+  const visibility = watch("visibility");
+  const featureEnabled = settings?.public_site_feature_enabled ?? false;
 
-  const onSubmit = (data: BaseFormValues): void => {
+  const onSubmit = (data: FormValues): void => {
     save({
-      public_site_enabled: data.public_site_enabled,
+      public_site_enabled: data.visibility !== "off",
+      public_site_direct_links_only: data.visibility === "direct_only",
       public_site_logo_url: data.public_site_logo_url || null,
       public_site_tagline: data.public_site_tagline || null,
     });
   };
 
-  const publicUrl = settings ? `/p/${settings.slug}` : null;
+  const publicUrl = settings && visibility === "public" ? `/p/${settings.slug}` : null;
 
   if (isLoading) return <p className="text-sm text-muted-foreground">Loading...</p>;
 
@@ -76,7 +111,7 @@ export default function PublicSiteSettingsPage(): React.ReactElement {
     <div className="space-y-6">
       <div className="flex items-center justify-between gap-4">
         <h1 className="text-2xl font-semibold tracking-tight">Public Website</h1>
-        {settings?.public_site_enabled && publicUrl && (
+        {publicUrl && (
           <Button asChild variant="outline" size="sm">
             <a href={publicUrl} target="_blank" rel="noopener noreferrer">
               <ExternalLink className="mr-1.5 h-4 w-4" />
@@ -85,6 +120,13 @@ export default function PublicSiteSettingsPage(): React.ReactElement {
           </Button>
         )}
       </div>
+
+      {!featureEnabled && (
+        <div className="rounded-md border border-amber-200 bg-amber-50 px-4 py-3 text-sm text-amber-800 dark:border-amber-800 dark:bg-amber-950/30 dark:text-amber-300">
+          The public website feature isn&apos;t enabled for your account. Contact your account
+          manager to request access.
+        </div>
+      )}
 
       <Card className="max-w-lg">
         <CardHeader>
@@ -97,20 +139,28 @@ export default function PublicSiteSettingsPage(): React.ReactElement {
         </CardHeader>
         <CardContent>
           <form onSubmit={handleSubmit(onSubmit)} className="space-y-6">
-            <div className="flex items-center justify-between gap-4">
-              <div>
-                <Label htmlFor="public_site_enabled">Enable public website</Label>
-                <p className="text-xs text-muted-foreground mt-0.5">
-                  When enabled, your property listings are publicly accessible.
-                </p>
-              </div>
-              <ToggleSwitch
-                id="public_site_enabled"
-                checked={enabled}
-                onCheckedChange={(v) => setValue("public_site_enabled", v)}
-                disabled={!canEdit}
-              />
-            </div>
+            <fieldset disabled={!canEdit || !featureEnabled} className="space-y-2">
+              <legend className="text-sm font-medium mb-2">Visibility</legend>
+              {VISIBILITY_OPTIONS.map((opt) => (
+                <label
+                  key={opt.value}
+                  className="flex items-start gap-3 rounded-md border p-3 cursor-pointer has-[:checked]:border-primary has-[:checked]:bg-primary/5"
+                >
+                  <input
+                    type="radio"
+                    value={opt.value}
+                    checked={visibility === opt.value}
+                    onChange={() => setValue("visibility", opt.value)}
+                    className="mt-0.5 accent-primary"
+                  />
+                  <div>
+                    <span className="text-sm font-medium">{opt.label}</span>
+                    <p className="text-xs text-muted-foreground">{opt.description}</p>
+                  </div>
+                </label>
+              ))}
+            </fieldset>
+
             <div className="space-y-1.5">
               <Label>Company Logo</Label>
               <Controller
@@ -130,6 +180,7 @@ export default function PublicSiteSettingsPage(): React.ReactElement {
               )}
               <p className="text-xs text-muted-foreground">PNG or WebP recommended. Max 5 MB.</p>
             </div>
+
             <div className="space-y-1.5">
               <Label htmlFor="tagline">Tagline</Label>
               <Input
@@ -143,6 +194,7 @@ export default function PublicSiteSettingsPage(): React.ReactElement {
                 <p className="text-xs text-destructive">{errors.public_site_tagline.message}</p>
               )}
             </div>
+
             {canEdit && (
               <Button type="submit" disabled={isPending}>
                 {isPending ? "Saving..." : "Save changes"}
@@ -164,9 +216,7 @@ export default function PublicSiteSettingsPage(): React.ReactElement {
         </Card>
       )}
 
-      {canEdit && settings && (
-        <CustomizeSection settings={settings} />
-      )}
+      {canEdit && settings && <CustomizeSection settings={settings} />}
     </div>
   );
 }

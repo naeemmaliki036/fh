@@ -2,7 +2,7 @@
 
 import { useState } from "react";
 import { useRouter } from "next/navigation";
-import { Search } from "lucide-react";
+import { ExternalLink, Search } from "lucide-react";
 import { useAdminTenants } from "@/hooks/queries/useTenantAdmin";
 import { TenantStatusBadge } from "@/components/atoms/TenantStatusBadge";
 import { Input } from "@/components/ui/input";
@@ -14,7 +14,7 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { formatDate } from "@/lib/utils/format-date";
-import type { TenantStatus } from "@/lib/types";
+import type { Tenant, TenantStatus } from "@/lib/types";
 
 const STATUS_OPTIONS: { value: TenantStatus | "all"; label: string }[] = [
   { value: "all", label: "All statuses" },
@@ -22,6 +22,44 @@ const STATUS_OPTIONS: { value: TenantStatus | "all"; label: string }[] = [
   { value: "active", label: "Active" },
   { value: "suspended", label: "Suspended" },
 ];
+
+function viewSiteTooltip(tenant: Tenant): string | null {
+  if (!tenant.public_site_feature_enabled) return "Public site feature not enabled";
+  if (!tenant.public_site_enabled) return "Tenant has disabled their public site";
+  if (tenant.public_site_direct_links_only) return "Direct-link only mode";
+  return null;
+}
+
+function ViewSiteButton({ tenant }: { tenant: Tenant }): React.ReactElement {
+  const tooltip = viewSiteTooltip(tenant);
+  const isActive = tooltip === null;
+
+  if (isActive) {
+    return (
+      <a
+        href={`/p/${tenant.slug}`}
+        target="_blank"
+        rel="noopener noreferrer"
+        title="Open public site"
+        onClick={(e) => e.stopPropagation()}
+        className="inline-flex items-center justify-center rounded-md p-1.5 text-muted-foreground hover:bg-muted hover:text-foreground transition-colors"
+      >
+        <ExternalLink className="h-4 w-4" />
+      </a>
+    );
+  }
+
+  return (
+    <button
+      disabled
+      title={tooltip ?? undefined}
+      onClick={(e) => e.stopPropagation()}
+      className="inline-flex items-center justify-center rounded-md p-1.5 text-muted-foreground/40 cursor-not-allowed"
+    >
+      <ExternalLink className="h-4 w-4" />
+    </button>
+  );
+}
 
 export function TenantsTable(): React.ReactElement {
   const router = useRouter();
@@ -87,6 +125,7 @@ export function TenantsTable(): React.ReactElement {
                 <th className="px-4 py-3 text-left font-medium">Status</th>
                 <th className="px-4 py-3 text-left font-medium">Currency</th>
                 <th className="px-4 py-3 text-left font-medium">Created</th>
+                <th className="px-4 py-3 text-left font-medium w-10">Site</th>
               </tr>
             </thead>
             <tbody>
@@ -103,6 +142,9 @@ export function TenantsTable(): React.ReactElement {
                   </td>
                   <td className="px-4 py-3 text-muted-foreground">{tenant.currency}</td>
                   <td className="px-4 py-3 text-muted-foreground">{formatDate(tenant.created_at, "en")}</td>
+                  <td className="px-4 py-3">
+                    <ViewSiteButton tenant={tenant} />
+                  </td>
                 </tr>
               ))}
             </tbody>

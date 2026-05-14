@@ -287,7 +287,7 @@ def s6_suspended_tenant() -> None:
         skip("Suspended tenant test", "no platform token")
         return
 
-    # Find a tenant that is NOT marina-realty
+    # Find a tenant that is NOT marina-realty AND has public_site_enabled=True
     other_slug: str | None = None
     other_id: str | None = None
     try:
@@ -295,7 +295,9 @@ def s6_suspended_tenant() -> None:
         if r.status_code == 200:
             items = r.json().get("items", [])
             for t in items:
-                if t.get("slug") != TENANT_SLUG and t.get("status") == "active":
+                if (t.get("slug") != TENANT_SLUG
+                        and t.get("status") == "active"
+                        and t.get("public_site_enabled") is True):
                     other_slug = t["slug"]
                     other_id = t["id"]
                     break

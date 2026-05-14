@@ -12,10 +12,12 @@ export async function generateMetadata({ params }: PageProps): Promise<Metadata>
   const { slug, id } = await params;
   try {
     const listing = await publicSiteRepository.getListing(slug, extractListingId(id));
-    const firstImage = listing.media_urls[0];
+    const firstImage = listing.media_urls[0] ?? listing.hero_media_url ?? undefined;
     return {
-      title: `${listing.title} — Properties`,
-      description: listing.description ?? `${listing.title} available ${listing.purpose === "sale" ? "for sale" : "for rent"}`,
+      title: `${listing.title} — ${listing.tenant_name ?? "Properties"}`,
+      description:
+        listing.description ??
+        `${listing.title} available ${listing.purpose === "sale" ? "for sale" : "for rent"}`,
       openGraph: {
         title: listing.title,
         description: listing.description ?? undefined,

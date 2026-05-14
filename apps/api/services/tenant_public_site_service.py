@@ -40,9 +40,14 @@ class TenantPublicSiteService(BaseService):
     async def get_settings(self, tenant_id: UUID) -> dict:
         """Return public-site settings + computed URL hint."""
         tenant = await self._get_tenant(tenant_id)
+        return self._to_dict(tenant)
+
+    def _to_dict(self, tenant) -> dict:  # noqa: ANN001
         return {
             "slug": tenant.slug,
+            "public_site_feature_enabled": tenant.public_site_feature_enabled,
             "public_site_enabled": tenant.public_site_enabled,
+            "public_site_direct_links_only": tenant.public_site_direct_links_only,
             "public_site_logo_url": tenant.public_site_logo_url,
             "public_site_tagline": tenant.public_site_tagline,
             "public_url_hint": f"/p/{tenant.slug}",
@@ -78,11 +83,18 @@ class TenantPublicSiteService(BaseService):
 
         before = {
             "public_site_enabled": tenant.public_site_enabled,
+            "public_site_direct_links_only": tenant.public_site_direct_links_only,
             "public_site_logo_url": tenant.public_site_logo_url,
             "public_site_tagline": tenant.public_site_tagline,
         }
 
-        _allowed = {"public_site_enabled", "public_site_logo_url", "public_site_tagline"}
+        # Tenant-writable fields (public_site_feature_enabled is platform-only).
+        _allowed = {
+            "public_site_enabled",
+            "public_site_direct_links_only",
+            "public_site_logo_url",
+            "public_site_tagline",
+        }
         config_updated = False
 
         for key, val in updates.items():
@@ -99,6 +111,7 @@ class TenantPublicSiteService(BaseService):
 
         after: dict = {
             "public_site_enabled": tenant.public_site_enabled,
+            "public_site_direct_links_only": tenant.public_site_direct_links_only,
             "public_site_logo_url": tenant.public_site_logo_url,
             "public_site_tagline": tenant.public_site_tagline,
         }
@@ -121,15 +134,4 @@ class TenantPublicSiteService(BaseService):
         )
 
         await self.session.refresh(tenant)
-        return {
-            "slug": tenant.slug,
-            "public_site_enabled": tenant.public_site_enabled,
-            "public_site_logo_url": tenant.public_site_logo_url,
-            "public_site_tagline": tenant.public_site_tagline,
-            "public_url_hint": f"/p/{tenant.slug}",
-            "config": tenant.public_site_config or {},
-            "max_images_per_property": tenant.max_images_per_property,
-            "max_videos_per_property": tenant.max_videos_per_property,
-            "max_image_mb": tenant.max_image_mb,
-            "max_video_mb": tenant.max_video_mb,
-        }
+        return self._to_dict(tenant)

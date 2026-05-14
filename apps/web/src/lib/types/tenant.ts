@@ -11,6 +11,14 @@ export interface Tenant {
   locale: string;
   default_properties_view: PropertiesViewMode;
   operating_countries: string[];
+  contact_email: string;
+  contact_phone: string;
+  /** Platform master switch — only platform admins can toggle. */
+  public_site_feature_enabled: boolean;
+  /** Tenant's own on/off toggle. */
+  public_site_enabled: boolean;
+  /** When true, only listing-detail URLs resolve; index/profile/agents → 404. */
+  public_site_direct_links_only: boolean;
   approved_at: string | null;
   approved_by_id: string | null;
   suspended_at: string | null;
@@ -85,6 +93,10 @@ export interface TenantDetailResponse extends Tenant {
 
 export interface TenantLifecycleRequest {
   reason_note?: string;
+}
+
+export interface PublicSiteFeatureRequest {
+  enabled: boolean;
 }
 
 export interface TenantSendMessageRequest {

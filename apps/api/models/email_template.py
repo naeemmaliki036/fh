@@ -42,11 +42,12 @@ class EmailTemplate(Base, UUIDMixin, TimestampMixin):
     body_html: Mapped[str] = mapped_column(Text, nullable=False)
     body_text: Mapped[str | None] = mapped_column(Text, nullable=True)
 
-    # Map of variable names to descriptions — for documentation/editor hints.
-    variables: Mapped[dict] = mapped_column(
+    # List of variable names (or map of name → description) for editor hints.
+    # Seed data stores a list[str]; future templates may use dict[str, str].
+    variables: Mapped[list | dict] = mapped_column(
         JSONB,
         nullable=False,
-        server_default=text("'{}'::jsonb"),
+        server_default=text("'[]'::jsonb"),
     )
 
     active: Mapped[bool] = mapped_column(

@@ -9,9 +9,11 @@ import { ListYourPropertyDialog } from "./ListYourPropertyDialog";
 interface PublicSiteHeaderProps {
   profile: PublicTenantProfile;
   slug: string;
+  /** True when the site is in direct_only mode — hides index-only nav links. */
+  isDirect?: boolean;
 }
 
-export function PublicSiteHeader({ profile, slug }: PublicSiteHeaderProps): React.ReactElement {
+export function PublicSiteHeader({ profile, slug, isDirect = false }: PublicSiteHeaderProps): React.ReactElement {
   const [open, setOpen] = useState(false);
   const [listDialogOpen, setListDialogOpen] = useState(false);
   const initials = profile.name.slice(0, 2).toUpperCase();
@@ -39,18 +41,20 @@ export function PublicSiteHeader({ profile, slug }: PublicSiteHeaderProps): Reac
           </span>
         </Link>
 
-        {/* Desktop nav — centered */}
-        <nav className="hidden flex-1 items-center justify-center gap-8 text-sm font-bold text-slate-600 md:flex">
-          <Link href={`${homeHref}#listings`} className="transition hover:text-slate-950">
-            Listings
-          </Link>
-          <Link href={`${homeHref}#team`} className="transition hover:text-slate-950">
-            Team
-          </Link>
-          <Link href={`${homeHref}#contact`} className="transition hover:text-slate-950">
-            Contact
-          </Link>
-        </nav>
+        {/* Desktop nav — centered; hidden in direct_only mode */}
+        {!isDirect && (
+          <nav className="hidden flex-1 items-center justify-center gap-8 text-sm font-bold text-slate-600 md:flex">
+            <Link href={`${homeHref}#listings`} className="transition hover:text-slate-950">
+              Listings
+            </Link>
+            <Link href={`${homeHref}#team`} className="transition hover:text-slate-950">
+              Team
+            </Link>
+            <Link href={`${homeHref}#contact`} className="transition hover:text-slate-950">
+              Contact
+            </Link>
+          </nav>
+        )}
 
         {/* CTA + hamburger */}
         <div className="flex items-center gap-3 shrink-0">

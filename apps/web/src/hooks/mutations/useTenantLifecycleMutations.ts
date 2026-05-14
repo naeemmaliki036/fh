@@ -3,7 +3,12 @@
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { toast } from "sonner";
 import { tenantAdminRepository } from "@/lib/api/repositories";
-import type { Tenant, TenantLifecycleRequest, TenantMediaLimitsRequest } from "@/lib/types";
+import type {
+  PublicSiteFeatureRequest,
+  Tenant,
+  TenantLifecycleRequest,
+  TenantMediaLimitsRequest,
+} from "@/lib/types";
 import { queryKeys } from "../queryKeys";
 
 function invalidateTenantQueries(qc: ReturnType<typeof useQueryClient>, id: string): void {
@@ -80,6 +85,24 @@ export function useSetTenantMediaLimits() {
     onSuccess: (data) => {
       invalidateTenantQueries(qc, data.id);
       toast.success("Media limits updated");
+    },
+    onError: (err: Error) => toast.error(err.message),
+  });
+}
+
+export function useSetPublicSiteFeature() {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: ({
+      id,
+      body,
+    }: {
+      id: string;
+      body: PublicSiteFeatureRequest;
+    }): Promise<Tenant> => tenantAdminRepository.setPublicSiteFeature(id, body),
+    onSuccess: (data) => {
+      invalidateTenantQueries(qc, data.id);
+      toast.success("Public site feature updated");
     },
     onError: (err: Error) => toast.error(err.message),
   });

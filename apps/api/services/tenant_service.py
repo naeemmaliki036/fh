@@ -186,6 +186,28 @@ class TenantService(BaseService):
         await self.session.refresh(tenant)
         return tenant
 
+    async def set_public_site_feature(
+        self,
+        tenant_id: UUID,
+        actor_id: UUID,
+        *,
+        enabled: bool,
+        ip_address: str | None = None,
+        user_agent: str | None = None,
+    ) -> Tenant:
+        """Toggle the platform master switch for a tenant's public site."""
+        tenant = await self.get_tenant(tenant_id)
+        before = {"public_site_feature_enabled": tenant.public_site_feature_enabled}
+        tenant.public_site_feature_enabled = enabled
+        await self.session.flush()
+        after = {"public_site_feature_enabled": enabled}
+        await self._rls_and_audit(
+            tenant_id, AuditAction.TENANT_UPDATED, actor_id, before, after,
+            ip_address, user_agent,
+        )
+        await self.session.refresh(tenant)
+        return tenant
+
     async def update_media_limits(
         self,
         tenant_id: UUID,

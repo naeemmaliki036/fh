@@ -123,7 +123,6 @@ async def generic_exception_handler(
 # ---------------------------------------------------------------------------
 app.include_router(auth.router, prefix="/auth", tags=["auth"])
 app.include_router(tenants.router, prefix="/tenants", tags=["tenants"])
-app.include_router(users.router, prefix="/users", tags=["users"])
 app.include_router(agents.router, prefix="/agents", tags=["agents"])
 app.include_router(customers.router, prefix="/customers", tags=["customers"])
 app.include_router(leads.router, prefix="/leads", tags=["leads"])
@@ -132,7 +131,11 @@ app.include_router(properties.router, prefix="/properties", tags=["properties"])
 app.include_router(listings.router, prefix="", tags=["listings"])
 app.include_router(listing_price_routes.router, prefix="", tags=["listings"])
 app.include_router(listing_document_routes.router, prefix="", tags=["listings"])
+# listing_review_routes must be registered BEFORE users.router:
+# it exposes GET /users/eligible-reviewers, which would otherwise be swallowed
+# by users.router's GET /users/{user_id} parameterised route.
 app.include_router(listing_review_routes.router, prefix="", tags=["listings"])
+app.include_router(users.router, prefix="/users", tags=["users"])
 app.include_router(media.router, prefix="", tags=["media"])
 app.include_router(document_requests.router, prefix="/document-requests", tags=["document-requests"])
 app.include_router(public_document_requests.router, prefix="/public/document-requests", tags=["public"])

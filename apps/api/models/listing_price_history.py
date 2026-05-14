@@ -8,7 +8,7 @@ Listing price update. No updated_at — these rows are never mutated.
 import uuid
 from datetime import datetime
 
-from sqlalchemy import CHAR, ForeignKey, Numeric, Text
+from sqlalchemy import CHAR, DateTime, ForeignKey, Numeric, Text
 from sqlalchemy.dialects.postgresql import UUID
 from sqlalchemy.orm import Mapped, mapped_column
 
@@ -47,6 +47,7 @@ class ListingPriceHistory(Base, UUIDMixin):
     reason_note: Mapped[str | None] = mapped_column(Text, nullable=True)
 
     changed_at: Mapped[datetime] = mapped_column(
+        DateTime(timezone=True),
         nullable=False,
         # server_default via DB column default — service must pass explicit value
         # or rely on DB now() when inserting.
