@@ -13,6 +13,7 @@ from fastapi import APIRouter, Depends, File, Form, UploadFile
 
 from apps.api.dependencies import CurrentUser, DbSession, TenantContext
 from apps.api.models.enums import MediaKind
+from apps.api.models.media import Media
 from apps.api.schemas.media import (
     MediaListResponse,
     MediaReorderRequest,
@@ -33,8 +34,26 @@ def _listing_svc(db: DbSession) -> ListingService:
     return ListingService(db)
 
 
-def _to_resp(media, url: str) -> MediaResponse:
-    return MediaResponse.model_validate({**media.__dict__, "url": url})
+def _to_resp(media: Media, url: str) -> MediaResponse:
+    """Build MediaResponse from an ORM object without leaking _sa_instance_state."""
+    return MediaResponse(
+        id=media.id,
+        tenant_id=media.tenant_id,
+        property_id=media.property_id,
+        kind=media.kind,
+        storage_key=media.storage_key,
+        url=url,
+        mime_type=media.mime_type,
+        size_bytes=media.size_bytes,
+        ordering=media.ordering,
+        alt_text=media.alt_text,
+        variants=media.variants,
+        width=media.width,
+        height=media.height,
+        uploaded_by_user_id=media.uploaded_by_user_id,
+        created_at=media.created_at,
+        updated_at=media.updated_at,
+    )
 
 
 @router.post("/properties/{property_id}/media", response_model=MediaResponse, status_code=201)

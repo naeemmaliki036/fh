@@ -1,5 +1,6 @@
 """Media upload + management service. Uses public storage (R2 or local)."""
 
+import logging
 import uuid as uuid_mod
 from uuid import UUID
 
@@ -11,6 +12,8 @@ from apps.api.models.media import Media
 from apps.api.services.base import BaseService
 from packages.common.storage import get_public_storage
 from packages.common.utils.error_handlers import bad_request, forbidden, not_found
+
+logger = logging.getLogger(__name__)
 
 _MAX_IMAGE = 15 * 1024 * 1024
 _MAX_VIDEO = 25 * 1024 * 1024   # 25 MB per video (listing cap)
@@ -160,14 +163,23 @@ class MediaService(BaseService):
     ) -> list[tuple[Media, str]]:
         self._require_manager(current_user["role"])
         await self._set_rls(tenant_id)
-        results = []
+        objects: list[tuple[Media, str]] = []
         for i, mid in enumerate(ordered_ids):
             m = await self.session.get(Media, mid)
             if not m or m.property_id != property_id or m.tenant_id != tenant_id:
                 raise not_found(f"Media {mid}")
             m.ordering = i
-            results.append((m, self._url(m.storage_key)))
-        await self.session.flush()
+            objects.append((m, self._url(m.storage_key)))
+        try:
+            await self.session.flush()
+        except Exception:
+            logger.exception("reorder flush failed for property %s", property_id)
+            raise
+        # Refresh each object so server-side updated_at is accurate before serialization.
+        results: list[tuple[Media, str]] = []
+        for m, url in objects:
+            await self.session.refresh(m)
+            results.append((m, url))
         return results
 
     async def delete_media(
