@@ -29,11 +29,11 @@ export function DocRequestForm({ isPending, onSubmit, onCancel }: DocRequestForm
   const [instructions, setInstructions] = useState("");
   const [expiresInDays, setExpiresInDays] = useState("7");
   const [items, setItems] = useState<DocumentRequestItemCreate[]>([
-    { kind: "kyc", label: "", is_required: true, ordering: 0 },
+    { kind: "kyc" as string, label: "", is_required: true, ordering: 0 },
   ]);
 
   const addItem = (): void => {
-    setItems(prev => [...prev, { kind: "kyc", label: "", is_required: true, ordering: prev.length }]);
+    setItems(prev => [...prev, { kind: "kyc" as string, label: "", is_required: true, ordering: prev.length }]);
   };
 
   const removeItem = (idx: number): void => {
@@ -90,9 +90,9 @@ export function DocRequestForm({ isPending, onSubmit, onCancel }: DocRequestForm
         </div>
         {items.map((item, idx) => (
           <div key={idx} className="flex gap-2 items-center rounded-md border p-3">
-            <Select value={item.kind} onValueChange={v => updateItem(idx, { kind: v as PrivateDocumentKind })}>
+            <Select value={item.kind} onValueChange={v => updateItem(idx, { kind: v })}>
               <SelectTrigger className="w-36 flex-shrink-0"><SelectValue /></SelectTrigger>
-              <SelectContent>{KINDS.map(k => <SelectItem key={k} value={k}>{KIND_LABELS[k]}</SelectItem>)}</SelectContent>
+              <SelectContent>{KINDS.map(k => <SelectItem key={k} value={k}>{KIND_LABELS[k as LegacyKind]}</SelectItem>)}</SelectContent>
             </Select>
             <Input className="flex-1" placeholder="Label, e.g. Passport copy" value={item.label}
               onChange={e => updateItem(idx, { label: e.target.value })} />

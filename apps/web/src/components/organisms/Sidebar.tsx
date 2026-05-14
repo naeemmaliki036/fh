@@ -51,6 +51,8 @@ const MANAGE_ITEMS: NavItem[] = [
   { href: "/calendar", label: "Calendar", icon: CalendarDays },
   { href: "/document-requests", label: "Doc Requests", icon: FileCheck },
   { href: "/deals", label: "Deals", icon: Handshake },
+  { href: "/leaderboard", label: "Leaderboard", icon: Trophy, adminOnly: true },
+  { href: "/my-earnings", label: "My Earnings", icon: Wallet, agentOnly: true },
 ];
 
 const TOOLS_ITEMS: NavItem[] = [
@@ -58,10 +60,12 @@ const TOOLS_ITEMS: NavItem[] = [
   { href: "/settings/profile", label: "Profile", icon: Settings },
   { href: "/settings/company", label: "Company", icon: Building2, adminOnly: true },
   { href: "/settings/email-templates", label: "Email Templates", icon: Mail, adminOnly: true },
+  { href: "/settings/off-market-reasons", label: "Off-Market Reasons", icon: Home, adminOnly: true },
 ];
 
 const ADMIN_ROLES = new Set(["company_owner", "company_admin"]);
 const REVIEWER_ROLES = new Set(["listing_manager", "company_admin", "company_owner"]);
+const AGENT_ROLES = new Set(["agent"]);
 
 function SectionLabel({ label }: { label: string }): React.ReactElement {
   return (
@@ -124,6 +128,7 @@ export function Sidebar(): React.ReactElement {
 
   const isAdmin = currentUser && ADMIN_ROLES.has(currentUser.role);
   const isReviewer = currentUser && REVIEWER_ROLES.has(currentUser.role);
+  const isAgent = currentUser && AGENT_ROLES.has(currentUser.role);
 
   const { data: pendingReviewsData } = useMyPendingReviews(isReviewer ? (currentUser?.id ?? "") : "");
   const pendingReviewCount = pendingReviewsData?.total ?? 0;
@@ -135,6 +140,7 @@ export function Sidebar(): React.ReactElement {
     return items.filter((item) => {
       if (item.adminOnly && !isAdmin) return false;
       if (item.reviewerOnly && !isReviewer) return false;
+      if (item.agentOnly && !isAgent) return false;
       return true;
     });
   }

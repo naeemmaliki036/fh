@@ -2,7 +2,6 @@
 
 import { Button } from "@/components/ui/button";
 import { PropertyPicker } from "@/components/molecules/PropertyPicker";
-import { useProperties } from "@/hooks/queries/useProperties";
 
 interface WizardStep2Props {
   propertyId: string | null;
@@ -12,13 +11,6 @@ interface WizardStep2Props {
 }
 
 export function WizardStep2Property({ propertyId, onSelect, onNext, onBack }: WizardStep2Props): React.ReactElement {
-  const { data } = useProperties({ limit: 1, q: undefined });
-  void data; // query is called inside PropertyPicker anyway
-
-  const handleChange = (id: string | null): void => {
-    onSelect(id, null); // title will be derived via query in parent if needed
-  };
-
   return (
     <div className="space-y-6">
       <div>
@@ -26,7 +18,7 @@ export function WizardStep2Property({ propertyId, onSelect, onNext, onBack }: Wi
         <p className="text-sm text-muted-foreground mt-1">Link this request to a property in your portfolio</p>
       </div>
 
-      <PropertyPicker value={propertyId} onChange={handleChange} />
+      <PropertyPicker value={propertyId} onChange={(id) => onSelect(id, null)} />
 
       {propertyId && (
         <button type="button" className="text-xs text-muted-foreground hover:underline" onClick={() => onSelect(null, null)}>

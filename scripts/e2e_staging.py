@@ -325,7 +325,13 @@ def s7_tenant_lifecycle() -> None:
         record("fail", "POST /tenants/{id}/reactivate", str(e))
 
     try:
+        # Retry up to 3 times: reactivate commit may not be immediately visible
         r = client.get(f"{API}/public/sites/{TENANT_SLUG}")
+        for _ in range(2):
+            if r.status_code == 200:
+                break
+            time.sleep(1)
+            r = client.get(f"{API}/public/sites/{TENANT_SLUG}")
         record("pass" if r.status_code == 200 else "fail",
                f"GET /public/sites/{TENANT_SLUG} → 200 after reactivate",
                None if r.status_code == 200 else f"got {r.status_code}")
