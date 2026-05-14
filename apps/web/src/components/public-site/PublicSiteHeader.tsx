@@ -4,6 +4,7 @@ import { useState } from "react";
 import Link from "next/link";
 import { X, Menu } from "lucide-react";
 import type { PublicTenantProfile } from "@/lib/types/public-site";
+import { ListYourPropertyDialog } from "./ListYourPropertyDialog";
 
 interface PublicSiteHeaderProps {
   profile: PublicTenantProfile;
@@ -12,6 +13,7 @@ interface PublicSiteHeaderProps {
 
 export function PublicSiteHeader({ profile, slug }: PublicSiteHeaderProps): React.ReactElement {
   const [open, setOpen] = useState(false);
+  const [listDialogOpen, setListDialogOpen] = useState(false);
   const initials = profile.name.slice(0, 2).toUpperCase();
   const homeHref = `/p/${slug}`;
 
@@ -52,6 +54,12 @@ export function PublicSiteHeader({ profile, slug }: PublicSiteHeaderProps): Reac
 
         {/* CTA + hamburger */}
         <div className="flex items-center gap-3 shrink-0">
+          <button
+            onClick={() => setListDialogOpen(true)}
+            className="hidden rounded-full border border-[hsl(var(--primary))] px-5 py-2.5 text-sm font-bold text-[hsl(var(--primary))] transition hover:bg-[hsl(var(--primary))]/10 sm:inline-flex"
+          >
+            List Your Property
+          </button>
           <Link
             href={`${homeHref}#contact`}
             className="hidden rounded-full bg-slate-950 px-5 py-2.5 text-sm font-bold text-white transition hover:-translate-y-0.5 hover:bg-slate-800 sm:inline-flex"
@@ -81,16 +89,30 @@ export function PublicSiteHeader({ profile, slug }: PublicSiteHeaderProps): Reac
             <Link href={`${homeHref}#contact`} onClick={() => setOpen(false)}>
               Contact
             </Link>
+            <button
+              onClick={() => { setOpen(false); setListDialogOpen(true); }}
+              className="mt-1 inline-flex w-fit rounded-full border border-[hsl(var(--primary))] px-6 py-2.5 text-sm font-bold text-[hsl(var(--primary))]"
+            >
+              List Your Property
+            </button>
             <Link
               href={`${homeHref}#contact`}
               onClick={() => setOpen(false)}
-              className="mt-1 inline-flex w-fit rounded-full bg-slate-950 px-6 py-2.5 text-sm text-white"
+              className="inline-flex w-fit rounded-full bg-slate-950 px-6 py-2.5 text-sm text-white"
             >
               Talk to us
             </Link>
           </nav>
         </div>
       )}
+
+      <ListYourPropertyDialog
+        open={listDialogOpen}
+        onOpenChange={setListDialogOpen}
+        slug={slug}
+        initialIntent="sell"
+        operatingCountries={profile.operating_countries}
+      />
     </header>
   );
 }

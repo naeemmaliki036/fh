@@ -101,6 +101,8 @@ export interface PublicTenantProfile {
   tagline: string | null;
   contact_email: string;
   contact_phone: string;
+  /** ISO-3166-1 alpha-2 country codes where the tenant operates */
+  operating_countries: string[];
   stats?: PublicSiteStats;
   config?: RawSiteConfig | null;
 }
