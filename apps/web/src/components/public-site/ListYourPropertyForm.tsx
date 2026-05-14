@@ -59,9 +59,9 @@ function buildMessage(form: FormState): string {
 }
 
 export const fieldCls =
-  "w-full rounded-xl border border-slate-200 bg-slate-50 px-4 py-3 text-sm text-slate-950 outline-none transition focus:border-[hsl(var(--primary))] focus:ring-2 focus:ring-[hsl(var(--primary))]/20 disabled:opacity-50";
-export const errCls = "mt-1 px-1 text-xs text-red-600";
-export const labelCls = "mb-1 block text-xs font-semibold uppercase tracking-wide text-slate-500";
+  "w-full rounded-lg border border-slate-200 bg-slate-50 px-3 py-2 text-sm text-slate-950 outline-none transition focus:border-[hsl(var(--primary))] focus:ring-2 focus:ring-[hsl(var(--primary))]/20 disabled:opacity-50";
+export const errCls = "mt-0.5 px-1 text-[11px] text-red-600";
+export const labelCls = "mb-0.5 block text-[10px] font-semibold uppercase tracking-wide text-slate-500";
 
 export interface ListYourPropertyFormProps {
   slug: string;
@@ -145,8 +145,11 @@ export function ListYourPropertyForm({
     });
   }
 
+  const hideBeds = NON_RESIDENTIAL_TYPES.has(form.propertyType);
+
   return (
-    <form onSubmit={handleSubmit} className="space-y-4">
+    <form onSubmit={handleSubmit} className="space-y-3">
+      {/* Row 1: Intent (full width) */}
       <div>
         <label className={labelCls}>I want to... *</label>
         <select value={form.intent} onChange={set("intent")} className={fieldCls}>
@@ -158,7 +161,8 @@ export function ListYourPropertyForm({
         {errors.intent && <p className={errCls}>{errors.intent}</p>}
       </div>
 
-      <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
+      {/* Row 2: Name + Phone + Email */}
+      <div className="grid grid-cols-1 gap-3 sm:grid-cols-3">
         <div>
           <label className={labelCls}>Full name *</label>
           <input value={form.name} onChange={set("name")} placeholder="Jane Smith" className={fieldCls} />
@@ -177,40 +181,36 @@ export function ListYourPropertyForm({
             error={errors.phone}
           />
         </div>
+        <div>
+          <label className={labelCls}>Email *</label>
+          <input type="email" value={form.email} onChange={set("email")} placeholder="jane@example.com" className={fieldCls} />
+          {errors.email && <p className={errCls}>{errors.email}</p>}
+        </div>
       </div>
 
-      <div>
-        <label className={labelCls}>Email *</label>
-        <input type="email" value={form.email} onChange={set("email")} placeholder="jane@example.com" className={fieldCls} />
-        {errors.email && <p className={errCls}>{errors.email}</p>}
-      </div>
-
-      <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
+      {/* Row 3: Type + City + Area (+ Country if multi) */}
+      <div className={`grid grid-cols-1 gap-3 ${multiCountry ? "sm:grid-cols-4" : "sm:grid-cols-3"}`}>
         <div>
           <label className={labelCls}>Property type *</label>
           <select value={form.propertyType} onChange={set("propertyType")} className={fieldCls}>
-            <option value="">Select type</option>
+            <option value="">Select</option>
             {PROPERTY_TYPES.map((t) => (
               <option key={t} value={t.toLowerCase()}>{t}</option>
             ))}
           </select>
           {errors.propertyType && <p className={errCls}>{errors.propertyType}</p>}
         </div>
-
         {multiCountry && (
           <div>
             <label className={labelCls}>Country</label>
             <select value={form.country} onChange={set("country")} className={fieldCls}>
-              <option value="">Select country</option>
+              <option value="">Select</option>
               {operatingCountries.map((c) => (
                 <option key={c} value={c}>{COUNTRY_LABELS[c] ?? c}</option>
               ))}
             </select>
           </div>
         )}
-      </div>
-
-      <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
         <div>
           <label className={labelCls}>City</label>
           {cityOptions.length > 0 ? (
@@ -229,7 +229,6 @@ export function ListYourPropertyForm({
             <input value={form.city} onChange={set("city")} placeholder="City" className={fieldCls} />
           )}
         </div>
-
         <div>
           <label className={labelCls}>Area</label>
           <SearchableSelect
@@ -244,8 +243,9 @@ export function ListYourPropertyForm({
         </div>
       </div>
 
-      <div className={`grid grid-cols-1 gap-4 ${NON_RESIDENTIAL_TYPES.has(form.propertyType) ? "" : "sm:grid-cols-2"}`}>
-        {!NON_RESIDENTIAL_TYPES.has(form.propertyType) && (
+      {/* Row 4: Bedrooms (if residential) + Price */}
+      <div className={`grid grid-cols-1 gap-3 ${hideBeds ? "" : "sm:grid-cols-2"}`}>
+        {!hideBeds && (
           <div>
             <label className={labelCls}>Bedrooms (optional)</label>
             <input type="number" min={0} value={form.bedrooms} onChange={set("bedrooms")} placeholder="e.g. 3" className={fieldCls} />
@@ -260,16 +260,17 @@ export function ListYourPropertyForm({
         </div>
       </div>
 
+      {/* Row 5: Notes (compact 2 rows) */}
       <div>
-        <label className={labelCls}>Additional notes</label>
-        <textarea rows={3} value={form.message} onChange={set("message")} placeholder="Anything else you'd like us to know..." className={`${fieldCls} resize-y`} />
+        <label className={labelCls}>Additional notes (optional)</label>
+        <textarea rows={2} value={form.message} onChange={set("message")} placeholder="Anything else you'd like us to know..." className={`${fieldCls} resize-none`} />
         {errors.message && <p className={errCls}>{errors.message}</p>}
       </div>
 
       <button
         type="submit"
         disabled={isPending}
-        className="inline-flex w-full items-center justify-center rounded-full bg-[hsl(var(--primary))] px-6 py-3 text-sm font-extrabold text-[hsl(var(--primary-foreground))] transition hover:-translate-y-0.5 hover:opacity-90 disabled:opacity-60"
+        className="mt-1 inline-flex w-full items-center justify-center rounded-full bg-[hsl(var(--primary))] px-6 py-2.5 text-sm font-extrabold text-[hsl(var(--primary-foreground))] transition hover:-translate-y-0.5 hover:opacity-90 disabled:opacity-60"
       >
         {isPending ? "Sending…" : "Send to our team"}
       </button>

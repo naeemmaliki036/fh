@@ -1,3 +1,7 @@
+"use client";
+
+import { useState } from "react";
+import { Phone, Mail } from "lucide-react";
 import type { PublicAgentSnippet } from "@/lib/types/public-site";
 
 interface AgentCardProps {
@@ -13,6 +17,9 @@ export function AgentCard({ agent }: AgentCardProps): React.ReactElement {
     .toUpperCase();
 
   const subtitle = agent.license_id ? `License: ${agent.license_id}` : "Property Advisor";
+
+  const [phoneRevealed, setPhoneRevealed] = useState(false);
+  const [emailRevealed, setEmailRevealed] = useState(false);
 
   return (
     <article className="rounded-[2rem] bg-white p-6 text-center shadow-sm">
@@ -36,19 +43,47 @@ export function AgentCard({ agent }: AgentCardProps): React.ReactElement {
 
       <div className="mt-5 flex gap-3">
         {agent.phone && (
-          <a
-            href={`tel:${agent.phone}`}
-            className="flex-1 inline-flex min-h-11 items-center justify-center rounded-full border border-slate-200 bg-white px-5 py-3 text-sm font-extrabold text-slate-950 transition hover:-translate-y-0.5 hover:bg-slate-50"
-          >
-            Call
-          </a>
+          phoneRevealed ? (
+            <a
+              href={`tel:${agent.phone}`}
+              className="flex-1 inline-flex min-h-11 items-center justify-center gap-1.5 rounded-full border border-slate-200 bg-slate-50 px-4 py-3 text-sm font-extrabold text-slate-950 transition hover:-translate-y-0.5 hover:bg-white"
+              aria-label={`Call ${agent.phone}`}
+            >
+              <Phone className="h-3.5 w-3.5 text-slate-500" />
+              <span className="truncate">{agent.phone}</span>
+            </a>
+          ) : (
+            <button
+              type="button"
+              onClick={() => setPhoneRevealed(true)}
+              className="flex-1 inline-flex min-h-11 items-center justify-center gap-2 rounded-full border border-slate-200 bg-white px-5 py-3 text-sm font-extrabold text-slate-950 transition hover:-translate-y-0.5 hover:bg-slate-50"
+              aria-label="Reveal phone number"
+            >
+              <Phone className="h-4 w-4" />
+              Call
+            </button>
+          )
         )}
-        <a
-          href={`mailto:${agent.email}`}
-          className="flex-1 inline-flex min-h-11 items-center justify-center rounded-full bg-slate-950 px-5 py-3 text-sm font-extrabold text-white transition hover:-translate-y-0.5 hover:bg-slate-800"
-        >
-          Email
-        </a>
+        {emailRevealed ? (
+          <a
+            href={`mailto:${agent.email}`}
+            className="flex-1 inline-flex min-h-11 items-center justify-center gap-1.5 rounded-full bg-slate-950 px-4 py-3 text-sm font-extrabold text-white transition hover:-translate-y-0.5 hover:bg-slate-800"
+            aria-label={`Email ${agent.email}`}
+          >
+            <Mail className="h-3.5 w-3.5 text-white/70" />
+            <span className="truncate">{agent.email}</span>
+          </a>
+        ) : (
+          <button
+            type="button"
+            onClick={() => setEmailRevealed(true)}
+            className="flex-1 inline-flex min-h-11 items-center justify-center gap-2 rounded-full bg-slate-950 px-5 py-3 text-sm font-extrabold text-white transition hover:-translate-y-0.5 hover:bg-slate-800"
+            aria-label="Reveal email"
+          >
+            <Mail className="h-4 w-4" />
+            Email
+          </button>
+        )}
       </div>
     </article>
   );

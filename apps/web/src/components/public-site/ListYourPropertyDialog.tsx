@@ -49,24 +49,23 @@ export function ListYourPropertyDialog({
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="max-h-[90vh] w-full max-w-xl overflow-y-auto rounded-2xl p-0 shadow-2xl">
-        {/* Welcome banner */}
-        <div className="rounded-t-2xl bg-[hsl(var(--primary))]/8 px-6 pb-5 pt-6">
-          <div className="mb-3 flex h-11 w-11 items-center justify-center rounded-2xl bg-[hsl(var(--primary))]/15">
-            <Home className="h-5 w-5 text-[hsl(var(--primary))]" />
+      <DialogContent className="w-full max-w-3xl rounded-2xl p-0 shadow-2xl">
+        {/* Compact welcome banner — amber accent on icon */}
+        <div className="flex items-center gap-3 rounded-t-2xl bg-amber-50 px-5 py-3">
+          <div className="flex h-9 w-9 flex-shrink-0 items-center justify-center rounded-xl bg-amber-100 ring-1 ring-amber-200">
+            <Home className="h-4 w-4 text-amber-600" />
           </div>
-          <DialogHeader>
-            <DialogTitle className="text-xl font-black text-slate-950">
+          <DialogHeader className="flex-1 space-y-0">
+            <DialogTitle className="text-base font-black text-slate-950">
               Let&apos;s get your property listed
             </DialogTitle>
-            <DialogDescription className="mt-1 text-sm leading-relaxed text-slate-600">
-              Tell us a bit about your property and we&apos;ll take it from there. Our team will
-              reach out within one business day to walk you through next steps.
+            <DialogDescription className="text-xs text-slate-500">
+              We&apos;ll reach out within one business day.
             </DialogDescription>
           </DialogHeader>
         </div>
 
-        <div className="px-6 pb-6 pt-4">
+        <div className="px-5 pb-5 pt-3">
           {successName ? (
             <SuccessState name={successName} />
           ) : (
