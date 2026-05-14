@@ -183,7 +183,14 @@ class PublicSiteService(BaseService):
         tid = tenant.id
 
         listing = await self.session.get(Listing, listing_id)
-        if not listing or listing.tenant_id != tid or listing.status != ListingStatus.ACTIVE:
+        HIDDEN_STATUSES = {
+            ListingStatus.ARCHIVED,
+            ListingStatus.SOLD,
+            ListingStatus.RENTED,
+            ListingStatus.OFF_MARKET,
+            ListingStatus.EXPIRED,
+        }
+        if not listing or listing.tenant_id != tid or listing.status in HIDDEN_STATUSES:
             raise not_found("Listing")
 
         prop = await self.session.get(Property, listing.property_id)
@@ -215,6 +222,7 @@ class PublicSiteService(BaseService):
             "price": float(listing.price),
             "currency": listing.currency,
             "purpose": listing.purpose.value,
+            "status": listing.status.value,
             "beds": prop.bedrooms,
             "baths": prop.bathrooms,
             "area_sqft": float(prop.size_sqft) if prop.size_sqft else None,

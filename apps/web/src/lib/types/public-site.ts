@@ -146,6 +146,7 @@ export interface PublicListingDetail {
   price: number;
   currency: string;
   purpose: string;
+  status: string;
   beds: number | null;
   baths: number | null;
   area_sqft: number | null;

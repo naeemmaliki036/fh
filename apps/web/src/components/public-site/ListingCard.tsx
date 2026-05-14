@@ -2,6 +2,7 @@ import Link from "next/link";
 import { ArrowRight } from "lucide-react";
 import type { PublicListingItem } from "@/lib/types/public-site";
 import { formatAed } from "@/lib/utils/format-currency";
+import { listingHandle } from "@/lib/utils/listing-url";
 
 interface ListingCardProps {
   listing: PublicListingItem;
@@ -36,7 +37,7 @@ export function ListingCard({ listing, slug }: ListingCardProps): React.ReactEle
 
   return (
     <Link
-      href={`/p/${slug}/listings/${listing.id}`}
+      href={`/p/${slug}/listings/${listingHandle(listing.title, listing.id)}`}
       className="group flex flex-col overflow-hidden rounded-[2rem] bg-white shadow-card transition hover:-translate-y-1 hover:shadow-card-md"
     >
       {/* Hero image */}

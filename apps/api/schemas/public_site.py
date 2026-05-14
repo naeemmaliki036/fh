@@ -94,6 +94,7 @@ class PublicListingDetailResponse(BaseModel):
     price: float
     currency: str
     purpose: str
+    status: str
     beds: int | None = None
     baths: int | None = None
     area_sqft: float | None = None

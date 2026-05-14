@@ -131,6 +131,7 @@ export function PropertyListingsPanel({ propertyId }: PropertyListingsPanelProps
       {!isLoading && listings.length > 0 && activeView === "card" && (
         <ListingCardView
           listings={listings}
+          tenantSlug={publicSite?.slug ?? null}
           onEdit={setEditTarget}
           onDelete={remove}
           onStatusChange={(l, s) => setPending({ listing: l, targetStatus: s })}
@@ -140,6 +141,7 @@ export function PropertyListingsPanel({ propertyId }: PropertyListingsPanelProps
       {!isLoading && listings.length > 0 && activeView === "list" && (
         <ListingListView
           listings={listings}
+          tenantSlug={publicSite?.slug ?? null}
           onEdit={setEditTarget}
           onDelete={remove}
           onStatusChange={(l, s) => setPending({ listing: l, targetStatus: s })}

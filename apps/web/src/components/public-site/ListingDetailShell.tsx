@@ -42,6 +42,14 @@ export function ListingDetailShell({ listing, slug }: ListingDetailShellProps): 
 
   return (
     <div className="bg-[#f7f5ef] min-h-screen">
+      {/* Preview banner — shown only when listing is not active */}
+      {listing.status !== "active" && (
+        <div className="bg-amber-50 border-b border-amber-200 px-4 py-2.5 text-center text-sm text-amber-900">
+          Preview mode &mdash; this listing is in{" "}
+          <strong>{listing.status.replace(/_/g, " ")}</strong> state and is not
+          visible on the public site listing index.
+        </div>
+      )}
       {/* Sticky breadcrumb */}
       <div className="sticky top-[61px] z-10 border-b border-slate-200/60 bg-[#f7f5ef]/90 backdrop-blur-md">
         <div className="mx-auto w-[min(100%-40px,1280px)] py-2.5">

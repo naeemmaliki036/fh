@@ -1,10 +1,12 @@
 "use client";
 
+import { ExternalLink } from "lucide-react";
 import { ListingPurposeBadge } from "@/components/atoms/ListingPurposeBadge";
 import { ListingStatusBadge } from "@/components/atoms/ListingStatusBadge";
 import { ConfirmDialog } from "@/components/molecules/ConfirmDialog";
 import { Button } from "@/components/ui/button";
 import { formatListingPrice } from "@/lib/utils/format-listing-price";
+import { listingHandle } from "@/lib/utils/listing-url";
 import type { Listing, ListingStatus } from "@/lib/types/listing";
 
 type TransitionDef = { label: string; status: ListingStatus; destructive: boolean };
@@ -40,12 +42,19 @@ export function getListingTransitions(l: Listing): TransitionDef[] {
 
 interface ListingListViewProps {
   listings: Listing[];
+  tenantSlug: string | null;
   onEdit: (listing: Listing) => void;
   onDelete: (id: string) => void;
   onStatusChange: (listing: Listing, targetStatus: ListingStatus) => void;
 }
 
-export function ListingListView({ listings, onEdit, onDelete, onStatusChange }: ListingListViewProps): React.ReactElement {
+export function ListingListView({
+  listings,
+  tenantSlug,
+  onEdit,
+  onDelete,
+  onStatusChange,
+}: ListingListViewProps): React.ReactElement {
   return (
     <div className="overflow-x-auto rounded-md border">
       <table className="w-full text-sm">
@@ -62,6 +71,9 @@ export function ListingListView({ listings, onEdit, onDelete, onStatusChange }: 
         <tbody>
           {listings.map((l) => {
             const transitions = getListingTransitions(l);
+            const publicHref = tenantSlug
+              ? `/p/${tenantSlug}/listings/${listingHandle(l.title, l.id)}`
+              : null;
             return (
               <tr key={l.id} className="border-b hover:bg-muted/30">
                 <td className="px-3 py-2.5 font-medium max-w-[160px] truncate">{l.title}</td>
@@ -71,6 +83,13 @@ export function ListingListView({ listings, onEdit, onDelete, onStatusChange }: 
                 <td className="px-3 py-2.5 capitalize text-muted-foreground">{l.listing_tier}</td>
                 <td className="px-3 py-2.5">
                   <div className="flex flex-wrap gap-1">
+                    {publicHref && (
+                      <Button size="sm" variant="outline" asChild>
+                        <a href={publicHref} target="_blank" rel="noopener noreferrer">
+                          <ExternalLink className="mr-1 h-3 w-3" />View on site
+                        </a>
+                      </Button>
+                    )}
                     <Button size="sm" variant="outline" onClick={() => onEdit(l)}>Edit</Button>
                     {transitions.map((t) => (
                       <Button

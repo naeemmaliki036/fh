@@ -2,6 +2,7 @@ import { notFound } from "next/navigation";
 import type { Metadata } from "next";
 import { publicSiteRepository } from "@/lib/api/repositories/public-site.repository";
 import { ListingDetailShell } from "@/components/public-site/ListingDetailShell";
+import { extractListingId } from "@/lib/utils/listing-url";
 
 interface PageProps {
   params: Promise<{ slug: string; id: string }>;
@@ -10,7 +11,7 @@ interface PageProps {
 export async function generateMetadata({ params }: PageProps): Promise<Metadata> {
   const { slug, id } = await params;
   try {
-    const listing = await publicSiteRepository.getListing(slug, id);
+    const listing = await publicSiteRepository.getListing(slug, extractListingId(id));
     const firstImage = listing.media_urls[0];
     return {
       title: `${listing.title} — Properties`,
@@ -31,7 +32,7 @@ export default async function PublicListingPage({ params }: PageProps): Promise<
 
   let listing;
   try {
-    listing = await publicSiteRepository.getListing(slug, id);
+    listing = await publicSiteRepository.getListing(slug, extractListingId(id));
   } catch {
     notFound();
   }
