@@ -32,9 +32,7 @@ export function HeroSection({ profile, firstListing, onSearch, cfg }: HeroSectio
   };
 
   return (
-    <section id="home" className="relative overflow-hidden">
-      <div className="pointer-events-none absolute left-1/2 top-[-160px] h-[520px] w-[520px] -translate-x-1/2 rounded-full bg-amber-200/30 blur-3xl" />
-
+    <section id="home" className="relative overflow-hidden bg-white">
       <div className="relative mx-auto grid w-[min(100%-40px,1280px)] items-center gap-12 py-16 lg:grid-cols-[1.05fr_0.95fr] lg:py-24">
         <div>
           <div className="inline-flex rounded-full border border-slate-200 bg-white/70 px-4 py-2 text-sm text-slate-700 shadow-sm">

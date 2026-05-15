@@ -14,7 +14,7 @@ export function AgentsSection({ slug }: AgentsSectionProps): React.ReactElement 
     <section id="agents" className="py-14">
       <div className="mx-auto w-[min(100%-40px,1280px)]">
         <div className="mx-auto mb-8 max-w-3xl text-center">
-          <span className="text-sm font-black uppercase tracking-[0.16em] text-amber-700">
+          <span className="text-sm font-black uppercase tracking-[0.16em]" style={{ color: "var(--accent)" }}>
             Expert agents
           </span>
           <h2 className="mx-auto mt-3 text-4xl font-black tracking-tight text-slate-950 md:text-5xl">
