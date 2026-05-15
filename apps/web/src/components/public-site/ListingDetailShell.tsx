@@ -1,9 +1,9 @@
 "use client";
 
 import Link from "next/link";
-import { BedDouble, Bath, Square, Building2 } from "lucide-react";
+import { useState } from "react";
+import { ArrowLeft, BedDouble, Bath, Square, Building2, MapPin } from "lucide-react";
 import type { PublicListingDetail } from "@/lib/types/public-site";
-import { ListingGallery } from "./ListingGallery";
 import { AgentCard } from "./AgentCard";
 import { ContactForm } from "./ContactForm";
 import { formatAed } from "@/lib/utils/format-currency";
@@ -25,12 +25,15 @@ interface StatTileProps {
   label: string;
 }
 
+/** Horizontal stat tile: [icon] value / label */
 function StatTile({ icon: Icon, value, label }: StatTileProps): React.ReactElement {
   return (
-    <div className="flex flex-col items-center gap-1 rounded-xl border border-slate-100 bg-slate-50 px-4 py-3 text-center">
-      <Icon className="h-4 w-4 text-slate-400" />
-      <p className="text-lg font-black text-slate-950 leading-none">{value}</p>
-      <p className="text-xs text-slate-500">{label}</p>
+    <div className="flex items-center gap-3 rounded-xl border border-slate-100 bg-slate-50 px-4 py-3">
+      <Icon className="h-5 w-5 shrink-0 text-slate-400" />
+      <div className="min-w-0 leading-tight">
+        <p className="truncate text-base font-black capitalize text-slate-950">{value}</p>
+        <p className="text-[11px] uppercase tracking-wide text-slate-500">{label}</p>
+      </div>
     </div>
   );
 }
@@ -39,145 +42,202 @@ export function ListingDetailShell({ listing, slug }: ListingDetailShellProps): 
   const amenities = Array.isArray(listing.amenities)
     ? listing.amenities.filter((a): a is string => typeof a === "string")
     : [];
+  const urls = listing.media_urls;
+  const [activeImage, setActiveImage] = useState(0);
+
+  const statCount =
+    (listing.beds != null ? 1 : 0) + (listing.baths != null ? 1 : 0) + (listing.area_sqft != null ? 1 : 0) + 1;
+  const gridCols = statCount >= 4 ? "sm:grid-cols-4" : statCount === 3 ? "sm:grid-cols-3" : "sm:grid-cols-2";
 
   return (
-    <div className="bg-white min-h-screen">
-      {/* Preview banner — shown only when listing is not active */}
+    <div className="min-h-screen bg-white">
       {listing.status !== "active" && (
-        <div className="bg-amber-50 border-b border-amber-200 px-4 py-2.5 text-center text-sm text-amber-900">
-          Preview mode &mdash; this listing is in{" "}
-          <strong>{listing.status.replace(/_/g, " ")}</strong> state and is not
-          visible on the public site listing index.
+        <div className="border-b border-amber-200 bg-amber-50 px-4 py-2.5 text-center text-sm text-amber-900">
+          Preview mode — this listing is in <strong>{listing.status.replace(/_/g, " ")}</strong> state and is not visible
+          on the public listings index.
         </div>
       )}
 
-      {/* Sticky breadcrumb */}
-      <div className="sticky top-[61px] z-10 border-b border-slate-200/60 bg-white/90 backdrop-blur-md">
-        <div className="mx-auto w-[min(100%-40px,1280px)] py-2.5">
-          <nav className="flex items-center gap-2 text-xs text-slate-400">
-            <Link href={`/p/${slug}`} className="hover:text-slate-700 transition-colors font-medium">
-              All Properties
-            </Link>
-            <span>/</span>
-            <span className="truncate text-slate-700 font-medium max-w-xs">{listing.title}</span>
-          </nav>
+      {/* Banner + overlaid summary widget */}
+      <div className="relative">
+        <div className="relative h-[420px] overflow-hidden bg-slate-900">
+          {urls.length > 0 ? (
+            <img
+              src={urls[activeImage]}
+              alt={listing.title}
+              className="absolute inset-0 h-full w-full object-cover"
+            />
+          ) : (
+            <div
+              className="absolute inset-0"
+              style={{
+                background: "linear-gradient(135deg, hsl(var(--primary)) 0%, hsl(var(--primary) / 0.7) 50%, #111827 100%)",
+              }}
+            />
+          )}
+          <div className="pointer-events-none absolute inset-0 bg-gradient-to-t from-black/70 via-black/30 to-black/10" />
+
+          {/* Back link */}
+          <Link
+            href={`/p/${slug}`}
+            className="absolute left-4 top-4 z-10 inline-flex items-center gap-1.5 text-sm font-medium text-white/85 transition hover:text-white"
+          >
+            <ArrowLeft className="h-4 w-4" /> Back to listings
+          </Link>
+
+          {/* Title block */}
+          <div className="absolute bottom-6 left-6 right-6 z-10 lg:right-[380px]">
+            <div className="flex flex-wrap items-center gap-2 mb-2">
+              <span className="inline-flex items-center rounded-full bg-white/95 px-3 py-1 text-xs font-semibold text-slate-900 shadow-sm backdrop-blur-sm">
+                {purposeLabel(listing.purpose)}
+              </span>
+              <span className="inline-flex items-center rounded-full bg-white/10 px-3 py-1 text-xs font-semibold capitalize text-white ring-1 ring-white/20 backdrop-blur-sm">
+                {listing.property_type.replace(/_/g, " ")}
+              </span>
+            </div>
+            <h1 className="text-2xl font-bold leading-tight text-white md:text-3xl">{listing.title}</h1>
+            {listing.address && (
+              <p className="mt-1 inline-flex items-center gap-1.5 text-sm text-white/80">
+                <MapPin className="h-3.5 w-3.5" /> {listing.address}
+              </p>
+            )}
+            {listing.short_description && (
+              <p className="mt-2 line-clamp-2 max-w-2xl text-sm text-white/80">{listing.short_description}</p>
+            )}
+          </div>
+
+          {/* Side widget — desktop only */}
+          <div className="absolute right-4 top-4 z-10 hidden w-[340px] rounded-2xl bg-white/95 p-5 shadow-lg backdrop-blur-sm lg:block">
+            <p className="text-[11px] uppercase tracking-wide text-slate-400">Price</p>
+            <p className="text-2xl font-black text-slate-950">{formatAed(listing.price)}</p>
+            <div className="my-4 h-px bg-slate-100" />
+            {listing.agent ? (
+              <AgentCardCompact agent={listing.agent} />
+            ) : (
+              <ContactForm slug={slug} listingId={listing.id} compact />
+            )}
+          </div>
         </div>
+
+        {/* Thumbnail strip below banner */}
+        {urls.length > 1 && (
+          <div className="flex gap-3 overflow-x-auto px-6 py-4">
+            {urls.map((url, i) => (
+              <button
+                key={i}
+                onClick={() => setActiveImage(i)}
+                className={`relative h-20 w-28 shrink-0 overflow-hidden rounded-xl border-2 transition-all ${
+                  i === activeImage
+                    ? "border-slate-950 ring-2 ring-slate-200"
+                    : "border-slate-200 opacity-70 hover:opacity-100"
+                }`}
+              >
+                <img src={url} alt={`${listing.title} ${i + 1}`} className="absolute inset-0 h-full w-full object-cover" />
+              </button>
+            ))}
+          </div>
+        )}
       </div>
 
-      <div className="mx-auto w-[min(100%-40px,1280px)] py-8">
-        {/* 1. Title + tag chips */}
-        <div className="mb-6">
-          <h1 className="text-4xl font-black leading-tight tracking-tight text-slate-950 md:text-5xl">
-            {listing.title}
-          </h1>
-          <div className="mt-3 flex flex-wrap items-center gap-2">
-            <span className="rounded-full border border-amber-200 bg-amber-100 px-3 py-1 text-xs font-bold text-amber-800">
-              {purposeLabel(listing.purpose)}
-            </span>
-            <span className="rounded-full border border-slate-200 bg-white px-3 py-1 text-xs font-bold text-slate-600 capitalize">
-              {listing.property_type.replace(/_/g, " ")}
-            </span>
-          </div>
-          {listing.address && (
-            <p className="mt-3 text-sm text-slate-500">{listing.address}</p>
-          )}
-
-          {/* 2. Short description — prominent, below title */}
-          {listing.short_description && (
-            <p className="mt-3 max-w-2xl text-lg text-slate-700 leading-snug">
-              {listing.short_description}
-            </p>
-          )}
+      {/* Breadcrumb */}
+      <header className="border-b border-slate-100 px-6 py-3">
+        <div className="mx-auto w-[min(100%-0px,1280px)] flex items-center gap-2 text-sm text-slate-500">
+          <Link href={`/p/${slug}`} className="hover:text-slate-900">
+            Listings
+          </Link>
+          <span>/</span>
+          <span className="truncate font-medium text-slate-900">{listing.title}</span>
         </div>
+      </header>
 
-        {/* 3. Gallery */}
-        <ListingGallery urls={listing.media_urls} title={listing.title} />
-
-        {/* 2-column layout */}
-        <div className="mt-8 grid grid-cols-1 gap-8 lg:grid-cols-[1fr_360px]">
-          {/* LEFT: details */}
+      {/* Main content */}
+      <div className="mx-auto w-[min(100%-40px,1280px)] py-8">
+        <div className="grid grid-cols-1 gap-8 lg:grid-cols-[1fr_360px]">
+          {/* LEFT */}
           <div className="space-y-6">
-            {/* 4a. Price — mobile only (desktop in right col) */}
-            <div className="lg:hidden rounded-2xl border border-slate-200 bg-white p-5 shadow-card">
-              <p className="text-3xl font-black text-slate-950">{formatAed(listing.price)}</p>
-            </div>
-
-            {/* 4b. Stat tiles */}
-            <div className="grid grid-cols-2 gap-3 sm:grid-cols-4">
-              {listing.beds != null && (
-                <StatTile icon={BedDouble} value={listing.beds} label="Bedrooms" />
-              )}
-              {listing.baths != null && (
-                <StatTile icon={Bath} value={listing.baths} label="Bathrooms" />
-              )}
+            {/* Stat tiles — horizontal */}
+            <div className={`grid grid-cols-2 gap-3 ${gridCols}`}>
+              {listing.beds != null && <StatTile icon={BedDouble} value={listing.beds} label="Bedrooms" />}
+              {listing.baths != null && <StatTile icon={Bath} value={listing.baths} label="Bathrooms" />}
               {listing.area_sqft != null && (
-                <StatTile
-                  icon={Square}
-                  value={`${listing.area_sqft.toLocaleString()} sqft`}
-                  label="Area"
-                />
+                <StatTile icon={Square} value={`${listing.area_sqft.toLocaleString()} sqft`} label="Area" />
               )}
-              <StatTile
-                icon={Building2}
-                value={listing.property_type.replace(/_/g, " ")}
-                label="Type"
-              />
+              <StatTile icon={Building2} value={listing.property_type.replace(/_/g, " ")} label="Type" />
             </div>
 
-            {/* 5. Full description */}
+            {/* Mobile price card */}
+            <div className="rounded-2xl border border-slate-100 bg-slate-50 p-5 lg:hidden">
+              <p className="text-[11px] uppercase tracking-wide text-slate-400">Price</p>
+              <p className="mt-1 text-3xl font-black text-slate-950">{formatAed(listing.price)}</p>
+            </div>
+
+            {/* Description */}
             {listing.description && (
-              <div className="rounded-2xl bg-white p-6 shadow-card">
-                <h2 className="text-base font-black text-slate-950">Description</h2>
-                <p className="mt-3 whitespace-pre-wrap text-sm leading-relaxed text-slate-500">
-                  {listing.description}
-                </p>
-              </div>
+              <section className="rounded-xl bg-slate-50 p-6">
+                <h2 className="mb-3 text-base font-bold text-slate-950">About this property</h2>
+                <p className="whitespace-pre-wrap text-sm leading-relaxed text-slate-600">{listing.description}</p>
+              </section>
             )}
 
             {/* Amenities */}
             {amenities.length > 0 && (
-              <div className="rounded-2xl bg-white p-6 shadow-card">
-                <h2 className="text-base font-black text-slate-950">Amenities</h2>
-                <div className="mt-3 flex flex-wrap gap-2">
+              <section className="rounded-xl bg-slate-50 p-6">
+                <h2 className="mb-3 text-base font-bold text-slate-950">Amenities</h2>
+                <div className="flex flex-wrap gap-2">
                   {amenities.map((a) => (
                     <span
                       key={a}
-                      className="rounded-full border border-slate-200 bg-slate-50 px-3 py-1 text-xs font-semibold text-slate-700"
+                      className="rounded-full border border-slate-200 bg-white px-3 py-1 text-xs font-semibold text-slate-700"
                     >
                       {a}
                     </span>
                   ))}
                 </div>
-              </div>
+              </section>
             )}
 
-            {/* 6. Mobile: agent + contact form */}
+            {/* Mobile: agent + contact form */}
             <div className="space-y-4 lg:hidden">
               {listing.agent && <AgentCard agent={listing.agent} />}
               <ContactForm slug={slug} listingId={listing.id} compact />
             </div>
           </div>
 
-          {/* RIGHT: price card + agent + form (desktop) */}
+          {/* RIGHT — sticky agent + contact (desktop) */}
           <div className="hidden lg:block">
-            <div className="sticky top-[110px] space-y-4">
-              {/* Price card */}
-              <div className="rounded-2xl border border-slate-200 bg-white p-6 shadow-card">
-                <p className="text-3xl font-black text-slate-950">{formatAed(listing.price)}</p>
-                <div className="mt-2 flex flex-wrap gap-2">
-                  <span className="rounded-full border border-amber-200 bg-amber-100 px-3 py-1 text-xs font-bold text-amber-800">
-                    {purposeLabel(listing.purpose)}
-                  </span>
-                </div>
-                {listing.address && (
-                  <p className="mt-3 text-xs text-slate-400">{listing.address}</p>
-                )}
-              </div>
+            <div className="sticky top-24 space-y-4">
               {listing.agent && <AgentCard agent={listing.agent} />}
               <ContactForm slug={slug} listingId={listing.id} compact />
             </div>
           </div>
         </div>
+      </div>
+    </div>
+  );
+}
+
+/** Compact agent block for the overlaid banner widget */
+function AgentCardCompact({ agent }: { agent: NonNullable<PublicListingDetail["agent"]> }): React.ReactElement {
+  const initials = agent.full_name
+    .split(" ")
+    .map((n) => n[0])
+    .slice(0, 2)
+    .join("")
+    .toUpperCase();
+  return (
+    <div className="flex items-center gap-3">
+      <div className="h-12 w-12 overflow-hidden rounded-full ring-2 ring-slate-100">
+        {agent.photo_url ? (
+          <img src={agent.photo_url} alt={agent.full_name} className="h-full w-full object-cover" />
+        ) : (
+          <div className="flex h-full w-full items-center justify-center bg-slate-200 text-sm font-black text-slate-600">
+            {initials}
+          </div>
+        )}
+      </div>
+      <div className="min-w-0 flex-1">
+        <p className="truncate text-sm font-bold text-slate-950">{agent.full_name}</p>
+        <p className="truncate text-xs text-slate-500">{agent.license_id ? `License: ${agent.license_id}` : "Property Advisor"}</p>
       </div>
     </div>
   );

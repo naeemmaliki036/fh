@@ -3,13 +3,9 @@
 /**
  * Returns location data in the same shape as the legacy TS constants
  * (CITIES_BY_COUNTRY / AREAS_BY_CITY), sourced from the API.
- *
- * Falls back to the TS constants while the API call is in-flight so
- * forms are never broken on first load.
  */
 
 import { useMemo } from "react";
-import { CITIES_BY_COUNTRY, AREAS_BY_CITY } from "@/lib/constants/locations";
 import { useLocationTree } from "./queries/useLocations";
 import type { CountryTree } from "@/lib/types/location";
 
@@ -47,7 +43,7 @@ export function useLocationData(): LocationData {
 
   const maps = useMemo(() => {
     if (!tree || tree.length === 0) {
-      return { citiesByCountry: CITIES_BY_COUNTRY, areasByCity: AREAS_BY_CITY };
+      return { citiesByCountry: {}, areasByCity: {} };
     }
     return treeToMaps(tree);
   }, [tree]);
