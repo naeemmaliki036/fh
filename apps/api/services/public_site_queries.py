@@ -6,10 +6,7 @@ All functions receive an AsyncSession and return plain dicts or None.
 
 from uuid import UUID
 
-import json
-
-from sqlalchemy import cast, func, select, text
-from sqlalchemy.dialects.postgresql import JSONB
+from sqlalchemy import func, select, text
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from apps.api.models.agent import Agent
@@ -117,9 +114,7 @@ async def fetch_listing_list(  # noqa: PLR0913
     if property_type is not None:
         stmt = stmt.where(Property.property_type == property_type)
     if amenities:
-        stmt = stmt.where(
-            Property.amenities.op("@>")(cast(json.dumps(amenities), JSONB))
-        )
+        stmt = stmt.where(Property.amenities.contains(amenities))
     if furnishing_status:
         stmt = stmt.where(Property.furnishing_status == furnishing_status)
     if completion_status:

@@ -6,11 +6,6 @@ migration-0039 structured column filters to a Property SELECT statement.
 
 from __future__ import annotations
 
-import json
-
-from sqlalchemy import cast
-from sqlalchemy.dialects.postgresql import JSONB
-
 from apps.api.models.property import Property
 
 
@@ -37,9 +32,7 @@ def apply_property_attribute_filters(
     must be present in the property's amenities array.
     """
     if amenities:
-        stmt = stmt.where(
-            Property.amenities.op("@>")(cast(json.dumps(amenities), JSONB))
-        )
+        stmt = stmt.where(Property.amenities.contains(amenities))
     if furnishing_status:
         stmt = stmt.where(Property.furnishing_status == furnishing_status)
     if completion_status:
