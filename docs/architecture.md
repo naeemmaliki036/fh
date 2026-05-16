@@ -72,7 +72,7 @@ frontend. Current value:
 ```
 ["https://af-staging-portal.up.railway.app",
  "https://af-staging-marketplace.up.railway.app",
- "https://af-staging.up.railway.app"]
+ "https://af-staging-public.up.railway.app"]
 ```
 
 ### 4. Shared TypeScript packages
@@ -180,7 +180,7 @@ scoping rules), not by deploying separate APIs.
 |---|---|
 | **portal** (`af-staging-portal`) | `/auth/*`, `/tenants/*`, `/properties/*`, `/listings/*`, `/deals/*`, `/agents/*`, `/customers/*`, `/leads/*` — **JWT required**, every query scoped to the user's `tenant_id`. Also hits `/public/sites/{slug}/*` for its own public tenant pages at `/p/{slug}`. |
 | **marketplace** (`af-staging-marketplace`) | `/marketplace/listings`, `/marketplace/agencies/*`, `/marketplace/stats`, `/marketplace/featured` — **no auth**, scoped to tenants where `aggregator_enabled = true AND status = 'active' AND public_site_enabled = true`. |
-| **aqarflow-website** (`af-staging`) | `/marketing/demo-request`, `/marketing/waitlist` — **no auth**. Today this is the same Next.js bundle as the portal, so it also has access to the JWT routes, but the public pages don't call them. |
+| **aqarflow-website** (`af-staging-public`) | `/marketing/demo-request`, `/marketing/waitlist` — **no auth**. Today this is the same Next.js bundle as the portal, so it also has access to the JWT routes, but the public pages don't call them. |
 
 ### Why this is a deliberate choice (not laziness)
 
