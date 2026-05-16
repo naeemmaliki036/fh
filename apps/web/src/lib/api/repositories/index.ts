@@ -23,3 +23,5 @@ export { ListingDocumentRepository, listingDocumentRepository } from "./listing-
 export { AuditLogRepository, auditLogRepository } from "./audit-log.repository";
 export { OffMarketReasonRepository, offMarketReasonRepository } from "./off-market-reason.repository";
 export { locationsRepository, adminLocationsRepository } from "./locations.repository";
+export { privateDocumentRepository } from "./private-document.repository";
+export { listingInterestedCustomersRepository } from "./listing-interested-customers.repository";

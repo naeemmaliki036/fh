@@ -44,6 +44,10 @@ class DocumentRequestService(BaseService):
     # Create
     # ------------------------------------------------------------------
 
+    def _validate_expires_in_days(self, expires_in_days: int) -> None:
+        if expires_in_days < 7 or expires_in_days > 14:
+            raise bad_request("expires_in_days must be between 7 and 14")
+
     async def create(
         self, tenant_id: UUID, current_user: dict,
         customer_id: UUID, lead_id: UUID | None, deal_id: UUID | None,
@@ -54,6 +58,7 @@ class DocumentRequestService(BaseService):
     ) -> tuple[DocumentRequest, list[DocumentRequestItem], str]:
         self._require_role(current_user["role"])
         await self._set_rls(tenant_id)
+        self._validate_expires_in_days(expires_in_days)
 
         code, code_hash = self._gen_code()
         token = secrets.token_urlsafe(32)
@@ -186,4 +191,55 @@ class DocumentRequestService(BaseService):
             entity_type="document_request", entity_id=dr.id,
             after={"event": "code_regenerated"},
         )
+        return dr, code
+
+    # ------------------------------------------------------------------
+    # Reactivate (single-use link re-open)
+    # ------------------------------------------------------------------
+
+    _REACTIVATE_ROLES = _ALLOWED_ROLES  # same as create/cancel
+
+    async def reactivate(
+        self,
+        request_id: UUID,
+        tenant_id: UUID,
+        current_user: dict,
+        expires_in_days: int = 7,
+    ) -> tuple[DocumentRequest, str]:
+        self._require_role(current_user["role"])
+        await self._set_rls(tenant_id)
+        self._validate_expires_in_days(expires_in_days)
+
+        data = await self.get_request(request_id, tenant_id)
+        dr = data["request"]
+
+        # Must be complete OR have a closed_at to be reactivatable
+        if dr.status != DocumentRequestStatus.COMPLETE and dr.closed_at is None:
+            raise bad_request(
+                "Only completed or closed document requests can be reactivated"
+            )
+
+        code, code_hash = self._gen_code()
+        dr.status = DocumentRequestStatus.PENDING
+        dr.closed_at = None
+        dr.verification_code_hash = code_hash
+        dr.verification_attempts = 0
+        dr.verified_at = None
+        dr.reactivated_count = (dr.reactivated_count or 0) + 1
+        dr.expires_at = datetime.now(UTC).replace(tzinfo=None) + timedelta(days=expires_in_days)
+        await self.session.flush()
+
+        await self._audit.record(
+            AuditAction.DOCUMENT_REQUEST_REACTIVATED,
+            tenant_id=tenant_id,
+            actor_user_id=UUID(current_user["id"]),
+            entity_type="document_request",
+            entity_id=dr.id,
+            after={
+                "event": "reactivated",
+                "reactivated_count": dr.reactivated_count,
+                "expires_in_days": expires_in_days,
+            },
+        )
+        await self.session.refresh(dr)
         return dr, code

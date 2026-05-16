@@ -52,7 +52,7 @@ export function DocRequestForm({ isPending, onSubmit, onCancel }: DocRequestForm
       title: title.trim(),
       instructions: instructions.trim() || null,
       items,
-      expires_in_days: Math.max(1, Math.min(90, parseInt(expiresInDays, 10) || 7)),
+      expires_in_days: Math.max(7, Math.min(14, parseInt(expiresInDays, 10) || 7)),
     });
   };
 
@@ -75,9 +75,19 @@ export function DocRequestForm({ isPending, onSubmit, onCancel }: DocRequestForm
             placeholder="Optional instructions for the customer" />
         </div>
         <div className="space-y-1.5">
-          <Label>Expires in (days)</Label>
-          <Input type="number" min={1} max={90} value={expiresInDays} onChange={e => setExpiresInDays(e.target.value)} />
-          <p className="text-xs text-muted-foreground mt-1">Max 90 days</p>
+          <Label>Link expires in (days): <span className="font-semibold">{expiresInDays}</span></Label>
+          <input
+            type="range"
+            min={7}
+            max={14}
+            step={1}
+            value={expiresInDays}
+            onChange={e => setExpiresInDays(e.target.value)}
+            className="w-full accent-primary"
+          />
+          <p className="text-xs text-muted-foreground">
+            Link will expire on <strong>{new Date(Date.now() + parseInt(expiresInDays, 10) * 86400_000).toLocaleDateString("en-AE", { year: "numeric", month: "short", day: "2-digit" })}</strong>
+          </p>
         </div>
       </div>
 

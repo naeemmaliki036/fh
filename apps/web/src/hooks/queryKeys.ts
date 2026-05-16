@@ -34,6 +34,14 @@ export const queryKeys = {
     detail: (id: string) => ["customers", id] as const,
     documents: (id: string) => ["customers", id, "documents"] as const,
   },
+  privateDocuments: {
+    all: ["private-documents"] as const,
+    pending: (params?: Record<string, unknown>) => ["private-documents", "pending", params] as const,
+  },
+  listingInterestedCustomers: {
+    all: ["listing-interested-customers"] as const,
+    list: (listingId: string) => ["listing-interested-customers", listingId] as const,
+  },
   properties: {
     all: ["properties"] as const,
     list: (params?: Record<string, unknown>) => ["properties", "list", params] as const,
@@ -48,6 +56,7 @@ export const queryKeys = {
     priceHistory: (id: string) => ["listings", id, "price-history"] as const,
     documents: (id: string) => ["listings", id, "documents"] as const,
     pendingReviews: (reviewerId: string) => ["listings", "pending-reviews", reviewerId] as const,
+    interestedCustomers: (id: string) => ["listings", id, "interested-customers"] as const,
   },
   auditLogs: {
     forEntity: (entityType: string, entityId: string) =>

@@ -12,6 +12,8 @@ from apps.api.schemas.document_request import (
     DocumentRequestCreateResponse,
     DocumentRequestListResponse,
     DocumentRequestResponse,
+    ReactivateDocumentRequest,
+    ReactivateDocumentResponse,
     RegenerateCodeResponse,
 )
 from apps.api.services.document_request_service import DocumentRequestService
@@ -110,3 +112,29 @@ async def regenerate_code(
 ) -> RegenerateCodeResponse:
     _, code = await svc.regenerate_code(request_id, tenant_id, current_user)
     return RegenerateCodeResponse(verification_code=code)
+
+
+@router.post("/{request_id}/reactivate", response_model=ReactivateDocumentResponse)
+async def reactivate_document_request(
+    request_id: UUID,
+    body: ReactivateDocumentRequest,
+    current_user: CurrentUser,
+    tenant_id: TenantContext,
+    svc: DocumentRequestService = Depends(_svc),
+) -> ReactivateDocumentResponse:
+    """Re-open a completed/closed document request link.
+
+    Clears closed_at, resets status to 'pending', increments reactivated_count.
+    Returns a new plaintext verification code — share it with the customer.
+    """
+    dr, code = await svc.reactivate(
+        request_id, tenant_id, current_user,
+        expires_in_days=body.expires_in_days,
+    )
+    return ReactivateDocumentResponse(
+        id=dr.id,
+        status=dr.status,
+        reactivated_count=dr.reactivated_count,
+        expires_at=dr.expires_at,
+        verification_code=code,
+    )

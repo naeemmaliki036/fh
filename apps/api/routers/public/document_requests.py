@@ -4,9 +4,10 @@ No JWT, no TenantContext, no CurrentUser on anonymous endpoints.
 Verified endpoints use get_verified_doc_request dependency instead.
 """
 
+from datetime import UTC, datetime
 from uuid import UUID
 
-from fastapi import APIRouter, Depends, File, Header, UploadFile
+from fastapi import APIRouter, Depends, File, Header, HTTPException, UploadFile
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from apps.api.dependencies import DbSession, get_db
@@ -27,6 +28,26 @@ def _svc(db: DbSession) -> PublicDocRequestService:
     return PublicDocRequestService(db)
 
 
+def _check_link_usable(dr: "DocumentRequest") -> None:
+    """Raise 410 if the link is used (closed_at set) or expired."""
+    from apps.api.models.enums import DocumentRequestStatus
+
+    if dr.closed_at is not None:
+        raise HTTPException(
+            status_code=410,
+            detail="This upload link has been used. Contact your agent to reactivate it.",
+        )
+    now = datetime.now(UTC)
+    expires = dr.expires_at if dr.expires_at.tzinfo else dr.expires_at.replace(tzinfo=UTC)
+    if expires < now:
+        raise HTTPException(
+            status_code=410,
+            detail="This upload link has expired. Contact your agent to get a new link.",
+        )
+    if dr.status in {DocumentRequestStatus.CANCELED, DocumentRequestStatus.EXPIRED}:
+        raise HTTPException(status_code=410, detail="This document request is no longer active")
+
+
 async def _get_verified_doc_request(
     token: str,
     authorization: str | None = Header(default=None),
@@ -35,9 +56,9 @@ async def _get_verified_doc_request(
     """Load + validate a doc-request JWT for verified endpoints.
 
     Raises 401 if Authorization header is missing/invalid.
-    Raises 410 if request is expired or canceled.
+    Raises 410 if request is expired, canceled, or already used.
     """
-    from fastapi import HTTPException, status
+    from fastapi import status
     from jose import JWTError
 
     from apps.api.auth import decode_doc_request_token
@@ -47,10 +68,7 @@ async def _get_verified_doc_request(
     data = await svc.get_by_token(token)
     dr = data["request"]
 
-    from apps.api.models.enums import DocumentRequestStatus
-
-    if dr.status in {DocumentRequestStatus.CANCELED, DocumentRequestStatus.EXPIRED}:
-        raise HTTPException(status_code=410, detail="This document request is no longer active")
+    _check_link_usable(dr)
 
     if not authorization or not authorization.startswith("Bearer "):
         raise HTTPException(
@@ -94,6 +112,9 @@ def _build_public_response(data: dict) -> PublicDocumentRequestResponse:
             )
             for it in items
         ],
+        customer_name=data.get("customer_name"),
+        agent_name=data.get("agent_name"),
+        agent_phone=data.get("agent_phone"),
     )
 
 
@@ -103,7 +124,10 @@ async def get_public_request(
     authorization: str | None = Header(default=None),
     svc: PublicDocRequestService = Depends(_svc),
 ) -> PublicDocumentRequestResponse:
-    """Anonymous or verified GET — returns verified=true if JWT is valid."""
+    """Anonymous or verified GET — returns verified=true if JWT is valid.
+
+    Returns 410 if link is already used (closed_at set) or expired.
+    """
     from jose import JWTError
 
     from apps.api.auth import decode_doc_request_token
@@ -111,6 +135,10 @@ async def get_public_request(
     verified = False
     data = await svc.get_by_token(token, verified=False)
     dr = data["request"]
+
+    # Enforce single-use and expiry at the GET level so the frontend can
+    # render the correct 410 screen immediately on load.
+    _check_link_usable(dr)
 
     if authorization and authorization.startswith("Bearer "):
         try:

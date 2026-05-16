@@ -6,6 +6,7 @@ import type {
   CustomerUpdateRequest,
   CustomerListResponse,
   CustomerListParams,
+  CustomerDetail,
 } from "@/lib/types/customer";
 import { CustomerConflictError } from "@/lib/types/customer";
 import type {
@@ -67,6 +68,11 @@ export class CustomerRepository extends BaseRepository<
 
   async deleteDocument(id: string, docId: string): Promise<void> {
     await this.client.delete(`${this.basePath}/${id}/documents/${docId}`);
+  }
+
+  async getDetail(id: string): Promise<CustomerDetail> {
+    const res = await this.client.get<CustomerDetail>(`${this.basePath}/${id}`);
+    return res.data;
   }
 }
 

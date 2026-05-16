@@ -27,7 +27,7 @@ RLS note (see migration 0007):
 import uuid
 from datetime import datetime
 
-from sqlalchemy import DateTime, Enum, ForeignKey, SmallInteger, String, Text
+from sqlalchemy import DateTime, Enum, ForeignKey, Integer, SmallInteger, String, Text
 from sqlalchemy.dialects.postgresql import UUID
 from sqlalchemy.orm import Mapped, mapped_column
 
@@ -110,3 +110,19 @@ class DocumentRequest(Base, UUIDMixin, TimestampMixin, TenantMixin):
     )
 
     agent_note: Mapped[str | None] = mapped_column(Text, nullable=True)
+
+    # ------------------------------------------------------------------
+    # Single-use / reactivation columns (added in migration 0037)
+    # ------------------------------------------------------------------
+    # Set when the customer successfully completes the upload flow.
+    # While NOT NULL, the public upload route returns 410 Gone.
+    # Cleared (set back to NULL) when an agent/admin reactivates the request.
+    closed_at: Mapped[datetime | None] = mapped_column(
+        DateTime(timezone=True), nullable=True
+    )
+
+    # Incremented each time an agent/admin reactivates a closed request.
+    # Provides an audit trail for how many times the link was recycled.
+    reactivated_count: Mapped[int] = mapped_column(
+        Integer, nullable=False, default=0, server_default="0"
+    )

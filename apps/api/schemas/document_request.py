@@ -24,7 +24,7 @@ class DocumentRequestCreate(BaseModel):
     instructions: str | None = None
     agent_note: str | None = None
     items: list[DocumentRequestItemCreate] = Field(min_length=1)
-    expires_in_days: int = Field(default=7, ge=1, le=90)
+    expires_in_days: int = Field(default=7, ge=7, le=14)
 
 
 class DocumentRequestItemResponse(BaseModel):
@@ -56,6 +56,9 @@ class DocumentRequestResponse(BaseModel):
     verified_at: datetime | None = None
     verification_attempts: int
     created_by_user_id: uuid.UUID
+    # Single-use / reactivation columns (migration 0037)
+    closed_at: datetime | None = None
+    reactivated_count: int = 0
     items: list[DocumentRequestItemResponse] = []
     items_count: int = 0
     uploaded_count: int = 0
@@ -77,3 +80,18 @@ class DocumentRequestListResponse(BaseModel):
 class RegenerateCodeResponse(BaseModel):
     verification_code: str
     message: str = "Verification code regenerated. Share it with the customer."
+
+
+class ReactivateDocumentRequest(BaseModel):
+    expires_in_days: int = 7  # validated at service layer: 7-14
+
+
+class ReactivateDocumentResponse(BaseModel):
+    model_config = ConfigDict(from_attributes=True)
+
+    id: uuid.UUID
+    status: DocumentRequestStatus
+    reactivated_count: int
+    expires_at: datetime
+    verification_code: str
+    message: str = "Document request reactivated. Share the new code with the customer."

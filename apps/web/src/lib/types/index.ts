@@ -78,6 +78,19 @@ export type {
   CustomerUpdateRequest,
   CustomerListResponse,
   CustomerListParams,
+  PendingDocumentStatus,
+  PendingDocument,
+  DealHistoryItem,
+  InterestedListing,
+  CustomerDetail,
+  ListingInterestedCustomer,
+  ListingInterestedCustomersResponse,
+  LinkCustomerToListingRequest,
+  PendingDocumentQueueItem,
+  PendingDocumentQueueResponse,
+  PendingDocumentQueueParams,
+  RejectDocumentRequest,
+  ReactivateDocumentRequestBody,
 } from "./customer";
 export { CustomerConflictError } from "./customer";
 

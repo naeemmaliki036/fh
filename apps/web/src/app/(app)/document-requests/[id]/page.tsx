@@ -3,16 +3,18 @@
 import { use, useState } from "react";
 import Link from "next/link";
 import { useSearchParams } from "next/navigation";
-import { ArrowLeft, CheckCircle, Circle } from "lucide-react";
+import { ArrowLeft, CheckCircle, Circle, RefreshCw } from "lucide-react";
 import { useDocumentRequest } from "@/hooks/queries/useDocumentRequests";
 import {
   useCancelDocumentRequest,
   useRegenerateDocumentRequestCode,
   useReopenDocumentRequest,
+  useReactivateDocumentRequest,
 } from "@/hooks/mutations/useDocumentRequestMutations";
 import { DocRequestStatusBadge } from "@/components/atoms/DocRequestStatusBadge";
 import { KindBadge } from "@/components/atoms/KindBadge";
 import { OneTimeCodeBanner } from "@/components/molecules/OneTimeCodeBanner";
+import { ReactivateDocRequestDialog } from "@/components/molecules/ReactivateDocRequestDialog";
 import { Button } from "@/components/ui/button";
 import {
   Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter,
@@ -33,7 +35,9 @@ export default function DocumentRequestDetailPage({ params }: PageProps): React.
   const { mutate: cancel, isPending: canceling } = useCancelDocumentRequest();
   const { mutate: regenerate, isPending: regenerating, data: regenData } = useRegenerateDocumentRequestCode();
   const { mutate: reopen, isPending: reopening } = useReopenDocumentRequest();
+  const { mutate: reactivate, isPending: reactivating } = useReactivateDocumentRequest();
   const [showCancelDialog, setShowCancelDialog] = useState(false);
+  const [showReactivateDialog, setShowReactivateDialog] = useState(false);
 
   // One-time create data from query cache (set by mutation before redirect)
   const cached = qc.getQueryData<DocumentRequestCreateResponse>(queryKeys.docRequests.detail(id));
@@ -121,12 +125,33 @@ export default function DocumentRequestDetailPage({ params }: PageProps): React.
       )}
 
       {request.status === "complete" && (
+        <div className="flex gap-2">
+          <Button
+            variant="outline"
+            disabled={reopening}
+            onClick={() => reopen(request.id)}
+          >
+            {reopening ? "Reopening…" : "Re-open for more documents"}
+          </Button>
+          <Button
+            variant="outline"
+            disabled={reactivating}
+            onClick={() => setShowReactivateDialog(true)}
+          >
+            <RefreshCw className="h-3.5 w-3.5 mr-1.5" />
+            Reactivate link
+          </Button>
+        </div>
+      )}
+
+      {request.closed_at && request.status !== "complete" && (
         <Button
           variant="outline"
-          disabled={reopening}
-          onClick={() => reopen(request.id)}
+          disabled={reactivating}
+          onClick={() => setShowReactivateDialog(true)}
         >
-          {reopening ? "Reopening…" : "Re-open for more documents"}
+          <RefreshCw className="h-3.5 w-3.5 mr-1.5" />
+          Reactivate link
         </Button>
       )}
 
@@ -146,6 +171,16 @@ export default function DocumentRequestDetailPage({ params }: PageProps): React.
           </DialogFooter>
         </DialogContent>
       </Dialog>
+
+      <ReactivateDocRequestDialog
+        open={showReactivateDialog}
+        onOpenChange={setShowReactivateDialog}
+        isPending={reactivating}
+        onConfirm={(expiresInDays) => {
+          reactivate({ id: request.id, body: { expires_in_days: expiresInDays } });
+          setShowReactivateDialog(false);
+        }}
+      />
     </div>
   );
 }

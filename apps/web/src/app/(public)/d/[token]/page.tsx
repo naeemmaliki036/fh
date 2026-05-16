@@ -5,6 +5,7 @@ import { publicDocumentRequestRepository } from "@/lib/api/repositories";
 import { PublicVerifyForm } from "@/components/molecules/PublicVerifyForm";
 import { PublicItemCard } from "@/components/molecules/PublicItemCard";
 import { DocRequestStatusBadge } from "@/components/atoms/DocRequestStatusBadge";
+import { ExpiryBanner } from "@/components/molecules/ExpiryBanner";
 import { useQuery } from "@tanstack/react-query";
 import type { PublicDocumentRequestResponse } from "@/lib/types/public-document-request";
 
@@ -49,16 +50,11 @@ function PublicDocumentRequestInner({ params }: PageProps): React.ReactElement {
       const res = await publicDocumentRequestRepository.verify(token, code);
       setJwt(res.access_token);
     } catch (err) {
-      // axios error — extract attempts_left from response
       const axiosErr = err as { response?: { status: number; data: { detail: string; attempts_left?: number } } };
       const status = axiosErr.response?.status;
       const detail = axiosErr.response?.data?.detail ?? "Verification failed";
       const attemptsLeft = axiosErr.response?.data?.attempts_left;
-      setVerifyError({
-        message: detail,
-        attemptsLeft,
-        locked: status === 423,
-      });
+      setVerifyError({ message: detail, attemptsLeft, locked: status === 423 });
     } finally {
       setVerifying(false);
     }
@@ -72,7 +68,15 @@ function PublicDocumentRequestInner({ params }: PageProps): React.ReactElement {
     );
   }
 
-  if (error || !data) {
+  // Handle 410 Gone responses
+  if (error) {
+    const axiosErr = error as { response?: { status: number; data?: { detail?: string } } };
+    const status = axiosErr.response?.status;
+    if (status === 410) {
+      const detail = axiosErr.response?.data?.detail ?? "";
+      const isExpired = detail.toLowerCase().includes("expired");
+      return <ClosedLinkPage isExpired={isExpired} />;
+    }
     return (
       <div className="rounded-xl border bg-card p-6 text-center space-y-2">
         <p className="font-semibold">Link not found</p>
@@ -80,6 +84,8 @@ function PublicDocumentRequestInner({ params }: PageProps): React.ReactElement {
       </div>
     );
   }
+
+  if (!data) return <></>;
 
   const isTerminal = data.status === "expired" || data.status === "canceled";
   const isComplete = data.status === "complete";
@@ -94,6 +100,12 @@ function PublicDocumentRequestInner({ params }: PageProps): React.ReactElement {
             ? "This document request has expired. Contact your agent for a new link."
             : "This document request has been canceled by your agent."}
         </p>
+        {data.agent_name && (
+          <p className="text-sm text-muted-foreground">
+            Contact: <strong>{data.agent_name}</strong>
+            {data.agent_phone && <> &mdash; {data.agent_phone}</>}
+          </p>
+        )}
       </div>
     );
   }
@@ -101,7 +113,7 @@ function PublicDocumentRequestInner({ params }: PageProps): React.ReactElement {
   if (isComplete) {
     return (
       <div className="rounded-xl border bg-card p-6 text-center space-y-4">
-        <div className="text-5xl">✓</div>
+        <div className="text-5xl">&#10003;</div>
         <p className="text-xl font-semibold">You&apos;re all done!</p>
         <p className="text-sm text-muted-foreground">
           All documents have been submitted. {data.tenant_name} will review them shortly.
@@ -112,6 +124,14 @@ function PublicDocumentRequestInner({ params }: PageProps): React.ReactElement {
 
   return (
     <div className="space-y-6">
+      {/* Sticky expiry banner */}
+      <ExpiryBanner
+        customerName={data.customer_name}
+        expiresAt={data.expires_at}
+        agentName={data.agent_name}
+        agentPhone={data.agent_phone}
+      />
+
       <div className="space-y-1">
         <h1 className="text-xl font-semibold">{data.title}</h1>
         <p className="text-sm text-muted-foreground">{data.tenant_name}</p>
@@ -124,7 +144,6 @@ function PublicDocumentRequestInner({ params }: PageProps): React.ReactElement {
 
       {!data.verified || !jwt ? (
         <>
-          {/* Locked preview of items */}
           <div className="space-y-2 opacity-60 pointer-events-none">
             {data.items.map(item => (
               <PublicItemCard
@@ -137,7 +156,6 @@ function PublicDocumentRequestInner({ params }: PageProps): React.ReactElement {
               />
             ))}
           </div>
-
           <PublicVerifyForm
             tenantName={data.tenant_name}
             isPending={verifying}
@@ -159,12 +177,29 @@ function PublicDocumentRequestInner({ params }: PageProps): React.ReactElement {
               />
             ))}
           </div>
-
           <div className="text-xs text-muted-foreground text-center">
             {data.items.filter(i => i.uploaded).length}/{data.items.length} documents submitted
           </div>
         </>
       )}
+    </div>
+  );
+}
+
+function ClosedLinkPage({ isExpired }: { isExpired: boolean }): React.ReactElement {
+  return (
+    <div className="rounded-xl border bg-card p-8 text-center space-y-4 max-w-md mx-auto mt-16">
+      <div className="h-12 w-12 rounded-full bg-amber-100 flex items-center justify-center mx-auto">
+        <span className="text-2xl">{isExpired ? "⏰" : "🔒"}</span>
+      </div>
+      <h2 className="text-xl font-semibold">
+        {isExpired ? "Upload Link Expired" : "Upload Link Closed"}
+      </h2>
+      <p className="text-sm text-muted-foreground">
+        {isExpired
+          ? "This upload link has expired. Contact your agent to get a new link."
+          : "This upload link has been used. Contact your agent to reactivate it."}
+      </p>
     </div>
   );
 }

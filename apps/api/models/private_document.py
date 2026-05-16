@@ -19,13 +19,19 @@ Both rules are enforced by the service layer (backend-dev's territory).
 
 import uuid
 
-from sqlalchemy import BigInteger, Enum, ForeignKey, String, UniqueConstraint
+from datetime import datetime
+
+from sqlalchemy import BigInteger, DateTime, Enum, ForeignKey, String, Text, UniqueConstraint
 from sqlalchemy.dialects.postgresql import UUID
 from sqlalchemy.orm import Mapped, mapped_column
 
 from packages.common.db.base import Base, TenantMixin, TimestampMixin, UUIDMixin
 
-from .enums import PrivateDocumentEntityType, PrivateDocumentKind
+from .enums import (
+    PrivateDocumentApprovalStatus,
+    PrivateDocumentEntityType,
+    PrivateDocumentKind,
+)
 
 _ev = lambda x: [e.value for e in x]  # noqa: E731
 
@@ -80,3 +86,35 @@ class PrivateDocument(Base, UUIDMixin, TimestampMixin, TenantMixin):
         ForeignKey("platform_users.id", ondelete="SET NULL"),
         nullable=True,
     )
+
+    # ------------------------------------------------------------------
+    # Approval workflow columns (added in migration 0037)
+    # ------------------------------------------------------------------
+    # Default is 'approved' so existing rows and agent-uploaded docs need no
+    # backfill.  Only documents uploaded via the public doc-request route
+    # are set to 'pending' explicitly by the service layer.
+    approval_status: Mapped[PrivateDocumentApprovalStatus] = mapped_column(
+        Enum(
+            PrivateDocumentApprovalStatus,
+            name="private_document_approval_status",
+            create_type=False,
+            values_callable=_ev,
+        ),
+        nullable=False,
+        default=PrivateDocumentApprovalStatus.APPROVED,
+        server_default=PrivateDocumentApprovalStatus.APPROVED.value,
+    )
+
+    # Tenant user who approved or rejected this document.
+    approved_by_user_id: Mapped[uuid.UUID | None] = mapped_column(
+        UUID(as_uuid=True),
+        ForeignKey("users.id", ondelete="SET NULL"),
+        nullable=True,
+    )
+
+    approved_at: Mapped[datetime | None] = mapped_column(
+        DateTime(timezone=True), nullable=True
+    )
+
+    # Populated when approval_status = 'rejected'; free-form explanation.
+    rejected_reason: Mapped[str | None] = mapped_column(Text, nullable=True)

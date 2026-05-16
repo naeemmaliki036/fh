@@ -2,7 +2,7 @@
 
 import { useQuery } from "@tanstack/react-query";
 import { customerRepository } from "@/lib/api/repositories";
-import type { Customer, CustomerListResponse, CustomerListParams } from "@/lib/types";
+import type { Customer, CustomerListResponse, CustomerListParams, CustomerDetail } from "@/lib/types";
 import type { PrivateDocument } from "@/lib/types/private-document";
 import { queryKeys } from "../queryKeys";
 
@@ -17,6 +17,14 @@ export function useCustomer(id: string) {
   return useQuery({
     queryKey: queryKeys.customers.detail(id),
     queryFn: (): Promise<Customer> => customerRepository.getById(id),
+    enabled: !!id,
+  });
+}
+
+export function useCustomerDetail(id: string) {
+  return useQuery({
+    queryKey: [...queryKeys.customers.detail(id), "full"] as const,
+    queryFn: (): Promise<CustomerDetail> => customerRepository.getDetail(id),
     enabled: !!id,
   });
 }

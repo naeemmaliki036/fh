@@ -17,6 +17,7 @@ import { ListingMediaPanel } from "@/components/organisms/ListingMediaPanel";
 import { ListingDocumentsPanel } from "@/components/organisms/ListingDocumentsPanel";
 import { ListingPriceHistoryPanel } from "@/components/organisms/ListingPriceHistoryPanel";
 import { AuditTimelinePanel } from "@/components/organisms/AuditTimelinePanel";
+import { InterestedCustomersPanel } from "@/components/organisms/InterestedCustomersPanel";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Button } from "@/components/ui/button";
 import { useAuth } from "@/contexts/AuthContext";
@@ -190,6 +191,7 @@ export default function ListingDetailPage({ params }: PageProps): React.ReactEle
           <TabsTrigger value="media">Media</TabsTrigger>
           <TabsTrigger value="documents">Documents</TabsTrigger>
           <TabsTrigger value="price-history">Price History</TabsTrigger>
+          <TabsTrigger value="customers">Interested Customers</TabsTrigger>
           <TabsTrigger value="activity">Activity</TabsTrigger>
         </TabsList>
 
@@ -207,6 +209,10 @@ export default function ListingDetailPage({ params }: PageProps): React.ReactEle
 
         <TabsContent value="price-history" className="pt-4">
           <ListingPriceHistoryPanel listingId={listing.id} />
+        </TabsContent>
+
+        <TabsContent value="customers" className="pt-4">
+          <InterestedCustomersPanel listingId={listing.id} listingStatus={listing.status} />
         </TabsContent>
 
         <TabsContent value="activity" className="pt-4">

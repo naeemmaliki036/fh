@@ -1,5 +1,6 @@
 """Customers router — CRUD + KYC document endpoints."""
 
+from datetime import UTC, datetime
 from uuid import UUID
 
 from fastapi import APIRouter, Depends, File, Form, HTTPException, Query, UploadFile, status
@@ -7,8 +8,10 @@ from fastapi import APIRouter, Depends, File, Form, HTTPException, Query, Upload
 from apps.api.dependencies import CurrentUser, DbSession, ReqCtx, TenantContext
 from apps.api.models.enums import (
     CustomerStatus,
+    PrivateDocumentApprovalStatus,
     PrivateDocumentEntityType,
     PrivateDocumentKind,
+    TenantRole,
 )
 from apps.api.schemas.customer import (
     CustomerCreateRequest,
@@ -17,6 +20,7 @@ from apps.api.schemas.customer import (
     CustomerUpdateRequest,
     MergeHintResponse,
 )
+from apps.api.schemas.customer_detail import CustomerDetailResponse
 from apps.api.schemas.private_document import (
     DownloadUrlResponse,
     PrivateDocumentListResponse,
@@ -95,13 +99,21 @@ async def create_customer(
     return CustomerResponse.model_validate(customer)
 
 
-@router.get("/{customer_id}", response_model=CustomerResponse)
+@router.get("/{customer_id}", response_model=CustomerDetailResponse)
 async def get_customer(
     customer_id: UUID,
     tenant_id: TenantContext,
     svc: CustomerService = Depends(_cust_svc),
-) -> CustomerResponse:
-    return CustomerResponse.model_validate(await svc.get_customer(customer_id, tenant_id))
+) -> CustomerDetailResponse:
+    """Return customer detail with documents, deal history and listing interests."""
+    data = await svc.get_customer_detail(customer_id, tenant_id)
+    customer = data["customer"]
+    return CustomerDetailResponse.model_validate({
+        **customer.__dict__,
+        "documents": data["documents"],
+        "deal_history": data["deal_history"],
+        "interested_listings": data["interested_listings"],
+    })
 
 
 @router.patch("/{customer_id}", response_model=CustomerResponse)
@@ -153,6 +165,23 @@ async def upload_document(
     file: UploadFile = File(...),
     svc: DocumentService = Depends(_doc_svc),
 ) -> PrivateDocumentResponse:
+    """Agent/admin direct upload — auto-approved, no pending review required.
+
+    Authorization: agent only if they are the customer's assigned_agent_id;
+    property_admin, company_admin, company_owner unrestricted.
+    """
+    _DIRECT_UPLOAD_ROLES = {
+        TenantRole.COMPANY_OWNER.value,
+        TenantRole.COMPANY_ADMIN.value,
+        TenantRole.PROPERTY_ADMIN.value,
+        TenantRole.AGENT.value,
+    }
+    if current_user["role"] not in _DIRECT_UPLOAD_ROLES:
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail="Insufficient role to upload documents directly to a customer",
+        )
+
     data = await file.read()
     doc = await svc.upload(
         tenant_id,
@@ -166,6 +195,11 @@ async def upload_document(
         ip_address=ctx.ip_address,
         user_agent=ctx.user_agent,
     )
+    # Agent-uploaded docs are auto-approved
+    doc.approval_status = PrivateDocumentApprovalStatus.APPROVED
+    doc.approved_by_user_id = UUID(current_user["id"])
+    doc.approved_at = datetime.now(UTC).replace(tzinfo=None)
+    # session flush happens at request end via get_db commit
     return PrivateDocumentResponse.model_validate(doc)
 
 

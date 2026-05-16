@@ -3,6 +3,7 @@
 from .agent import Agent
 from .audit_log import AuditLog
 from .customer import Customer
+from .customer_listing_interest import CustomerListingInterest
 from .deal import Deal
 from .document_request import DocumentRequest
 from .document_request_item import DocumentRequestItem
@@ -13,6 +14,7 @@ from .enums import (
     AuditAction,
     CommissionPayoutStatus,
     CommissionType,
+    CustomerListingInterestStatus,
     CustomerSource,
     CustomerStatus,
     DealStage,
@@ -25,6 +27,7 @@ from .enums import (
     ListingTier,
     MediaKind,
     PlatformRole,
+    PrivateDocumentApprovalStatus,
     PrivateDocumentEntityType,
     PrivateDocumentKind,
     PropertyStatus,
@@ -60,6 +63,8 @@ __all__ = [
     "AgentStatus",
     "CommissionType",
     "CommissionPayoutStatus",
+    "CustomerListingInterestStatus",
+    "PrivateDocumentApprovalStatus",
     "PrivateDocumentEntityType",
     "PrivateDocumentKind",
     "CustomerSource",
@@ -84,6 +89,7 @@ __all__ = [
     "Agent",
     "PrivateDocument",
     "Customer",
+    "CustomerListingInterest",
     "Property",
     "PropertyAgent",
     "Listing",

@@ -7,6 +7,7 @@ import type {
   DocumentRequestListParams,
   RegenerateCodeResponse,
 } from "@/lib/types/document-request";
+import type { ReactivateDocumentRequestBody } from "@/lib/types/customer";
 
 export class DocumentRequestRepository extends BaseRepository<
   DocumentRequest,
@@ -39,6 +40,11 @@ export class DocumentRequestRepository extends BaseRepository<
 
   async reopen(id: string): Promise<DocumentRequest> {
     const res = await this.client.post<DocumentRequest>(`${this.basePath}/${id}/reopen`);
+    return res.data;
+  }
+
+  async reactivate(id: string, body: ReactivateDocumentRequestBody): Promise<DocumentRequest> {
+    const res = await this.client.post<DocumentRequest>(`${this.basePath}/${id}/reactivate`, body);
     return res.data;
   }
 }

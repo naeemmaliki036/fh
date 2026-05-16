@@ -127,6 +127,19 @@ class AuditAction(str, enum.Enum):
     LOCATION_UPDATED = "location_updated"
     LOCATION_DELETED = "location_deleted"
 
+    # Customer listing interest events
+    CUSTOMER_LISTING_INTEREST_LINKED = "customer_listing_interest_linked"
+    CUSTOMER_LISTING_INTEREST_UNLINKED = "customer_listing_interest_unlinked"
+    CUSTOMER_LISTING_INTEREST_WON = "customer_listing_interest_won"
+    CUSTOMER_LISTING_INTEREST_LOST = "customer_listing_interest_lost"
+
+    # Private document approval events
+    PRIVATE_DOCUMENT_APPROVED = "private_document_approved"
+    PRIVATE_DOCUMENT_REJECTED = "private_document_rejected"
+
+    # Document request lifecycle
+    DOCUMENT_REQUEST_REACTIVATED = "document_request_reactivated"
+
     # Catch-all for ad-hoc events
     OTHER = "other"
 
@@ -309,3 +322,30 @@ class CommissionPayoutStatus(str, enum.Enum):
     PARTIAL = "partial"
     PAID = "paid"
     CANCELED = "canceled"
+
+
+class CustomerListingInterestStatus(str, enum.Enum):
+    """Tracks an agent-linked customer's outcome against a specific listing.
+
+    Transitions (enforced at service layer, not DB):
+      interested → won   (when deal closes and this customer is the buyer/tenant)
+      interested → lost  (when deal closes against the same listing for another customer)
+    """
+
+    INTERESTED = "interested"
+    WON = "won"
+    LOST = "lost"
+
+
+class PrivateDocumentApprovalStatus(str, enum.Enum):
+    """Review status for documents uploaded by customers via public doc-request flow.
+
+    Default is 'approved' so that:
+    - Existing rows (agent-uploaded docs) remain approved without backfill logic.
+    - Only documents uploaded through the public document-request route land as 'pending'
+      (the service layer must explicitly set 'pending' for those uploads).
+    """
+
+    PENDING = "pending"
+    APPROVED = "approved"
+    REJECTED = "rejected"

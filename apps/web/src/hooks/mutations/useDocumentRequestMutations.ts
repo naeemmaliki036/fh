@@ -10,6 +10,7 @@ import type {
   DocumentRequestCreateResponse,
   RegenerateCodeResponse,
 } from "@/lib/types/document-request";
+import type { ReactivateDocumentRequestBody } from "@/lib/types/customer";
 import { queryKeys } from "../queryKeys";
 
 export function useCreateDocumentRequest() {
@@ -64,6 +65,20 @@ export function useReopenDocumentRequest() {
       qc.setQueryData(queryKeys.docRequests.detail(data.id), data);
       qc.invalidateQueries({ queryKey: queryKeys.docRequests.all });
       toast.success("Request reopened — customer can upload more documents");
+    },
+    onError: (e: Error) => { toast.error(e.message); },
+  });
+}
+
+export function useReactivateDocumentRequest() {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: ({ id, body }: { id: string; body: ReactivateDocumentRequestBody }): Promise<DocumentRequest> =>
+      documentRequestRepository.reactivate(id, body),
+    onSuccess: (data) => {
+      qc.setQueryData(queryKeys.docRequests.detail(data.id), data);
+      qc.invalidateQueries({ queryKey: queryKeys.docRequests.all });
+      toast.success("Link reactivated — customer can upload again");
     },
     onError: (e: Error) => { toast.error(e.message); },
   });

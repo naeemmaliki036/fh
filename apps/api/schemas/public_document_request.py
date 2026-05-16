@@ -21,7 +21,10 @@ class PublicDocumentRequestResponse(BaseModel):
     """Safe metadata exposed to anonymous and verified public visitors.
 
     Deliberately excludes: customer_id, tenant_id, token, code hash, deal_id.
+    Fields customer_name / agent_* are included so the customer knows who sent
+    the request and whose link they are uploading for.
     """
+
     title: str
     instructions: str | None = None
     tenant_name: str
@@ -29,6 +32,11 @@ class PublicDocumentRequestResponse(BaseModel):
     expires_at: datetime
     verified: bool  # True when caller's Authorization JWT is valid for this request
     items: list[PublicItemResponse]
+    # Customer identification banner (returned after verification)
+    customer_name: str | None = None
+    # Agent contact info
+    agent_name: str | None = None
+    agent_phone: str | None = None
 
 
 class VerifyRequest(BaseModel):

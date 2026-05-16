@@ -6,7 +6,17 @@ from sqlalchemy import func, or_, select, text
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from apps.api.models.customer import Customer
-from apps.api.models.enums import CustomerStatus, TenantRole
+from apps.api.models.customer_listing_interest import CustomerListingInterest
+from apps.api.models.deal import Deal
+from apps.api.models.enums import (
+    CustomerListingInterestStatus,
+    CustomerStatus,
+    PrivateDocumentEntityType,
+    TenantRole,
+)
+from apps.api.models.listing import Listing
+from apps.api.models.private_document import PrivateDocument
+from apps.api.models.property import Property
 from apps.api.services.base import BaseService
 from apps.api.utils.phone import normalize_phone
 from packages.common.utils.error_handlers import conflict, forbidden, not_found
@@ -87,6 +97,82 @@ class CustomerService(BaseService):
         if not c or c.tenant_id != tenant_id:
             raise not_found("Customer")
         return c
+
+    async def get_customer_detail(self, customer_id: UUID, tenant_id: UUID) -> dict:
+        """Return customer + documents + deal history + interested listings."""
+        customer = await self.get_customer(customer_id, tenant_id)
+
+        # -- Documents (no storage_key exposed) --
+        doc_stmt = select(PrivateDocument).where(
+            PrivateDocument.tenant_id == tenant_id,
+            PrivateDocument.entity_type == PrivateDocumentEntityType.CUSTOMER,
+            PrivateDocument.entity_id == customer_id,
+        ).order_by(PrivateDocument.created_at.desc())
+        documents = list((await self.session.execute(doc_stmt)).scalars().all())
+
+        # -- Deal history --
+        deal_stmt = select(Deal, Property).join(
+            Property, Property.id == Deal.property_id
+        ).where(
+            Deal.tenant_id == tenant_id,
+            Deal.customer_id == customer_id,
+        ).order_by(Deal.created_at.desc())
+        deal_rows = (await self.session.execute(deal_stmt)).all()
+        deal_history = []
+        for deal, prop in deal_rows:
+            deal_history.append({
+                "id": deal.id,
+                "stage": deal.stage,
+                "transaction_value": deal.transaction_value,
+                "transaction_currency": deal.transaction_currency,
+                "created_at": deal.created_at,
+                "closed_at": deal.closed_at,
+                "property_title": prop.title if prop else None,
+                "listing_id": deal.listing_id,
+            })
+
+        # -- Interested listings --
+        interest_stmt = select(CustomerListingInterest, Listing).join(
+            Listing, Listing.id == CustomerListingInterest.listing_id
+        ).where(
+            CustomerListingInterest.tenant_id == tenant_id,
+            CustomerListingInterest.customer_id == customer_id,
+        ).order_by(CustomerListingInterest.created_at.desc())
+        interest_rows = (await self.session.execute(interest_stmt)).all()
+
+        interested_listings = []
+        for interest, listing in interest_rows:
+            won_to_customer_name: str | None = None
+            if interest.status == CustomerListingInterestStatus.LOST:
+                # Find the winner for this listing
+                winner_stmt = select(CustomerListingInterest, Customer).join(
+                    Customer, Customer.id == CustomerListingInterest.customer_id
+                ).where(
+                    CustomerListingInterest.tenant_id == tenant_id,
+                    CustomerListingInterest.listing_id == listing.id,
+                    CustomerListingInterest.status == CustomerListingInterestStatus.WON,
+                )
+                winner_row = (await self.session.execute(winner_stmt)).first()
+                if winner_row:
+                    _, winner_customer = winner_row
+                    won_to_customer_name = winner_customer.full_name
+
+            interested_listings.append({
+                "listing_id": listing.id,
+                "listing_title": listing.title,
+                "listing_status": listing.status.value,
+                "interest_status": interest.status,
+                "linked_at": interest.created_at,
+                "notes": interest.notes,
+                "won_to_customer_name": won_to_customer_name,
+            })
+
+        return {
+            "customer": customer,
+            "documents": documents,
+            "deal_history": deal_history,
+            "interested_listings": interested_listings,
+        }
 
     # ------------------------------------------------------------------
     # Create

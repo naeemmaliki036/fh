@@ -244,5 +244,19 @@ class DealService(BaseService):
             before={"stage": old_stage.value},
             after={"stage": new_stage.value, "description": description},
         )
+
+        # Side effect: update customer listing interest rows when deal closes-won
+        if new_stage == DealStage.CLOSED_WON and deal.listing_id:
+            from apps.api.services.customer_listing_interest_service import (
+                CustomerListingInterestService,
+            )
+            cli_svc = CustomerListingInterestService(self.session)
+            await cli_svc.handle_deal_closed_won(
+                tenant_id=tenant_id,
+                listing_id=deal.listing_id,
+                winning_customer_id=deal.customer_id,
+                actor_user_id=UUID(current_user["id"]),
+            )
+
         await self.session.refresh(deal)
         return await self._enrich(deal)

@@ -23,6 +23,7 @@ export interface DocumentRequest {
   token: string;
   status: DocumentRequestStatus;
   expires_at: string;
+  closed_at: string | null;
   verified_at: string | null;
   verification_attempts: number;
   created_by_user_id: string;

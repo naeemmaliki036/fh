@@ -16,13 +16,16 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from apps.api.auth import encode_doc_request_token, verify_password
 from apps.api.models.document_request import DocumentRequest
 from apps.api.models.document_request_item import DocumentRequestItem
+from apps.api.models.customer import Customer
 from apps.api.models.enums import (
     AuditAction,
     DocumentRequestStatus,
+    PrivateDocumentApprovalStatus,
     PrivateDocumentEntityType,
     TenantStatus,
 )
 from apps.api.models.tenant import Tenant
+from apps.api.models.user import User
 from apps.api.services.audit_service import AuditService
 from apps.api.services.base import BaseService
 from apps.api.services.document_service import DocumentService
@@ -60,7 +63,10 @@ class PublicDocRequestService(BaseService):
     # ------------------------------------------------------------------
 
     async def get_by_token(self, token: str, verified: bool = False) -> dict:
-        """Load request + tenant name. No RLS needed — owner role bypasses."""
+        """Load request + tenant name + customer + agent context.
+
+        No RLS needed — owner role bypasses.
+        """
         stmt = select(DocumentRequest).where(DocumentRequest.token == token)
         dr = (await self.session.execute(stmt)).scalar_one_or_none()
         if not dr:
@@ -75,8 +81,29 @@ class PublicDocRequestService(BaseService):
                     "reason": tenant.suspended_reason or "This site is temporarily unavailable.",
                 },
             )
+
+        # Resolve customer name for the identification banner
+        customer = await self.session.get(Customer, dr.customer_id)
+        customer_name = customer.full_name if customer else None
+
+        # Resolve agent context from created_by_user_id
+        agent_name: str | None = None
+        agent_phone: str | None = None
+        creator = await self.session.get(User, dr.created_by_user_id)
+        if creator:
+            agent_name = creator.full_name
+            agent_phone = creator.phone
+
         items = await self._get_items(dr.id)
-        return {"request": dr, "tenant_name": tenant.name if tenant else "", "items": items, "verified": verified}
+        return {
+            "request": dr,
+            "tenant_name": tenant.name if tenant else "",
+            "items": items,
+            "verified": verified,
+            "customer_name": customer_name,
+            "agent_name": agent_name,
+            "agent_phone": agent_phone,
+        }
 
     # ------------------------------------------------------------------
     # Verify code
@@ -146,7 +173,13 @@ class PublicDocRequestService(BaseService):
             file_bytes,
             filename,
             mime_type,
+            # Customer is the uploader — no portal user_id; approval is pending
         )
+
+        # Customer-uploaded docs always land as 'pending' — never auto-approved
+        doc.approval_status = PrivateDocumentApprovalStatus.PENDING
+        doc.uploaded_by_user_id = None  # customer, not a portal user
+        await self.session.flush()
 
         item.uploaded_document_id = doc.id
         item.uploaded_at = datetime.now(UTC).replace(tzinfo=None)
@@ -157,7 +190,11 @@ class PublicDocRequestService(BaseService):
         required_done = all(
             it.uploaded_document_id for it in all_items if it.is_required
         )
-        dr.status = DocumentRequestStatus.COMPLETE if required_done else DocumentRequestStatus.PARTIAL
+        if required_done:
+            dr.status = DocumentRequestStatus.COMPLETE
+            dr.closed_at = datetime.now(UTC).replace(tzinfo=None)
+        else:
+            dr.status = DocumentRequestStatus.PARTIAL
         await self.session.flush()
 
         return {"item": item, "request_status": dr.status}

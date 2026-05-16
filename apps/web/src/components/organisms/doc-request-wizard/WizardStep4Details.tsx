@@ -1,7 +1,6 @@
 "use client";
 
 import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 
 interface WizardStep4Props {
@@ -41,17 +40,27 @@ export function WizardStep4Details({
           />
         </div>
         <div className="space-y-1.5">
-          <Label htmlFor="expires-days">Expires in (days)</Label>
-          <Input
+          <Label htmlFor="expires-days">
+            Link expires in (days): <span className="font-semibold">{expiresInDays}</span>
+          </Label>
+          <input
             id="expires-days"
-            type="number"
-            min={1}
-            max={90}
+            type="range"
+            min={7}
+            max={14}
+            step={1}
             value={expiresInDays}
-            onChange={(e) => onChangeDays(Math.max(1, Math.min(90, parseInt(e.target.value, 10) || 7)))}
-            className="w-32"
+            onChange={(e) => onChangeDays(Math.max(7, Math.min(14, parseInt(e.target.value, 10) || 7)))}
+            className="w-full accent-primary"
           />
-          <p className="text-xs text-muted-foreground">Between 1 and 90 days</p>
+          <p className="text-xs text-muted-foreground">
+            Link will expire on{" "}
+            <strong>
+              {new Date(Date.now() + expiresInDays * 86_400_000).toLocaleDateString("en-AE", {
+                year: "numeric", month: "short", day: "2-digit",
+              })}
+            </strong>
+          </p>
         </div>
       </div>
 

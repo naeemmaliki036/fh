@@ -14,8 +14,12 @@ export interface PublicDocumentRequestResponse {
   title: string;
   instructions: string | null;
   tenant_name: string;
+  customer_name: string | null;
+  agent_name: string | null;
+  agent_phone: string | null;
   status: DocumentRequestStatus;
   expires_at: string;
+  closed_at: string | null;
   verified: boolean;
   items: PublicItemResponse[];
 }

@@ -28,6 +28,7 @@ from apps.api.routers import (
     leaderboard,
     leads,
     listing_document_routes,
+    listing_interests,
     listing_price_routes,
     listing_review_routes,
     listings,
@@ -37,6 +38,7 @@ from apps.api.routers import (
     notifications,
     off_market_reasons,
     platform_users,
+    private_documents,
     properties,
     tenants,
     users,
@@ -155,6 +157,10 @@ app.include_router(off_market_reasons.router, prefix="/off-market-reasons", tags
 app.include_router(leaderboard.router, prefix="/leaderboard", tags=["leaderboard"])
 app.include_router(locations.router, prefix="/locations", tags=["locations"])
 app.include_router(admin_locations.router, prefix="/admin/locations", tags=["admin-locations"])
+# Customer detail feature (migration 0037)
+# listing_interests must come BEFORE listings prefix="" catch-all
+app.include_router(listing_interests.router, prefix="", tags=["listings"])
+app.include_router(private_documents.router, prefix="/private-documents", tags=["private-documents"])
 
 
 @app.get("/health", tags=["health"])
