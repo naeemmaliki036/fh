@@ -4,10 +4,10 @@ import { marketplaceApi } from "@/lib/api";
 import { queryKeys } from "@/lib/queryKeys";
 import type { MarketplaceStats } from "@fh/portal-types";
 
-export function useMarketplaceStats(): UseQueryResult<MarketplaceStats> {
+export function useMarketplaceStats(country?: string): UseQueryResult<MarketplaceStats> {
   return useQuery({
-    queryKey: queryKeys.marketplace.stats,
-    queryFn: () => getStats(marketplaceApi),
+    queryKey: queryKeys.marketplace.stats(country),
+    queryFn: () => getStats(marketplaceApi, country),
     staleTime: 5 * 60 * 1000,
   });
 }

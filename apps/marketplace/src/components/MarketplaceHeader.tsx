@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useRef, useEffect } from "react";
+import { useState, useRef, useEffect, Suspense } from "react";
 import Link from "next/link";
 import { Menu, X, Building2, ChevronRight } from "lucide-react";
 import {
@@ -8,6 +8,7 @@ import {
   AQARFLOW_PORTAL_URL,
   AQARFLOW_BRAND_NAME,
 } from "@/lib/portal-brand";
+import { CountrySelector } from "@/components/CountrySelector";
 
 function AgencyDropdown(): React.ReactElement {
   const [open, setOpen] = useState(false);
@@ -63,7 +64,7 @@ export function MarketplaceHeader(): React.ReactElement {
 
   return (
     <header className="sticky top-0 z-30 bg-white border-b border-slate-100 shadow-sm">
-      <div className="mx-auto flex w-[min(100%-32px,1280px)] items-center justify-between gap-6 py-3">
+      <div className="mx-auto flex w-[min(100%-32px,1280px)] items-center justify-between gap-4 py-3">
         <Link href="/" className="flex items-center gap-2 shrink-0">
           <Building2 className="h-6 w-6 text-teal-600" />
           <span className="text-lg font-black tracking-tight text-slate-900">
@@ -83,13 +84,16 @@ export function MarketplaceHeader(): React.ReactElement {
           </Link>
         </nav>
 
-        <div className="hidden md:flex items-center gap-4 shrink-0">
+        <div className="hidden md:flex items-center gap-3 shrink-0">
+          <Suspense>
+            <CountrySelector />
+          </Suspense>
           <AgencyDropdown />
           <Link
             href="/listings"
             className="rounded-full bg-teal-600 px-5 py-2 text-sm font-bold text-white hover:bg-teal-700 transition"
           >
-            Browse listings
+            Browse
           </Link>
         </div>
 
@@ -103,7 +107,7 @@ export function MarketplaceHeader(): React.ReactElement {
       </div>
 
       {menuOpen && (
-        <div className="md:hidden border-t border-slate-100 bg-white px-5 pb-6 pt-4">
+        <div className="md:hidden border-t border-slate-100 bg-white px-5 pb-6 pt-4 space-y-4">
           <nav className="flex flex-col gap-4 text-base font-semibold text-slate-700">
             <Link href="/listings?purpose=sale" onClick={() => setMenuOpen(false)}>
               Buy
@@ -123,6 +127,9 @@ export function MarketplaceHeader(): React.ReactElement {
               For agencies — {AQARFLOW_BRAND_NAME}
             </a>
           </nav>
+          <Suspense>
+            <CountrySelector />
+          </Suspense>
         </div>
       )}
     </header>

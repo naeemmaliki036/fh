@@ -24,7 +24,7 @@ export function MarketplaceSidebar(): React.ReactElement {
           </p>
         </div>
         <p className="text-xs text-teal-50 leading-relaxed">
-          Reach thousands of buyers and renters across the UAE. No setup fee. Powered
+          Reach thousands of buyers and renters worldwide. No setup fee. Powered
           by {AQARFLOW_BRAND_NAME}.
         </p>
         <a

@@ -1,8 +1,8 @@
 import type { AxiosInstance } from "axios";
 import type {
+  MarketplaceCountryItem,
   MarketplaceListingItem,
   MarketplaceListingDetail,
-  MarketplaceAgencyItem,
   MarketplaceAgencyDetail,
   MarketplaceStats,
   MarketplaceListingsParams,
@@ -11,6 +11,13 @@ import type {
 } from "@fh/portal-types";
 
 const BASE = "/marketplace";
+
+export async function getCountries(
+  c: AxiosInstance,
+): Promise<{ countries: MarketplaceCountryItem[] }> {
+  const res = await c.get<{ countries: MarketplaceCountryItem[] }>(`${BASE}/countries`);
+  return res.data;
+}
 
 export async function getListings(
   c: AxiosInstance,
@@ -33,9 +40,10 @@ export async function getAgencies(
   page?: number,
   pageSize?: number,
   q?: string,
+  country?: string,
 ): Promise<MarketplaceAgenciesResponse> {
   const res = await c.get<MarketplaceAgenciesResponse>(`${BASE}/agencies`, {
-    params: { page, page_size: pageSize, q },
+    params: { page, page_size: pageSize, q, country },
   });
   return res.data;
 }
@@ -60,12 +68,22 @@ export async function getAgencyListings(
   return res.data;
 }
 
-export async function getStats(c: AxiosInstance): Promise<MarketplaceStats> {
-  const res = await c.get<MarketplaceStats>(`${BASE}/stats`);
+export async function getStats(
+  c: AxiosInstance,
+  country?: string,
+): Promise<MarketplaceStats> {
+  const res = await c.get<MarketplaceStats>(`${BASE}/stats`, {
+    params: country ? { country } : undefined,
+  });
   return res.data;
 }
 
-export async function getFeatured(c: AxiosInstance): Promise<MarketplaceListingItem[]> {
-  const res = await c.get<MarketplaceListingItem[]>(`${BASE}/featured`);
+export async function getFeatured(
+  c: AxiosInstance,
+  country?: string,
+): Promise<MarketplaceListingItem[]> {
+  const res = await c.get<MarketplaceListingItem[]>(`${BASE}/featured`, {
+    params: country ? { country } : undefined,
+  });
   return res.data;
 }

@@ -11,6 +11,8 @@ import { useMarketplaceAgencies } from "@/hooks/queries/useMarketplaceAgencies";
 import { MarketplaceListingCard } from "@/components/MarketplaceListingCard";
 import { MarketplaceHeader } from "@/components/MarketplaceHeader";
 import { MarketplaceFooter } from "@/components/MarketplaceFooter";
+import { useCountry } from "@/lib/country-context";
+import { getCountryMeta } from "@/lib/country-meta";
 
 const PROPERTY_TYPES = [
   "apartment", "villa", "townhouse", "penthouse", "land", "office",
@@ -20,15 +22,17 @@ export default function MarketplaceHomePage(): React.ReactElement {
   const router = useRouter();
   const [q, setQ] = useState("");
   const [purpose, setPurpose] = useState<"sale" | "rent_long">("sale");
+  const { country } = useCountry();
 
-  const { data: stats } = useMarketplaceStats();
-  const { data: featured = [] } = useMarketplaceFeatured();
-  const { data: agenciesData } = useMarketplaceAgencies(1, 12);
+  const { data: stats } = useMarketplaceStats(country ?? undefined);
+  const { data: featured = [] } = useMarketplaceFeatured(country ?? undefined);
+  const { data: agenciesData } = useMarketplaceAgencies(1, 12, undefined, country ?? undefined);
   const agencies = agenciesData?.items ?? [];
 
   function handleSearch(e: React.FormEvent): void {
     e.preventDefault();
     const params = new URLSearchParams({ purpose, ...(q ? { q } : {}) });
+    if (country) params.set("country", country);
     router.push(`/listings?${params.toString()}`);
   }
 
@@ -36,6 +40,11 @@ export default function MarketplaceHomePage(): React.ReactElement {
     stats && stats.by_type.length > 0
       ? stats.by_type
       : PROPERTY_TYPES.map((pt) => ({ property_type: pt, count: 0 }));
+
+  const countryMeta = country ? getCountryMeta(country) : null;
+  const locationLabel = countryMeta
+    ? `${countryMeta.flag} ${countryMeta.name}`
+    : "worldwide";
 
   return (
     <div className="min-h-screen bg-white flex flex-col">
@@ -48,13 +57,14 @@ export default function MarketplaceHomePage(): React.ReactElement {
           setPurpose={setPurpose}
           onSearch={handleSearch}
           brandName={PORTAL_BRAND_NAME}
+          locationLabel={locationLabel}
         />
 
         {stats && (
           <section className="bg-teal-600 py-3.5 px-4">
             <p className="text-center text-sm font-bold text-white">
-              {stats.total_listings.toLocaleString()} listings across{" "}
-              {stats.total_agencies} agencies
+              {PORTAL_BRAND_NAME}: {stats.total_listings.toLocaleString()} listings across{" "}
+              {stats.total_agencies} agencies in {locationLabel}
             </p>
           </section>
         )}
@@ -66,7 +76,7 @@ export default function MarketplaceHomePage(): React.ReactElement {
               {typeList.map(({ property_type, count }) => (
                 <Link
                   key={property_type}
-                  href={`/listings?property_type=${property_type}`}
+                  href={`/listings?property_type=${property_type}${country ? `&country=${country}` : ""}`}
                   className="inline-flex items-center gap-2 rounded-full border border-slate-200 bg-white px-4 py-2 text-sm font-semibold text-slate-700 hover:border-teal-400 hover:text-teal-700 transition capitalize"
                 >
                   {property_type.replace(/_/g, " ")}
@@ -85,7 +95,7 @@ export default function MarketplaceHomePage(): React.ReactElement {
                   Verified properties
                 </h2>
                 <Link
-                  href="/listings?is_verified=true"
+                  href={`/listings?is_verified=true${country ? `&country=${country}` : ""}`}
                   className="flex items-center gap-1 text-sm font-semibold text-teal-600 hover:text-teal-700"
                 >
                   View all <ArrowRight className="h-4 w-4" />
@@ -152,6 +162,7 @@ interface HeroSectionProps {
   setPurpose: (v: "sale" | "rent_long") => void;
   onSearch: (e: React.FormEvent) => void;
   brandName: string;
+  locationLabel: string;
 }
 
 function HeroSection({
@@ -161,10 +172,10 @@ function HeroSection({
   setPurpose,
   onSearch,
   brandName,
+  locationLabel,
 }: HeroSectionProps): React.ReactElement {
   return (
     <section className="relative overflow-hidden bg-gradient-to-br from-teal-50 via-white to-amber-50 py-24 px-4">
-      {/* Decorative blobs */}
       <div
         aria-hidden="true"
         className="pointer-events-none absolute -top-20 -left-20 h-80 w-80 rounded-full bg-teal-100 opacity-40 blur-3xl"
@@ -177,18 +188,18 @@ function HeroSection({
       <div className="relative mx-auto max-w-3xl text-center space-y-8">
         <div>
           <p className="text-xs font-bold uppercase tracking-widest text-teal-600 mb-3">
-            UAE&apos;s open property marketplace
+            Open property marketplace
           </p>
           <h1 className="text-5xl md:text-6xl font-black text-slate-900 leading-tight">
-            Find your next{" "}
-            <span className="text-teal-600">home</span>
+            Search properties in{" "}
+            <span className="text-teal-600">{locationLabel}</span>
           </h1>
           <p className="mt-4 text-lg text-slate-500">
-            Search properties from {brandName}&apos;s verified agencies across the UAE
+            Browse verified listings from {brandName}&apos;s trusted agencies{" "}
+            {locationLabel !== "worldwide" ? `in ${locationLabel}` : "worldwide"}
           </p>
         </div>
 
-        {/* Purpose toggle */}
         <div className="inline-flex rounded-full border border-slate-200 bg-white p-1 shadow-sm">
           {(["sale", "rent_long"] as const).map((p) => (
             <button
@@ -205,7 +216,6 @@ function HeroSection({
           ))}
         </div>
 
-        {/* Search bar */}
         <form
           onSubmit={onSearch}
           className="flex gap-2 bg-white rounded-2xl shadow-lg border border-slate-100 p-2"

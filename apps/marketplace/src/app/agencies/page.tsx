@@ -6,14 +6,21 @@ import { Search, Loader2 } from "lucide-react";
 import { useMarketplaceAgencies } from "@/hooks/queries/useMarketplaceAgencies";
 import { MarketplaceHeader } from "@/components/MarketplaceHeader";
 import { MarketplaceFooter } from "@/components/MarketplaceFooter";
+import { useCountry } from "@/lib/country-context";
 
 const PAGE_SIZE = 24;
 
 export default function AgenciesPage(): React.ReactElement {
   const [q, setQ] = useState("");
   const [page, setPage] = useState(1);
+  const { country } = useCountry();
 
-  const { data, isLoading } = useMarketplaceAgencies(page, PAGE_SIZE, q || undefined);
+  const { data, isLoading } = useMarketplaceAgencies(
+    page,
+    PAGE_SIZE,
+    q || undefined,
+    country ?? undefined,
+  );
   const agencies = data?.items ?? [];
   const total = data?.total ?? 0;
   const totalPages = Math.max(1, Math.ceil(total / PAGE_SIZE));

@@ -8,9 +8,10 @@ export function useMarketplaceAgencies(
   page?: number,
   pageSize?: number,
   q?: string,
+  country?: string,
 ): UseQueryResult<MarketplaceAgenciesResponse> {
   return useQuery({
-    queryKey: queryKeys.marketplace.agencies(page, pageSize, q),
-    queryFn: () => getAgencies(marketplaceApi, page, pageSize, q),
+    queryKey: queryKeys.marketplace.agencies(page, pageSize, q, country),
+    queryFn: () => getAgencies(marketplaceApi, page, pageSize, q, country),
   });
 }

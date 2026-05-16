@@ -1,5 +1,10 @@
 // Marketplace types — mirrors apps/api/schemas/marketplace.py
 
+export interface MarketplaceCountryItem {
+  code: string;
+  tenant_count: number;
+}
+
 export interface MarketplaceTenantSnippet {
   id: string;
   slug: string;
@@ -56,13 +61,24 @@ export interface MarketplaceListingDetail {
   beds: number | null;
   baths: number | null;
   area_sqft: number | null;
+  plot_area_sqft: number | null;
   address: string | null;
   area: string | null;
   city: string | null;
+  country_name: string | null;
+  lat: number | null;
+  lng: number | null;
   internal_reference: string | null;
   build_year: number | null;
   property_type: string;
-  amenities: unknown[] | null;
+  furnishing_status: string | null;
+  completion_status: string | null;
+  parking_spaces: number | null;
+  service_charge_per_sqft: number | null;
+  rera_permit: string | null;
+  trakheesi: string | null;
+  ownership_type: string | null;
+  amenities: string[] | null;
   tags: string[];
   media_urls: string[];
   floor_plan_urls: string[];
@@ -73,6 +89,7 @@ export interface MarketplaceListingDetail {
   handover_year: number | null;
   handover_quarter: number | null;
   payment_plan: boolean;
+  verified_at: string | null;
   tenant: MarketplaceTenantSnippet;
   // Fields shared with list item — derived or optional
   is_verified?: boolean;
@@ -83,6 +100,8 @@ export interface MarketplaceListingDetail {
   agent_phone?: string | null;
   agent_photo_url?: string | null;
   agent_has_license?: boolean;
+  agent_email?: string | null;
+  agent_whatsapp?: string | null;
   created_at?: string | null;
 }
 
@@ -102,6 +121,13 @@ export interface MarketplaceAgencyItem {
 export interface MarketplaceAgencyDetail extends MarketplaceAgencyItem {
   operating_countries: string[];
   description: string | null;
+}
+
+export interface MarketplaceAgenciesParams {
+  page?: number;
+  page_size?: number;
+  q?: string;
+  country?: string;
 }
 
 export interface MarketplaceStats {
@@ -133,6 +159,7 @@ export interface MarketplaceListingsParams {
   has_floor_plan?: boolean;
   q?: string;
   tenant_slug?: string;
+  country?: string;
 }
 
 export interface MarketplaceListingsResponse {

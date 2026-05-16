@@ -1,6 +1,8 @@
 "use client";
 
 import { useMarketplaceStats } from "@/hooks/queries/useMarketplaceStats";
+import { useCountry } from "@/lib/country-context";
+import { getCountryMeta } from "@/lib/country-meta";
 
 interface AqarFlowPromoBlockProps {
   portalUrl: string;
@@ -15,13 +17,17 @@ export function AqarFlowPromoBlock({
   brandName,
   portalBrandName,
 }: AqarFlowPromoBlockProps): React.ReactElement {
-  const { data: stats } = useMarketplaceStats();
+  const { country } = useCountry();
+  const { data: stats } = useMarketplaceStats(country ?? undefined);
+
+  const locationLabel = country
+    ? `${getCountryMeta(country).flag} ${getCountryMeta(country).name}`
+    : "worldwide";
 
   return (
     <div className="border-b border-slate-200 bg-white">
       <div className="mx-auto w-[min(100%-32px,1280px)] py-10">
         <div className="grid grid-cols-1 md:grid-cols-2 gap-8 items-center">
-          {/* Left — CTA */}
           <div className="space-y-3">
             <p className="text-[11px] font-bold uppercase tracking-widest text-teal-600">
               Real estate agency?
@@ -30,8 +36,8 @@ export function AqarFlowPromoBlock({
               List your inventory on {portalBrandName} with {brandName}
             </h2>
             <p className="text-sm text-slate-500 leading-relaxed max-w-sm">
-              {brandName} is the operations platform built for UAE agencies — manage
-              inventory, leads, and deals, then publish to {portalBrandName} in one click.
+              {brandName} is the operations platform built for property agencies worldwide —
+              manage inventory, leads, and deals, then publish to {portalBrandName} in one click.
             </p>
             <div className="flex flex-wrap items-center gap-3 pt-1">
               <a
@@ -53,7 +59,6 @@ export function AqarFlowPromoBlock({
             </div>
           </div>
 
-          {/* Right — Social proof */}
           <div className="flex flex-wrap gap-6 justify-start md:justify-end">
             {stats != null && (
               <StatBadge
@@ -67,7 +72,7 @@ export function AqarFlowPromoBlock({
                 label="agencies"
               />
             )}
-            <StatBadge value="UAE-wide" label="reach" />
+            <StatBadge value={locationLabel} label="reach" />
           </div>
         </div>
       </div>

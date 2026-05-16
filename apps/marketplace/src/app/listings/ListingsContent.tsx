@@ -1,12 +1,13 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useSearchParams } from "next/navigation";
 import { Loader2 } from "lucide-react";
 import { useMarketplaceListings } from "@/hooks/queries/useMarketplaceListings";
 import { MarketplaceListingCard } from "@/components/MarketplaceListingCard";
 import { MarketplaceFiltersBar } from "@/components/MarketplaceFiltersBar";
 import { MarketplaceSidebar } from "@/components/MarketplaceSidebar";
+import { useCountry } from "@/lib/country-context";
 import type { MarketplaceListingsParams } from "@fh/portal-types";
 
 function paramsFromSearch(search: ReturnType<typeof useSearchParams>): MarketplaceListingsParams {
@@ -23,12 +24,18 @@ function paramsFromSearch(search: ReturnType<typeof useSearchParams>): Marketpla
 
 export function ListingsContent(): React.ReactElement {
   const searchParams = useSearchParams();
+  const { country } = useCountry();
   const [filters, setFilters] = useState<MarketplaceListingsParams>({
     sort: "verified_first",
     page: 1,
     page_size: 20,
     ...paramsFromSearch(searchParams),
   });
+
+  // Sync country into filters whenever context changes
+  useEffect(() => {
+    setFilters((f) => ({ ...f, country: country ?? undefined, page: 1 }));
+  }, [country]);
 
   const { data, isLoading, isError } = useMarketplaceListings(filters);
   const listings = data?.items ?? [];
