@@ -54,7 +54,7 @@ class ListingVerifyService(BaseService):
         if listing.is_verified:
             raise bad_request("Listing is already verified")
         listing.is_verified = True
-        listing.verified_at = datetime.now(UTC).replace(tzinfo=None)
+        listing.verified_at = datetime.now(UTC)
         listing.verified_by_user_id = UUID(current_user["id"])
         await self.session.flush()
         await self._audit.record(
@@ -97,7 +97,7 @@ class ListingVerifyService(BaseService):
     ) -> dict:
         """Return computed metrics dict to be merged into ListingResponse."""
         prop = await self.session.get(Property, listing.property_id)
-        now = datetime.now(UTC).replace(tzinfo=None)
+        now = datetime.now(UTC)
 
         # price_per_sqft
         price_per_sqft: int | None = None
@@ -123,8 +123,10 @@ class ListingVerifyService(BaseService):
             if old_p > 0:
                 price_drop_pct = round((old_p - new_p) / old_p * 100)
 
-        # days_since_posted
+        # days_since_posted — handle both tz-aware and tz-naive created_at
         ref_dt = listing.created_at
+        if ref_dt is not None and ref_dt.tzinfo is None:
+            ref_dt = ref_dt.replace(tzinfo=UTC)
         days_since_posted = (now - ref_dt).days if ref_dt else 0
 
         # verified_by_user_name

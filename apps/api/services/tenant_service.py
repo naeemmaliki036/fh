@@ -153,6 +153,7 @@ class TenantService(BaseService):
         name: str | None = None, currency: str | None = None,
         timezone_: str | None = None, locale: str | None = None,
         default_properties_view=None, operating_countries: list[str] | None = None,
+        property_ref_prefix: str | None = None,
         ip_address: str | None = None, user_agent: str | None = None,
     ) -> Tenant:
         role = current_user.get("role")
@@ -160,10 +161,23 @@ class TenantService(BaseService):
         if role not in allowed:
             raise forbidden("Only company_owner or company_admin can update tenant settings")
         tenant = await self.get_tenant(tenant_id)
+        if property_ref_prefix is not None and property_ref_prefix != tenant.property_ref_prefix:
+            from sqlalchemy import func as _func, select as _select
+            clash = (await self.session.execute(
+                _select(Tenant.id).where(
+                    _func.upper(Tenant.property_ref_prefix) == property_ref_prefix,
+                    Tenant.id != tenant_id,
+                )
+            )).first()
+            if clash:
+                raise bad_request(
+                    f"property_ref_prefix '{property_ref_prefix}' is already in use"
+                )
         before = {
             "name": tenant.name, "currency": tenant.currency, "timezone": tenant.timezone,
             "locale": tenant.locale, "default_properties_view": tenant.default_properties_view.value,
             "operating_countries": tenant.operating_countries,
+            "property_ref_prefix": tenant.property_ref_prefix,
         }
         if name is not None: tenant.name = name
         if currency is not None: tenant.currency = currency
@@ -171,11 +185,13 @@ class TenantService(BaseService):
         if locale is not None: tenant.locale = locale
         if default_properties_view is not None: tenant.default_properties_view = default_properties_view
         if operating_countries is not None: tenant.operating_countries = operating_countries
+        if property_ref_prefix is not None: tenant.property_ref_prefix = property_ref_prefix
         await self.session.flush()
         after = {
             "name": tenant.name, "currency": tenant.currency, "timezone": tenant.timezone,
             "locale": tenant.locale, "default_properties_view": tenant.default_properties_view.value,
             "operating_countries": tenant.operating_countries,
+            "property_ref_prefix": tenant.property_ref_prefix,
         }
         await self.session.execute(text(f"SET LOCAL app.tenant_id = '{tenant_id}'"))
         await self._audit.record(

@@ -97,6 +97,7 @@ class TenantUpdateRequest(BaseModel):
     locale: str | None = None
     default_properties_view: PropertiesViewMode | None = None
     operating_countries: list[str] | None = None
+    property_ref_prefix: str | None = None
 
     @field_validator("operating_countries", mode="before")
     @classmethod
@@ -104,6 +105,16 @@ class TenantUpdateRequest(BaseModel):
         if v is None:
             return None
         return _validate_countries(v)
+
+    @field_validator("property_ref_prefix")
+    @classmethod
+    def _validate_prefix(cls, v: str | None) -> str | None:
+        if v is None:
+            return None
+        v = v.upper().strip()
+        if not (len(v) == 3 and v.isalnum() and v.isascii()):
+            raise ValueError("property_ref_prefix must be exactly 3 alphanumeric characters")
+        return v
 
 
 # ---------------------------------------------------------------------------

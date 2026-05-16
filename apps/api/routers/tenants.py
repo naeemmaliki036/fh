@@ -94,6 +94,7 @@ async def update_my_tenant(
         locale=updates.get("locale"),
         default_properties_view=updates.get("default_properties_view"),
         operating_countries=updates.get("operating_countries"),
+        property_ref_prefix=updates.get("property_ref_prefix"),
         ip_address=ctx.ip_address,
         user_agent=ctx.user_agent,
     )

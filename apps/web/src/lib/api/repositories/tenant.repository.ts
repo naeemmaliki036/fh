@@ -47,11 +47,8 @@ export class TenantRepository extends BaseRepository<Tenant, never, TenantUpdate
     return res.data;
   }
 
-  async updatePropertyRefPrefix(tenantId: string, data: PropertyRefPrefixRequest): Promise<Tenant> {
-    const res = await this.client.patch<Tenant>(
-      `${this.basePath}/${tenantId}/property-ref-prefix`,
-      data,
-    );
+  async updatePropertyRefPrefix(_tenantId: string, data: PropertyRefPrefixRequest): Promise<Tenant> {
+    const res = await this.client.patch<Tenant>(`${this.basePath}/me`, data);
     return res.data;
   }
 }
