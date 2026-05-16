@@ -36,9 +36,9 @@ RUN apk add --no-cache libc6-compat \
 
 WORKDIR /app
 
-COPY --from=deps /app/node_modules ./node_modules
-COPY --from=deps /app/apps/web/node_modules ./apps/web/node_modules
-COPY package.json pnpm-workspace.yaml pnpm-lock.yaml ./
+# Copy the entire workspace from the deps stage so every package's
+# node_modules folder is present (workspace symlinks need them).
+COPY --from=deps /app /app
 COPY apps/web ./apps/web
 COPY packages ./packages
 

@@ -35,9 +35,10 @@ RUN apk add --no-cache libc6-compat \
 
 WORKDIR /app
 
-COPY --from=deps /app/node_modules ./node_modules
-COPY --from=deps /app/apps/marketplace/node_modules ./apps/marketplace/node_modules
-COPY package.json pnpm-workspace.yaml pnpm-lock.yaml ./
+# Copy the entire workspace from the deps stage — this brings in
+# node_modules for the root, apps/marketplace AND every package under
+# packages/* (e.g. @fh/api-client needs its own axios install).
+COPY --from=deps /app /app
 COPY apps/marketplace ./apps/marketplace
 COPY packages ./packages
 
