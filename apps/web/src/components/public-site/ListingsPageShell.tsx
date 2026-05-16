@@ -9,6 +9,7 @@ import { ServicesGrid } from "./ServicesGrid";
 import { ListingFilters } from "./ListingFilters";
 import { ListingsGrid } from "./ListingsGrid";
 import { PublicListingsSearchBar } from "./PublicListingsSearchBar";
+import { ListingsStatsBanner } from "./ListingsStatsBanner";
 
 interface ListingsPageShellProps {
   profile: PublicTenantProfile;
@@ -72,11 +73,13 @@ export function ListingsPageShell({ profile, slug }: ListingsPageShellProps): Re
             />
           </div>
 
-          {data && (
-            <p className="mb-4 text-sm text-slate-500">
-              {data.total} {data.total === 1 ? "property" : "properties"} found
-            </p>
-          )}
+          <ListingsStatsBanner
+            slug={slug}
+            onTypeFilter={(pt) => {
+              const next: PublicListingsParams = { page: 1, property_type: pt || null };
+              handleFilter(next);
+            }}
+          />
 
           {isLoading ? (
             <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">

@@ -26,7 +26,11 @@ from apps.api.models.listing import Listing
 from apps.api.models.tenant import Tenant
 from apps.api.services.audit_service import AuditService
 from apps.api.services.base import BaseService
-from apps.api.services.public_site_queries import fetch_listing_detail, fetch_listing_list
+from apps.api.services.public_site_queries import (
+    fetch_listing_detail,
+    fetch_listing_list,
+    fetch_listing_stats,
+)
 from apps.api.services.public_site_visibility import resolve_visibility
 from fastapi import HTTPException
 from packages.common.utils.error_handlers import not_found
@@ -96,6 +100,7 @@ class PublicSiteService(BaseService):
         *,
         page: int,
         page_size: int,
+        sort: str = "created_at_desc",
         min_price: float | None,
         max_price: float | None,
         beds: int | None,
@@ -117,6 +122,7 @@ class PublicSiteService(BaseService):
         return await fetch_listing_list(
             self.session, tenant,
             page=page, page_size=page_size,
+            sort=sort,
             min_price=min_price, max_price=max_price,
             beds=beds, baths=baths,
             property_type=property_type,
@@ -131,6 +137,14 @@ class PublicSiteService(BaseService):
             max_build_year=max_build_year,
             has_floor_plan=has_floor_plan,
         )
+
+    # ------------------------------------------------------------------
+    # Endpoint 2b: listing stats banner
+    # ------------------------------------------------------------------
+
+    async def get_listing_stats(self, slug: str) -> dict:
+        tenant = await self._resolve_tenant(slug)
+        return await fetch_listing_stats(self.session, tenant)
 
     # ------------------------------------------------------------------
     # Endpoint 3: listing detail

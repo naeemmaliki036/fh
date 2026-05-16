@@ -20,6 +20,7 @@ import { ListingDocumentsPanel } from "@/components/organisms/ListingDocumentsPa
 import { ListingPriceHistoryPanel } from "@/components/organisms/ListingPriceHistoryPanel";
 import { AuditTimelinePanel } from "@/components/organisms/AuditTimelinePanel";
 import { InterestedCustomersPanel } from "@/components/organisms/InterestedCustomersPanel";
+import { OpenHousesPanel } from "@/components/organisms/OpenHousesPanel";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Button } from "@/components/ui/button";
 import { useAuth } from "@/contexts/AuthContext";
@@ -233,6 +234,7 @@ export default function ListingDetailPage({ params }: PageProps): React.ReactEle
       <Tabs defaultValue="media">
         <TabsList>
           <TabsTrigger value="media">Media</TabsTrigger>
+          <TabsTrigger value="open-houses">Open Houses</TabsTrigger>
           <TabsTrigger value="documents">Documents</TabsTrigger>
           <TabsTrigger value="price-history">Price History</TabsTrigger>
           <TabsTrigger value="customers">Interested Customers</TabsTrigger>
@@ -245,6 +247,10 @@ export default function ListingDetailPage({ params }: PageProps): React.ReactEle
             propertyId={listing.property_id}
             heroMediaId={listing.hero_media_id}
           />
+        </TabsContent>
+
+        <TabsContent value="open-houses" className="pt-4">
+          <OpenHousesPanel listingId={listing.id} />
         </TabsContent>
 
         <TabsContent value="documents" className="pt-4">

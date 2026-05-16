@@ -9,6 +9,7 @@ import type {
   PublicAgentSnippet,
   PublicListingCard,
   SimilarListingsResponse,
+  ListingStatsResponse,
 } from "@/lib/types/public-site";
 
 const API_BASE = process.env.NEXT_PUBLIC_API_URL ?? "http://localhost:8000";
@@ -28,18 +29,20 @@ export const publicSiteRepository = {
     slug: string,
     params: PublicListingsParams = {},
   ): Promise<PublicListingListResponse> {
+    const { page = 1, page_size = 12, ...rest } = params;
+    const cleaned = Object.fromEntries(
+      Object.entries(rest).filter(([, v]) => v != null && v !== ""),
+    );
     const res = await publicHttp.get<PublicListingListResponse>(
       `/public/sites/${slug}/listings`,
-      {
-        params: {
-          page: params.page ?? 1,
-          page_size: params.page_size ?? 12,
-          ...(params.min_price != null && { min_price: params.min_price }),
-          ...(params.max_price != null && { max_price: params.max_price }),
-          ...(params.beds != null && { beds: params.beds }),
-          ...(params.property_type && { property_type: params.property_type }),
-        },
-      },
+      { params: { page, page_size, ...cleaned } },
+    );
+    return res.data;
+  },
+
+  async getListingStats(slug: string): Promise<ListingStatsResponse> {
+    const res = await publicHttp.get<ListingStatsResponse>(
+      `/public/sites/${slug}/listings/stats`,
     );
     return res.data;
   },

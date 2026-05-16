@@ -26,3 +26,4 @@ export { locationsRepository, adminLocationsRepository } from "./locations.repos
 export { privateDocumentRepository } from "./private-document.repository";
 export { listingInterestedCustomersRepository } from "./listing-interested-customers.repository";
 export { reportsRepository } from "./reports.repository";
+export { openHouseRepository } from "./open-house.repository";

@@ -130,6 +130,12 @@ export interface PublicListingItem {
   days_since_posted?: number;
   internal_reference: string | null;
   build_year: number | null;
+  // Wave 2 card extras
+  agent_name: string | null;
+  agent_phone: string | null;
+  agent_photo_url: string | null;
+  agent_has_license: boolean;
+  next_open_house_at: string | null;
 }
 
 /** Alias for card usage — same shape */
@@ -151,6 +157,12 @@ export interface PublicAgentSnippet {
   license_id?: string | null;
 }
 
+export interface PublicOpenHouseSlot {
+  starts_at: string;
+  ends_at: string;
+  capacity: number | null;
+}
+
 export interface PublicListingDetail {
   id: string;
   title: string;
@@ -164,9 +176,12 @@ export interface PublicListingDetail {
   baths: number | null;
   area_sqft: number | null;
   address: string | null;
+  area: string | null;
+  city: string | null;
   property_type: string;
   amenities: unknown[] | null;
   media_urls: string[];
+  floor_plan_urls: string[];
   hero_media_url?: string | null;
   agent: PublicAgentSnippet | null;
   is_verified: boolean;
@@ -175,6 +190,13 @@ export interface PublicListingDetail {
   price_per_sqft: number | null;
   price_drop_pct: number | null;
   days_since_posted: number;
+  build_year: number | null;
+  handover_year: number | null;
+  handover_quarter: number | null;
+  payment_plan: string | null;
+  next_open_house: { starts_at: string; ends_at: string } | null;
+  upcoming_open_houses: PublicOpenHouseSlot[];
+  created_at: string | null;
   // Branding — always present; used by listing-detail page in direct_only mode
   // without requiring a separate profile fetch.
   tenant_name: string | null;
@@ -247,6 +269,12 @@ export interface PublicListingsParams {
   min_build_year?: number | null;
   max_build_year?: number | null;
   has_floor_plan?: boolean | null;
+  sort?: "created_at_desc" | "price_asc" | "price_desc" | "verified_first" | null;
+}
+
+export interface ListingStatsResponse {
+  total: number;
+  by_type: Array<{ property_type: string; count: number }>;
 }
 
 export interface SimilarListingsResponse {

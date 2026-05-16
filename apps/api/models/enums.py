@@ -9,6 +9,7 @@ within the 300-LOC limit; they are re-exported below for import-path stability.
 
 import enum
 
+from .open_house_enums import OpenHouseStatus  # noqa: F401  re-export
 from .property_enums import (  # noqa: F401  re-export
     CompletionStatus,
     FitOutStatus,
@@ -161,6 +162,11 @@ class AuditAction(str, enum.Enum):
     # Listing verification (added in migration 0040)
     LISTING_VERIFIED = "listing_verified"
     LISTING_UNVERIFIED = "listing_unverified"
+
+    # Open house events (added in migration 0041)
+    OPEN_HOUSE_CREATED = "open_house_created"
+    OPEN_HOUSE_UPDATED = "open_house_updated"
+    OPEN_HOUSE_CANCELLED = "open_house_cancelled"
 
     # Catch-all for ad-hoc events
     OTHER = "other"

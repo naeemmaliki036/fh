@@ -50,6 +50,7 @@ def _to_resp(media: Media, url: str) -> MediaResponse:
         variants=media.variants,
         width=media.width,
         height=media.height,
+        is_floor_plan=bool(media.is_floor_plan),
         uploaded_by_user_id=media.uploaded_by_user_id,
         created_at=media.created_at,
         updated_at=media.updated_at,

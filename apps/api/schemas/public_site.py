@@ -50,6 +50,11 @@ class PublicTenantProfileResponse(BaseModel):
 # ---------------------------------------------------------------------------
 
 
+class PublicOpenHouseSnippet(BaseModel):
+    starts_at: str
+    ends_at: str
+
+
 class PublicListingItem(BaseModel):
     model_config = ConfigDict(from_attributes=True)
 
@@ -62,10 +67,23 @@ class PublicListingItem(BaseModel):
     baths: int | None = None
     area_sqft: float | None = None
     address: str | None = None
+    area: str | None = None
+    city: str | None = None
     property_type: str
     primary_photo_url: str | None = None
     purpose: str
     tags: list[str] = Field(default_factory=list)
+    is_verified: bool = False
+    internal_reference: str | None = None
+    price_per_sqft: float | None = None
+    build_year: int | None = None
+    listing_tier: str | None = None
+    next_open_house_at: str | None = None
+    # Agent card fields — populated by bulk query, no N+1.
+    agent_name: str | None = None
+    agent_phone: str | None = None
+    agent_photo_url: str | None = None
+    agent_has_license: bool = False
 
 
 class PublicListingListResponse(BaseModel):
@@ -73,6 +91,21 @@ class PublicListingListResponse(BaseModel):
     total: int
     page: int
     page_size: int
+
+
+# ---------------------------------------------------------------------------
+# Public: listing stats banner
+# ---------------------------------------------------------------------------
+
+
+class PublicListingTypeCount(BaseModel):
+    property_type: str
+    count: int
+
+
+class PublicListingStatsResponse(BaseModel):
+    total: int
+    by_type: list[PublicListingTypeCount]
 
 
 # ---------------------------------------------------------------------------
@@ -88,6 +121,12 @@ class PublicAgentSnippet(BaseModel):
     email: str
 
 
+class PublicUpcomingOpenHouse(BaseModel):
+    starts_at: str
+    ends_at: str
+    capacity: int | None = None
+
+
 class PublicListingDetailResponse(BaseModel):
     id: uuid.UUID
     title: str
@@ -101,12 +140,23 @@ class PublicListingDetailResponse(BaseModel):
     baths: int | None = None
     area_sqft: float | None = None
     address: str | None = None
+    area: str | None = None
+    city: str | None = None
+    internal_reference: str | None = None
+    build_year: int | None = None
     property_type: str
     amenities: list[Any] | None = None
     tags: list[str] = Field(default_factory=list)
     media_urls: list[str] = Field(default_factory=list)
+    floor_plan_urls: list[str] = Field(default_factory=list)
     hero_media_url: str | None = None
     agent: PublicAgentSnippet | None = None
+    next_open_house: PublicOpenHouseSnippet | None = None
+    upcoming_open_houses: list[PublicUpcomingOpenHouse] = Field(default_factory=list)
+    # Off-plan delivery info (migration 0039).
+    handover_year: int | None = None
+    handover_quarter: int | None = None
+    payment_plan: bool = False
     # Branding — present in all visibility states (including direct_only)
     # so the listing-detail page can render without a separate profile call.
     tenant_name: str | None = None

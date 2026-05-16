@@ -9,6 +9,7 @@ Pattern mirrors apps/api/routers/public/document_requests.py:
 from uuid import UUID
 
 from fastapi import APIRouter, Depends, Query, Request, status
+from fastapi import HTTPException
 
 from apps.api.dependencies import DbSession
 from apps.api.models.enums import CompletionStatus, FurnishingStatus, ViewOrientation
@@ -18,6 +19,7 @@ from apps.api.schemas.public_site import (
     PublicLeadResponse,
     PublicListingDetailResponse,
     PublicListingListResponse,
+    PublicListingStatsResponse,
     PublicTenantProfileResponse,
     PublicTenantStats,
 )
@@ -79,11 +81,28 @@ async def get_public_profile(
 # ---------------------------------------------------------------------------
 
 
+_VALID_SORTS = {"created_at_desc", "verified_first", "price_asc", "price_desc"}
+
+
+@router.get("/{slug}/listings/stats", response_model=PublicListingStatsResponse)
+async def get_public_listing_stats(
+    slug: str,
+    svc: PublicSiteService = Depends(_svc),
+) -> PublicListingStatsResponse:
+    """Active listing counts by property type for the stats banner.
+
+    404 if slug not found or site disabled.
+    """
+    data = await svc.get_listing_stats(slug)
+    return PublicListingStatsResponse(**data)
+
+
 @router.get("/{slug}/listings", response_model=PublicListingListResponse)
 async def list_public_listings(
     slug: str,
     page: int = Query(default=1, ge=1),
     page_size: int = Query(default=12, ge=1, le=50),
+    sort: str = Query(default="created_at_desc", description="created_at_desc | verified_first | price_asc | price_desc"),
     min_price: float | None = Query(default=None, ge=0),
     max_price: float | None = Query(default=None, ge=0),
     beds: int | None = Query(default=None, ge=0),
@@ -106,12 +125,16 @@ async def list_public_listings(
     """Paginated active listings for a public site.
 
     404 if slug not found or site disabled.
+    sort must be one of: created_at_desc, verified_first, price_asc, price_desc.
     """
+    if sort not in _VALID_SORTS:
+        raise HTTPException(status_code=422, detail=f"sort must be one of: {', '.join(sorted(_VALID_SORTS))}")
     amenity_list = [a.strip() for a in amenities.split(",") if a.strip()] if amenities else None
     data = await svc.list_listings(
         slug,
         page=page,
         page_size=page_size,
+        sort=sort,
         min_price=min_price,
         max_price=max_price,
         beds=beds,

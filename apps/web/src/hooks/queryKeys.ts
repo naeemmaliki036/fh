@@ -93,6 +93,7 @@ export const queryKeys = {
     agents: (slug: string) => ["public-site", slug, "agents"] as const,
     similar: (slug: string, listingId: string) =>
       ["public-site", slug, "similar", listingId] as const,
+    stats: (slug: string) => ["public-site", slug, "stats"] as const,
   },
   tenantPublicSite: {
     settings: ["tenant-public-site", "settings"] as const,
@@ -113,6 +114,10 @@ export const queryKeys = {
   },
   offMarketReasons: {
     all: ["off-market-reasons"] as const,
+  },
+  openHouses: {
+    list: (listingId: string, includePast?: boolean) =>
+      ["open-houses", listingId, { includePast }] as const,
   },
   reports: {
     closedDeals: (params?: Record<string, unknown>) => ["reports", "closed-deals", params] as const,

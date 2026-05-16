@@ -2,76 +2,41 @@
 
 import { useCallback, useEffect, useRef, useState } from "react";
 import { useRouter, useSearchParams, usePathname } from "next/navigation";
+import { SlidersHorizontal } from "lucide-react";
 import type { PublicListingsParams } from "@/lib/types/public-site";
-import { useLocationData } from "@/hooks/useLocationData";
-import { SearchSegment, type SegmentOption } from "./SearchSegment";
 import {
   PublicListingsAdvancedFilters,
   type AdvancedFilterValues,
 } from "./PublicListingsAdvancedFilters";
+import { FilterPillDropdown } from "./FilterPillDropdown";
+import { PropertyTypePanel, BedsBathsPanel, PricePanel } from "./SearchBarFilterPanels";
 
 // ---------------------------------------------------------------------------
-// Constants
+// Constants / helpers
 // ---------------------------------------------------------------------------
-
-const PURPOSE_OPTIONS: SegmentOption[] = [
-  { value: "", label: "All" },
-  { value: "sale", label: "Buy" },
-  { value: "rent_long", label: "Rent" },
-];
 
 const DEBOUNCE_MS = 400;
 
-// ---------------------------------------------------------------------------
-// Helpers
-// ---------------------------------------------------------------------------
+const SORT_OPTIONS: Array<{ value: NonNullable<PublicListingsParams["sort"]>; label: string }> = [
+  { value: "created_at_desc", label: "Newest" },
+  { value: "verified_first", label: "Verified first" },
+  { value: "price_asc", label: "Price: low to high" },
+  { value: "price_desc", label: "Price: high to low" },
+];
 
-function buildParams(c: string, ar: string, p: string, adv: AdvancedFilterValues): PublicListingsParams {
-  return {
-    page: 1,
-    city: c || null,
-    area: ar || null,
-    purpose: p || null,
-    property_type: adv.propertyType || null,
-    beds: adv.beds !== "" ? Number(adv.beds) : null,
-    baths: adv.baths !== "" ? Number(adv.baths) : null,
-    min_price: adv.minPrice !== "" ? Number(adv.minPrice) : null,
-    max_price: adv.maxPrice !== "" ? Number(adv.maxPrice) : null,
-    furnishing_status: adv.furnishing || null,
-    completion_status: adv.completion || null,
-    view_orientation: adv.views.length > 0 ? adv.views[0] : null,
-    amenities: adv.amenities.length > 0 ? adv.amenities.join(",") : null,
-    is_verified: adv.isVerified ? true : null,
-    rent_cheque_count: adv.rentChequeCount !== "" ? Number(adv.rentChequeCount) : null,
-    has_floor_plan: adv.hasFloorPlan ? true : null,
-  };
-}
-
-function buildSearchParams(c: string, ar: string, p: string, adv: AdvancedFilterValues): URLSearchParams {
-  const sp = new URLSearchParams();
-  if (c) sp.set("city", c);
-  if (ar) sp.set("area", ar);
-  if (p) sp.set("purpose", p);
-  if (adv.propertyType) sp.set("property_type", adv.propertyType);
-  if (adv.beds !== "") sp.set("beds", adv.beds);
-  if (adv.baths !== "") sp.set("baths", adv.baths);
-  if (adv.minPrice !== "") sp.set("min_price", adv.minPrice);
-  if (adv.maxPrice !== "") sp.set("max_price", adv.maxPrice);
-  if (adv.furnishing) sp.set("furnishing_status", adv.furnishing);
-  if (adv.completion) sp.set("completion_status", adv.completion);
-  if (adv.views.length > 0) sp.set("view_orientation", adv.views[0]);
-  if (adv.amenities.length > 0) sp.set("amenities", adv.amenities.join(","));
-  if (adv.isVerified) sp.set("is_verified", "true");
-  if (adv.rentChequeCount !== "") sp.set("rent_cheque_count", adv.rentChequeCount);
-  if (adv.hasFloorPlan) sp.set("has_floor_plan", "true");
-  return sp;
+function labelify(s: string): string {
+  return s.replace(/_/g, " ").replace(/\b\w/g, (c) => c.toUpperCase());
 }
 
 function emptyAdv(): AdvancedFilterValues {
-  return { propertyType: "", beds: "", baths: "", minPrice: "", maxPrice: "", furnishing: "", completion: "", views: [], amenities: [], isVerified: false, rentChequeCount: "", hasFloorPlan: false };
+  return {
+    propertyType: "", beds: "", baths: "", minPrice: "", maxPrice: "",
+    furnishing: "", completion: "", views: [], amenities: [],
+    isVerified: false, rentChequeCount: "", hasFloorPlan: false,
+  };
 }
 
-function advFromSearchParams(sp: URLSearchParams): AdvancedFilterValues {
+function advFromSP(sp: URLSearchParams): AdvancedFilterValues {
   return {
     propertyType: sp.get("property_type") ?? "",
     beds: sp.get("beds") ?? "",
@@ -88,8 +53,48 @@ function advFromSearchParams(sp: URLSearchParams): AdvancedFilterValues {
   };
 }
 
+function buildParams(adv: AdvancedFilterValues, purpose: string, sort: string, furnishing: string): PublicListingsParams {
+  return {
+    page: 1,
+    purpose: purpose || null,
+    property_type: adv.propertyType || null,
+    beds: adv.beds !== "" ? Number(adv.beds) : null,
+    baths: adv.baths !== "" ? Number(adv.baths) : null,
+    min_price: adv.minPrice !== "" ? Number(adv.minPrice) : null,
+    max_price: adv.maxPrice !== "" ? Number(adv.maxPrice) : null,
+    furnishing_status: furnishing || adv.furnishing || null,
+    completion_status: adv.completion || null,
+    view_orientation: adv.views[0] ?? null,
+    amenities: adv.amenities.length > 0 ? adv.amenities.join(",") : null,
+    is_verified: adv.isVerified ? true : null,
+    rent_cheque_count: adv.rentChequeCount !== "" ? Number(adv.rentChequeCount) : null,
+    has_floor_plan: adv.hasFloorPlan ? true : null,
+    sort: (sort || null) as PublicListingsParams["sort"],
+  };
+}
+
+function buildSP(adv: AdvancedFilterValues, purpose: string, sort: string, furnishing: string): URLSearchParams {
+  const sp = new URLSearchParams();
+  if (purpose) sp.set("purpose", purpose);
+  if (adv.propertyType) sp.set("property_type", adv.propertyType);
+  if (adv.beds !== "") sp.set("beds", adv.beds);
+  if (adv.baths !== "") sp.set("baths", adv.baths);
+  if (adv.minPrice !== "") sp.set("min_price", adv.minPrice);
+  if (adv.maxPrice !== "") sp.set("max_price", adv.maxPrice);
+  const fur = furnishing || adv.furnishing;
+  if (fur) sp.set("furnishing_status", fur);
+  if (adv.completion) sp.set("completion_status", adv.completion);
+  if (adv.views[0]) sp.set("view_orientation", adv.views[0]);
+  if (adv.amenities.length > 0) sp.set("amenities", adv.amenities.join(","));
+  if (adv.isVerified) sp.set("is_verified", "true");
+  if (adv.rentChequeCount !== "") sp.set("rent_cheque_count", adv.rentChequeCount);
+  if (adv.hasFloorPlan) sp.set("has_floor_plan", "true");
+  if (sort) sp.set("sort", sort);
+  return sp;
+}
+
 // ---------------------------------------------------------------------------
-// Props
+// Component
 // ---------------------------------------------------------------------------
 
 interface PublicListingsSearchBarProps {
@@ -97,166 +102,159 @@ interface PublicListingsSearchBarProps {
   operatingCountries?: string[];
 }
 
-// ---------------------------------------------------------------------------
-// Component
-// ---------------------------------------------------------------------------
-
-export function PublicListingsSearchBar({
-  onFilter,
-  operatingCountries = [],
-}: PublicListingsSearchBarProps): React.ReactElement {
+export function PublicListingsSearchBar({ onFilter }: PublicListingsSearchBarProps): React.ReactElement {
   const router = useRouter();
   const pathname = usePathname();
   const searchParams = useSearchParams();
 
-  const { citiesByCountry, areasByCity } = useLocationData();
-  const primaryCountry = operatingCountries[0] ?? "AE";
-  const cityOptions: SegmentOption[] = [
-    { value: "", label: "All cities" },
-    ...(citiesByCountry[primaryCountry] ?? []),
-  ];
-
-  const [city, setCity] = useState(searchParams.get("city") ?? "");
-  const [area, setArea] = useState(searchParams.get("area") ?? "");
   const [purpose, setPurpose] = useState(searchParams.get("purpose") ?? "");
-  const [adv, setAdv] = useState<AdvancedFilterValues>(() => advFromSearchParams(searchParams));
+  const [sort, setSort] = useState(searchParams.get("sort") ?? "");
+  const [furnishing, setFurnishing] = useState(searchParams.get("furnishing_status") ?? "");
+  const [adv, setAdv] = useState<AdvancedFilterValues>(() => advFromSP(searchParams));
   const [showAdvanced, setShowAdvanced] = useState(false);
-  const advDebounce = useRef<ReturnType<typeof setTimeout> | null>(null);
-
-  const mappedAreas: SegmentOption[] | undefined = city ? areasByCity[city] : undefined;
-  const hasAreaDropdown = mappedAreas !== undefined && mappedAreas.length > 0;
-  const areaOptions: SegmentOption[] = hasAreaDropdown
-    ? [{ value: "", label: "All areas" }, ...mappedAreas]
-    : [];
-
-  const handleCityChange = (v: string): void => { setCity(v); setArea(""); };
+  const debounce = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   const apply = useCallback(
-    (c: string, ar: string, p: string, a: AdvancedFilterValues): void => {
-      const sp = buildSearchParams(c, ar, p, a);
+    (a: AdvancedFilterValues, p: string, s: string, f: string): void => {
+      const sp = buildSP(a, p, s, f);
       router.replace(`${pathname}?${sp.toString()}`, { scroll: false });
-      onFilter(buildParams(c, ar, p, a));
+      onFilter(buildParams(a, p, s, f));
     },
     [router, pathname, onFilter],
   );
 
-  const scheduleApply = useCallback(
-    (c: string, ar: string, p: string, a: AdvancedFilterValues): void => {
-      if (advDebounce.current) clearTimeout(advDebounce.current);
-      advDebounce.current = setTimeout(() => apply(c, ar, p, a), DEBOUNCE_MS);
+  const schedule = useCallback(
+    (a: AdvancedFilterValues, p: string, s: string, f: string): void => {
+      if (debounce.current) clearTimeout(debounce.current);
+      debounce.current = setTimeout(() => apply(a, p, s, f), DEBOUNCE_MS);
     },
     [apply],
   );
 
   useEffect(() => {
     const sp = searchParams;
-    const hasAny = sp.get("city") || sp.get("area") || sp.get("purpose") ||
-      sp.get("property_type") || sp.get("beds") || sp.get("baths") ||
-      sp.get("min_price") || sp.get("max_price") ||
-      sp.get("furnishing_status") || sp.get("completion_status") ||
-      sp.get("view_orientation") || sp.get("amenities");
+    const hasAny = sp.get("purpose") || sp.get("property_type") || sp.get("beds") ||
+      sp.get("min_price") || sp.get("max_price") || sp.get("sort") ||
+      sp.get("furnishing_status") || sp.get("completion_status");
     if (hasAny) {
-      onFilter(buildParams(sp.get("city") ?? "", sp.get("area") ?? "", sp.get("purpose") ?? "", advFromSearchParams(sp)));
+      onFilter(buildParams(advFromSP(sp), sp.get("purpose") ?? "", sp.get("sort") ?? "", sp.get("furnishing_status") ?? ""));
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
-  const handleAdvChange = (next: AdvancedFilterValues): void => {
-    setAdv(next);
-    if (advDebounce.current) clearTimeout(advDebounce.current);
-    advDebounce.current = setTimeout(() => apply(city, area, purpose, next), DEBOUNCE_MS);
+  const setAndApply = (patch: { purpose?: string; sort?: string; furnishing?: string }): void => {
+    const p = patch.purpose ?? purpose;
+    const s = patch.sort ?? sort;
+    const f = patch.furnishing ?? furnishing;
+    if (patch.purpose !== undefined) setPurpose(p);
+    if (patch.sort !== undefined) setSort(s);
+    if (patch.furnishing !== undefined) setFurnishing(f);
+    apply(adv, p, s, f);
   };
 
-  const handleSearch = (): void => {
-    if (advDebounce.current) clearTimeout(advDebounce.current);
-    apply(city, area, purpose, adv);
-  };
+  const setAdvApply = (next: AdvancedFilterValues): void => { setAdv(next); apply(next, purpose, sort, furnishing); };
+  const setAdvSchedule = (next: AdvancedFilterValues): void => { setAdv(next); schedule(next, purpose, sort, furnishing); };
 
-  const hasFilters =
-    city || area || purpose ||
-    adv.propertyType || adv.beds !== "" || adv.baths !== "" ||
-    adv.minPrice !== "" || adv.maxPrice !== "" ||
-    adv.furnishing || adv.completion ||
-    adv.views.length > 0 || adv.amenities.length > 0 ||
-    adv.isVerified || adv.rentChequeCount !== "" || adv.hasFloorPlan;
+  const hasFilters = purpose || adv.propertyType || adv.beds !== "" || adv.baths !== "" ||
+    adv.minPrice !== "" || adv.maxPrice !== "" || adv.furnishing ||
+    adv.completion || adv.views.length > 0 || adv.amenities.length > 0 ||
+    adv.isVerified || adv.rentChequeCount !== "" || adv.hasFloorPlan || sort || furnishing;
 
   const clearAll = (): void => {
-    setCity(""); setArea(""); setPurpose(""); setAdv(emptyAdv());
+    setPurpose(""); setSort(""); setFurnishing(""); setAdv(emptyAdv());
     router.replace(pathname, { scroll: false });
     onFilter({ page: 1 });
   };
 
-  return (
-    <div className="mb-6">
-      <div className="flex flex-col items-stretch gap-0 rounded-full border border-border bg-card shadow-card-md sm:flex-row sm:items-center sm:gap-0 sm:p-1.5">
-        <SearchSegment
-          label="City"
-          value={city}
-          placeholder="All cities"
-          options={cityOptions}
-          onChange={(v) => { handleCityChange(v); apply(v, "", purpose, adv); }}
-        />
-        <div className="hidden h-8 w-px shrink-0 bg-border sm:block" />
-        {hasAreaDropdown ? (
-          <SearchSegment
-            label="Area"
-            value={area}
-            placeholder="All areas"
-            options={areaOptions}
-            disabled={!city}
-            onChange={(v) => { setArea(v); apply(city, v, purpose, adv); }}
-          />
-        ) : (
-          <SearchSegment
-            label="Area"
-            value={area}
-            placeholder={city ? "Type area..." : "Select city first"}
-            options={[]}
-            disabled={!city}
-            freeText
-            onChange={(v) => { setArea(v); scheduleApply(city, v, purpose, adv); }}
-          />
-        )}
-        <div className="hidden h-8 w-px shrink-0 bg-border sm:block" />
-        <SearchSegment
-          label="Buy or Rent?"
-          value={purpose}
-          placeholder="All"
-          options={PURPOSE_OPTIONS}
-          onChange={(v) => { setPurpose(v); apply(city, area, v, adv); }}
-        />
-        <div className="flex shrink-0 items-center gap-2 p-1.5 sm:p-0">
-          <button
-            type="button"
-            onClick={handleSearch}
-            className="w-full rounded-full bg-slate-950 px-6 py-2.5 text-sm font-extrabold text-white transition hover:-translate-y-0.5 hover:bg-slate-800 sm:w-auto"
-          >
-            Search
-          </button>
-        </div>
-      </div>
+  const sortLabel = SORT_OPTIONS.find((o) => o.value === sort)?.label ?? "Sort";
+  const purposeLabel = purpose === "sale" ? "Buy" : purpose === "rent_long" ? "Rent" : "Buy / Rent";
+  const typeLabel = adv.propertyType ? labelify(adv.propertyType) : "Property type";
+  const bedsBathsLabel = adv.beds !== "" || adv.baths !== ""
+    ? [adv.beds !== "" ? `${adv.beds === "0" ? "Studio" : adv.beds} bd` : "", adv.baths !== "" ? `${adv.baths} ba` : ""].filter(Boolean).join(" · ")
+    : "Beds & Baths";
+  const priceLabel = adv.minPrice !== "" || adv.maxPrice !== ""
+    ? `${adv.minPrice ? `AED ${Number(adv.minPrice).toLocaleString()}` : "0"} – ${adv.maxPrice ? `AED ${Number(adv.maxPrice).toLocaleString()}` : "any"}`
+    : "Price";
 
-      <div className="mt-2 flex items-center gap-4 px-1">
-        <button
-          type="button"
-          onClick={() => setShowAdvanced((v) => !v)}
-          className="text-xs font-medium text-muted-foreground underline-offset-2 hover:underline"
-        >
-          {showAdvanced ? "Hide filters" : "More filters"}
+  const pillClass = (active: boolean): string =>
+    `rounded-full border px-3 py-1 text-xs font-medium transition ${active ? "border-slate-950 bg-slate-950 text-white" : "border-border bg-muted text-foreground hover:border-slate-400"}`;
+
+  return (
+    <div className="mb-6 space-y-3">
+      <div className="flex flex-wrap items-center gap-2">
+        <FilterPillDropdown label={purposeLabel} active={!!purpose}>
+          {[{ value: "", label: "All" }, { value: "sale", label: "Buy" }, { value: "rent_long", label: "Rent" }].map((o) => (
+            <button key={o.value} type="button" onClick={() => setAndApply({ purpose: o.value })}
+              className={`block w-full rounded px-2 py-1.5 text-left text-sm hover:bg-muted ${purpose === o.value ? "font-semibold" : ""}`}>
+              {o.label}
+            </button>
+          ))}
+        </FilterPillDropdown>
+
+        <FilterPillDropdown label={typeLabel} active={!!adv.propertyType}>
+          <PropertyTypePanel value={adv.propertyType}
+            onChange={(v) => setAdvApply({ ...adv, propertyType: v })} />
+        </FilterPillDropdown>
+
+        <FilterPillDropdown label={priceLabel} active={adv.minPrice !== "" || adv.maxPrice !== ""}>
+          <PricePanel minPrice={adv.minPrice} maxPrice={adv.maxPrice}
+            onChange={(patch) => setAdvSchedule({ ...adv, ...patch })} />
+        </FilterPillDropdown>
+
+        <FilterPillDropdown label={bedsBathsLabel} active={adv.beds !== "" || adv.baths !== ""}>
+          <BedsBathsPanel adv={adv} onChange={(patch) => setAdvApply({ ...adv, ...patch })} />
+        </FilterPillDropdown>
+
+        <FilterPillDropdown label={adv.completion ? labelify(adv.completion) : "Off-plan / Ready"} active={!!adv.completion}>
+          {[{ value: "", label: "Any" }, { value: "off_plan", label: "Off-plan" }, { value: "ready", label: "Ready" }].map((o) => (
+            <button key={o.value} type="button" onClick={() => setAdvApply({ ...adv, completion: o.value })}
+              className={`block w-full rounded px-2 py-1.5 text-left text-sm hover:bg-muted ${adv.completion === o.value ? "font-semibold" : ""}`}>
+              {o.label}
+            </button>
+          ))}
+        </FilterPillDropdown>
+
+        <FilterPillDropdown label={sortLabel} active={!!sort}>
+          {SORT_OPTIONS.map((o) => (
+            <button key={o.value} type="button" onClick={() => setAndApply({ sort: o.value })}
+              className={`block w-full rounded px-2 py-1.5 text-left text-sm hover:bg-muted ${sort === o.value ? "font-semibold" : ""}`}>
+              {o.label}
+            </button>
+          ))}
+        </FilterPillDropdown>
+
+        <button type="button" onClick={() => setShowAdvanced((v) => !v)}
+          className={`inline-flex items-center gap-1.5 rounded-full border px-3 py-1.5 text-sm font-medium transition ${showAdvanced ? "border-slate-950 bg-slate-950 text-white" : "border-border bg-card text-foreground hover:border-slate-400"}`}>
+          <SlidersHorizontal className="h-3.5 w-3.5" /> More filters
         </button>
+
         {hasFilters && (
-          <button
-            type="button"
-            onClick={clearAll}
-            className="text-xs font-medium text-muted-foreground underline-offset-2 hover:underline"
-          >
+          <button type="button" onClick={clearAll} className="text-xs font-medium text-muted-foreground underline-offset-2 hover:underline">
             Clear all
           </button>
         )}
       </div>
 
+      {/* Quick furnishing row + sort toggle */}
+      <div className="flex flex-wrap items-center gap-2">
+        {[{ value: "", label: "All" }, { value: "furnished", label: "Furnished" }, { value: "unfurnished", label: "Unfurnished" }].map((o) => (
+          <button key={o.value} type="button" onClick={() => setAndApply({ furnishing: furnishing === o.value ? "" : o.value })}
+            className={pillClass(furnishing === o.value)}>
+            {o.label}
+          </button>
+        ))}
+        <div className="ml-auto flex items-center gap-1.5">
+          <input id="verified-sort" type="checkbox" checked={sort === "verified_first"}
+            onChange={(e) => setAndApply({ sort: e.target.checked ? "verified_first" : "" })}
+            className="h-3.5 w-3.5 rounded border-border" />
+          <label htmlFor="verified-sort" className="cursor-pointer text-xs font-medium text-muted-foreground">
+            Show verified first
+          </label>
+        </div>
+      </div>
+
       {showAdvanced && (
-        <PublicListingsAdvancedFilters values={adv} onChange={handleAdvChange} purpose={purpose} />
+        <PublicListingsAdvancedFilters values={adv} onChange={setAdvSchedule} purpose={purpose} />
       )}
     </div>
   );

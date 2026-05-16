@@ -3,6 +3,7 @@ import type { Metadata } from "next";
 import { publicSiteRepository } from "@/lib/api/repositories/public-site.repository";
 import { ListingDetailShell } from "@/components/public-site/ListingDetailShell";
 import { extractListingId } from "@/lib/utils/listing-url";
+import { ListingJsonLd } from "@/components/atoms/ListingJsonLd";
 
 interface PageProps {
   params: Promise<{ slug: string; id: string }>;
@@ -39,5 +40,10 @@ export default async function PublicListingPage({ params }: PageProps): Promise<
     notFound();
   }
 
-  return <ListingDetailShell listing={listing} slug={slug} />;
+  return (
+    <>
+      <ListingJsonLd listing={listing} slug={slug} handle={id} />
+      <ListingDetailShell listing={listing} slug={slug} />
+    </>
+  );
 }

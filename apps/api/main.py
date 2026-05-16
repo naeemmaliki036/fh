@@ -37,6 +37,7 @@ from apps.api.routers import (
     media,
     notifications,
     off_market_reasons,
+    open_houses,
     platform_users,
     private_documents,
     properties,
@@ -163,6 +164,7 @@ app.include_router(admin_locations.router, prefix="/admin/locations", tags=["adm
 app.include_router(listing_interests.router, prefix="", tags=["listings"])
 app.include_router(private_documents.router, prefix="/private-documents", tags=["private-documents"])
 app.include_router(reports.router, prefix="/reports", tags=["reports"])
+app.include_router(open_houses.router, prefix="", tags=["open-houses"])
 
 
 @app.get("/health", tags=["health"])

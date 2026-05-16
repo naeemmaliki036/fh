@@ -27,6 +27,7 @@ from .enums import (
     ListingStatus,
     ListingTier,
     MediaKind,
+    OpenHouseStatus,
     PlatformRole,
     PrivateDocumentApprovalStatus,
     PrivateDocumentEntityType,
@@ -45,6 +46,7 @@ from .property_enums import (
     OwnershipType,
     ViewOrientation,
 )
+from .open_house import OpenHouse
 from .lead import Lead
 from .location import Area, City, Country
 from .off_market_reason import OffMarketReason
@@ -96,6 +98,8 @@ __all__ = [
     "OwnershipType",
     "ViewOrientation",
     "FitOutStatus",
+    # Open house enums (migration 0041)
+    "OpenHouseStatus",
     # Models
     "Tenant",
     "PlatformUser",
@@ -120,6 +124,7 @@ __all__ = [
     "Deal",
     "Notification",
     "OffMarketReason",
+    "OpenHouse",
     "Country",
     "City",
     "Area",

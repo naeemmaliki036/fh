@@ -1,7 +1,7 @@
 "use client";
 
 import { useRef, useState, type ReactElement } from "react";
-import { Star, Trash2, Film, Image as ImageIcon } from "lucide-react";
+import { Star, Trash2, Film, Image as ImageIcon, LayoutTemplate } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import {
@@ -13,7 +13,7 @@ import {
   DialogTitle,
 } from "@/components/ui/dialog";
 import { usePropertyMedia } from "@/hooks/queries/useProperties";
-import { useUploadMedia, useDeleteMedia } from "@/hooks/mutations/useMediaMutations";
+import { useUploadMedia, useDeleteMedia, useUpdateMedia } from "@/hooks/mutations/useMediaMutations";
 import { useSetListingHeroMedia } from "@/hooks/mutations/useListingPriceMutations";
 import { cn } from "@/lib/utils/cn";
 import type { Media, MediaKind } from "@/lib/types/media";
@@ -55,6 +55,7 @@ export function ListingMediaPanel({
   const { data: media = [], isLoading } = usePropertyMedia(propertyId);
   const { mutate: upload, isPending: uploading } = useUploadMedia(propertyId);
   const { mutate: remove, isPending: deleting } = useDeleteMedia(propertyId);
+  const { mutate: updateMedia } = useUpdateMedia(propertyId);
   const { mutate: setHero, isPending: settingHero } = useSetListingHeroMedia(listingId);
 
   const videoCount = media.filter((m) => m.mime_type.startsWith("video/")).length;
@@ -191,6 +192,15 @@ export function ListingMediaPanel({
                 }
               </div>
 
+              {/* Floor plan badge */}
+              {m.is_floor_plan && (
+                <div className="absolute bottom-1.5 left-1.5 z-10">
+                  <span className="inline-flex items-center gap-0.5 rounded bg-blue-100 px-1 py-0.5 text-[10px] font-semibold text-blue-700">
+                    <LayoutTemplate className="h-2.5 w-2.5" />Floor plan
+                  </span>
+                </div>
+              )}
+
               {/* Actions */}
               <div className="p-2 flex items-center justify-between gap-1">
                 <button
@@ -207,6 +217,19 @@ export function ListingMediaPanel({
                 >
                   <Star className={cn("h-3 w-3", isHero && "fill-current")} />
                   {isHero ? "Hero" : "Set hero"}
+                </button>
+
+                <button
+                  type="button"
+                  className={cn(
+                    "flex items-center gap-1 text-xs rounded px-1.5 py-0.5 transition-colors",
+                    m.is_floor_plan ? "text-blue-600 font-medium" : "text-muted-foreground hover:text-blue-500",
+                  )}
+                  onClick={() => updateMedia({ id: m.id, is_floor_plan: !m.is_floor_plan })}
+                  title={m.is_floor_plan ? "Remove floor plan tag" : "Mark as floor plan"}
+                >
+                  <LayoutTemplate className="h-3 w-3" />
+                  {m.is_floor_plan ? "Floor plan" : "Tag"}
                 </button>
 
                 <Button

@@ -262,6 +262,16 @@ export type {
 } from "./email";
 
 export type {
+  OpenHouseStatus,
+  OpenHouse,
+  OpenHouseCreate,
+  OpenHouseUpdate,
+  OpenHouseCancelRequest,
+  OpenHouseListResponse,
+  OpenHouseListParams,
+} from "./open-house";
+
+export type {
   PublicSiteStats,
   HeroConfig,
   ThemeConfig,
@@ -279,6 +289,7 @@ export type {
   PublicListingCard,
   PublicListingListResponse,
   PublicAgentSnippet,
+  PublicOpenHouseSlot,
   PublicListingDetail,
   PublicLeadCreate,
   PublicLeadResponse,
@@ -286,4 +297,5 @@ export type {
   PublicSiteSettingsUpdate,
   PublicListingsParams,
   SimilarListingsResponse,
+  ListingStatsResponse,
 } from "./public-site";
