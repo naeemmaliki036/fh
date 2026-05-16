@@ -1,0 +1,87 @@
+# Local-dev docker-compose
+# Brings up Postgres + Redis + the three app services in one command.
+#
+# Usage:
+#   docker compose up --build           # build + run everything
+#   docker compose up postgres redis    # infra only (use local dev servers for apps)
+#   docker compose logs -f api          # tail an individual service
+#
+# Set secrets in .env (copy from .env.example).
+
+services:
+  postgres:
+    image: postgres:16-alpine
+    restart: unless-stopped
+    environment:
+      POSTGRES_USER: fh
+      POSTGRES_PASSWORD: fh
+      POSTGRES_DB: fh
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U fh -d fh"]
+      interval: 5s
+      timeout: 3s
+      retries: 10
+
+  redis:
+    image: redis:7-alpine
+    restart: unless-stopped
+    ports:
+      - "6379:6379"
+    volumes:
+      - redis_data:/data
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 5s
+      timeout: 3s
+      retries: 10
+
+  api:
+    build:
+      context: .
+      dockerfile: apps/api/Dockerfile
+    restart: unless-stopped
+    depends_on:
+      postgres: { condition: service_healthy }
+      redis:    { condition: service_healthy }
+    environment:
+      DATABASE_URL: postgresql+asyncpg://fh:fh@postgres:5432/fh
+      REDIS_URL: redis://redis:6379/0
+      JWT_SECRET: ${JWT_SECRET:-dev-secret-change-me}
+      ENVIRONMENT: ${ENVIRONMENT:-development}
+      CORS_ORIGINS: ${CORS_ORIGINS:-http://localhost:3000,http://localhost:3001}
+    ports:
+      - "8000:8000"
+
+  web:
+    build:
+      context: .
+      dockerfile: apps/web/Dockerfile
+    restart: unless-stopped
+    depends_on:
+      - api
+    environment:
+      NEXT_PUBLIC_API_BASE_URL: ${NEXT_PUBLIC_API_BASE_URL:-http://localhost:8000}
+    ports:
+      - "3000:3000"
+
+  marketplace:
+    build:
+      context: .
+      dockerfile: apps/marketplace/Dockerfile
+    restart: unless-stopped
+    depends_on:
+      - api
+    environment:
+      NEXT_PUBLIC_API_BASE_URL: ${NEXT_PUBLIC_API_BASE_URL:-http://localhost:8000}
+      NEXT_PUBLIC_PORTAL_BRAND_NAME: ${NEXT_PUBLIC_PORTAL_BRAND_NAME:-PropertyPoint}
+      NEXT_PUBLIC_PORTAL_BRAND_TAGLINE: ${NEXT_PUBLIC_PORTAL_BRAND_TAGLINE:-UAE's open property marketplace}
+    ports:
+      - "3001:3000"
+
+volumes:
+  postgres_data:
+  redis_data:

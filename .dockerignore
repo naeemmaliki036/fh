@@ -1,22 +1,74 @@
-**/__pycache__
-**/*.py[cod]
-**/*.egg-info
-.venv/
-.env
-.env.*
-!.env.example
+# Repo-level .dockerignore — applies to every `docker build` from the repo root.
+
+# Version control
 .git
 .gitignore
-.pytest_cache/
-.ruff_cache/
-.mypy_cache/
+.gitattributes
+
+# Editor / IDE
+.vscode
+.idea
+*.swp
+*.swo
+**/.DS_Store
+
+# CI / Cloud / tooling state
+.github
+.railway
+.claude
+.cursor
+.windsurf
+
+# Node — never copy host-built artifacts into the image
 node_modules
 **/node_modules
 .next
 **/.next
-uploads/
-postgres_data/
-redis_data/
-**/.DS_Store
+out
+**/out
+dist
+**/dist
 *.tsbuildinfo
-tests/
+**/.turbo
+
+# Python — never copy local venv or caches
+.venv
+**/.venv
+venv
+**/__pycache__
+**/*.py[cod]
+**/*.egg-info
+.mypy_cache
+.ruff_cache
+.pytest_cache
+.coverage
+htmlcov
+
+# Local-only state
+infra/postgres_data
+infra/redis_data
+uploads
+postgres_data
+redis_data
+
+# Env files — copy nothing; each container reads its own at runtime
+.env
+.env.*
+**/.env
+**/.env.*
+!**/.env.example
+
+# Logs / dumps
+*.log
+*.pid
+*.seed
+*.dump
+
+# Tests + docs / scripts not needed inside containers
+tests
+**/tests
+docs
+scripts
+README.md
+*.md
+!CLAUDE.md
