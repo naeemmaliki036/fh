@@ -122,17 +122,6 @@ export const queryKeys = {
   reports: {
     closedDeals: (params?: Record<string, unknown>) => ["reports", "closed-deals", params] as const,
   },
-  marketplace: {
-    listings: (params?: Record<string, unknown>) => ["marketplace", "listings", params] as const,
-    listing: (id: string) => ["marketplace", "listing", id] as const,
-    agencies: (page?: number, pageSize?: number, q?: string) =>
-      ["marketplace", "agencies", { page, pageSize, q }] as const,
-    agency: (slug: string) => ["marketplace", "agency", slug] as const,
-    agencyListings: (slug: string, params?: Record<string, unknown>) =>
-      ["marketplace", "agency", slug, "listings", params] as const,
-    stats: ["marketplace", "stats"] as const,
-    featured: ["marketplace", "featured"] as const,
-  },
   locations: {
     tree: ["locations", "tree"] as const,
     countries: ["locations", "countries"] as const,

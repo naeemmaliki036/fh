@@ -1,0 +1,10 @@
+{
+  "name": "fh",
+  "private": true,
+  "packageManager": "pnpm@9.0.0",
+  "scripts": {
+    "build:web": "pnpm --filter fh-web build",
+    "build:marketplace": "pnpm --filter fh-marketplace build",
+    "typecheck": "pnpm -r typecheck"
+  }
+}

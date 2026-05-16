@@ -273,18 +273,6 @@ export type {
 } from "./open-house";
 
 export type {
-  MarketplaceListingItem,
-  MarketplaceListingDetail,
-  MarketplaceTenantSnippet,
-  MarketplaceAgencyItem,
-  MarketplaceAgencyDetail,
-  MarketplaceStats,
-  MarketplaceListingsParams,
-  MarketplaceListingsResponse,
-  MarketplaceAgenciesResponse,
-} from "./marketplace";
-
-export type {
   PublicSiteStats,
   HeroConfig,
   ThemeConfig,
