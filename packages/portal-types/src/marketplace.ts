@@ -2,7 +2,9 @@
 
 export interface MarketplaceCountryItem {
   code: string;
-  tenant_count: number;
+  name: string;
+  flag_emoji: string;
+  display_order: number;
 }
 
 export interface MarketplaceTenantSnippet {

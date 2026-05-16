@@ -5,7 +5,6 @@ import { useRouter, usePathname, useSearchParams } from "next/navigation";
 import { ChevronDown } from "lucide-react";
 import { useCountry } from "@/lib/country-context";
 import { useMarketplaceCountries } from "@/hooks/queries/useMarketplaceCountries";
-import { getCountryMeta } from "@/lib/country-meta";
 
 export function CountrySelector(): React.ReactElement {
   const { country, setCountry, isHydrated } = useCountry();
@@ -28,8 +27,10 @@ export function CountrySelector(): React.ReactElement {
 
   if (!isHydrated || !country) return <></>;
 
-  const meta = getCountryMeta(country);
   const countries = data?.countries ?? [];
+  const selected = countries.find((c) => c.code === country);
+  const selectedName = selected?.name ?? country;
+  const selectedFlag = selected?.flag_emoji ?? "🏳️";
 
   function handleSelect(code: string): void {
     setCountry(code);
@@ -47,10 +48,10 @@ export function CountrySelector(): React.ReactElement {
         aria-haspopup="listbox"
         aria-expanded={open}
       >
-        <span role="img" aria-label={meta.name} className="text-base leading-none">
-          {meta.flag}
+        <span role="img" aria-label={selectedName} className="text-base leading-none">
+          {selectedFlag}
         </span>
-        <span className="hidden sm:inline max-w-[120px] truncate">{meta.name}</span>
+        <span className="hidden sm:inline max-w-[120px] truncate">{selectedName}</span>
         <ChevronDown className="h-3.5 w-3.5 shrink-0 text-slate-400" />
       </button>
 
@@ -61,8 +62,7 @@ export function CountrySelector(): React.ReactElement {
           className="absolute right-0 top-full mt-2 w-64 rounded-2xl border border-slate-100 bg-white shadow-xl z-50 overflow-hidden"
         >
           <div className="max-h-80 overflow-y-auto p-2 space-y-0.5">
-            {countries.map(({ code, tenant_count }) => {
-              const m = getCountryMeta(code);
+            {countries.map(({ code, name, flag_emoji }) => {
               const isSelected = code === country;
               return (
                 <button
@@ -76,15 +76,10 @@ export function CountrySelector(): React.ReactElement {
                       : "text-slate-700 hover:bg-slate-50 font-semibold"
                   }`}
                 >
-                  <span className="text-xl leading-none" role="img" aria-label={m.name}>
-                    {m.flag}
+                  <span className="text-xl leading-none" role="img" aria-label={name}>
+                    {flag_emoji}
                   </span>
-                  <span className="flex-1 truncate">{m.name}</span>
-                  {tenant_count > 0 && (
-                    <span className="text-[10px] text-slate-400 shrink-0">
-                      {tenant_count}
-                    </span>
-                  )}
+                  <span className="flex-1 truncate">{name}</span>
                 </button>
               );
             })}

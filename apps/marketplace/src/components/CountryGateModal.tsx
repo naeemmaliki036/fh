@@ -3,7 +3,6 @@
 import { Globe } from "lucide-react";
 import { useCountry } from "@/lib/country-context";
 import { useMarketplaceCountries } from "@/hooks/queries/useMarketplaceCountries";
-import { getCountryMeta } from "@/lib/country-meta";
 import { PORTAL_BRAND_NAME } from "@/lib/portal-brand";
 
 export function CountryGateModal(): React.ReactElement | null {
@@ -40,28 +39,20 @@ export function CountryGateModal(): React.ReactElement | null {
             </div>
           ) : (
             <div className="grid grid-cols-2 sm:grid-cols-3 gap-3">
-              {countries.map(({ code, tenant_count }) => {
-                const meta = getCountryMeta(code);
-                return (
-                  <button
-                    key={code}
-                    onClick={() => setCountry(code)}
-                    className="group flex flex-col items-center gap-2 rounded-2xl border border-slate-100 bg-white p-4 hover:border-teal-400 hover:shadow-md transition text-center"
-                  >
-                    <span className="text-4xl leading-none" role="img" aria-label={meta.name}>
-                      {meta.flag}
-                    </span>
-                    <span className="text-xs font-bold text-slate-800 leading-snug group-hover:text-teal-700 transition">
-                      {meta.name}
-                    </span>
-                    {tenant_count > 0 && (
-                      <span className="rounded-full bg-teal-50 px-2 py-0.5 text-[10px] font-bold text-teal-600">
-                        {tenant_count} {tenant_count === 1 ? "agency" : "agencies"}
-                      </span>
-                    )}
-                  </button>
-                );
-              })}
+              {countries.map(({ code, name, flag_emoji }) => (
+                <button
+                  key={code}
+                  onClick={() => setCountry(code)}
+                  className="group flex flex-col items-center gap-2 rounded-2xl border border-slate-100 bg-white p-4 hover:border-teal-400 hover:shadow-md transition text-center"
+                >
+                  <span className="text-4xl leading-none" role="img" aria-label={name}>
+                    {flag_emoji}
+                  </span>
+                  <span className="text-xs font-bold text-slate-800 leading-snug group-hover:text-teal-700 transition">
+                    {name}
+                  </span>
+                </button>
+              ))}
             </div>
           )}
         </div>
