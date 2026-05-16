@@ -172,6 +172,11 @@ class AuditAction(str, enum.Enum):
     TENANT_AGGREGATOR_DISABLED = "tenant_aggregator_disabled"
     TENANT_AGGREGATOR_ENABLED = "tenant_aggregator_enabled"
 
+    # Marketplace country catalog (added in migration 0043)
+    MARKETPLACE_COUNTRY_CREATED = "marketplace_country_created"
+    MARKETPLACE_COUNTRY_UPDATED = "marketplace_country_updated"
+    MARKETPLACE_COUNTRY_DELETED = "marketplace_country_deleted"
+
     # Catch-all for ad-hoc events
     OTHER = "other"
 

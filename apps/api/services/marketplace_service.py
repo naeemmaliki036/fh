@@ -224,24 +224,27 @@ class MarketplaceService(BaseService):
     # ------------------------------------------------------------------
 
     async def list_countries(self) -> dict:
-        """Distinct ISO codes where at least one qualifying tenant operates.
+        """Return enabled marketplace countries ordered by display_order, code.
 
-        Returns: { "countries": [{ "code": "AE", "tenant_count": 3 }, ...] }
-        Tenants without any active listing are still included (covers new agencies).
+        Data comes from the platform-managed marketplace_countries catalog
+        (migration 0043), not from tenant.operating_countries.
+        Returns: { "countries": [{ "code": "AE", "name": ..., "flag_emoji": ...,
+                                    "display_order": 10 }, ...] }
         """
-        sql = (
-            "SELECT UNNEST(t.operating_countries) AS code, COUNT(*) AS tenant_count "
-            "FROM tenants t "
-            "WHERE t.status = 'active' "
-            "  AND t.aggregator_enabled = true "
-            "  AND t.public_site_enabled = true "
-            "GROUP BY code "
-            "ORDER BY tenant_count DESC, code ASC"
+        from apps.api.services.marketplace_country_service import (
+            MarketplaceCountryService,
         )
-        rows = (await self.session.execute(text(sql))).all()
+
+        rows = await MarketplaceCountryService(self.session).list_enabled()
         return {
             "countries": [
-                {"code": r.code, "tenant_count": int(r.tenant_count)} for r in rows
+                {
+                    "code": mc.code,
+                    "name": mc.name,
+                    "flag_emoji": mc.flag_emoji,
+                    "display_order": mc.display_order,
+                }
+                for mc in rows
             ]
         }
 

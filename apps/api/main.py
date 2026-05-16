@@ -33,6 +33,7 @@ from apps.api.routers import (
     listing_review_routes,
     listings,
     locations,
+    marketplace_countries_admin,
     marketing,
     media,
     notifications,
@@ -166,6 +167,11 @@ app.include_router(private_documents.router, prefix="/private-documents", tags=[
 app.include_router(reports.router, prefix="/reports", tags=["reports"])
 app.include_router(open_houses.router, prefix="", tags=["open-houses"])
 app.include_router(marketplace.router, prefix="/marketplace", tags=["marketplace"])
+app.include_router(
+    marketplace_countries_admin.router,
+    prefix="/admin/marketplace-countries",
+    tags=["admin-marketplace-countries"],
+)
 
 
 @app.get("/health", tags=["health"])

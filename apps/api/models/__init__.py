@@ -49,6 +49,7 @@ from .property_enums import (
 from .open_house import OpenHouse
 from .lead import Lead
 from .location import Area, City, Country
+from .marketplace_country import MarketplaceCountry
 from .off_market_reason import OffMarketReason
 from .lead_activity import LeadActivity
 from .listing import Listing
@@ -128,4 +129,5 @@ __all__ = [
     "Country",
     "City",
     "Area",
+    "MarketplaceCountry",
 ]
