@@ -60,6 +60,9 @@ class MarketplaceListingItem(BaseModel):
     agent_has_license: bool = False
     next_open_house_at: str | None = None
     tenant: MarketplaceTenantSnippet
+    # Consumer listing fields (migration 0044)
+    is_consumer_listing: bool = False
+    owner_display_name: str | None = None
 
 
 class MarketplaceListingListResponse(BaseModel):
@@ -104,6 +107,9 @@ class MarketplaceListingDetailResponse(BaseModel):
     handover_quarter: int | None = None
     payment_plan: bool = False
     tenant: MarketplaceTenantSnippet
+    # Consumer listing fields (migration 0044)
+    is_consumer_listing: bool = False
+    owner_display_name: str | None = None
 
 
 # ---------------------------------------------------------------------------

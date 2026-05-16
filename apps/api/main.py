@@ -48,6 +48,12 @@ from apps.api.routers import (
 )
 from apps.api.routers.public import document_requests as public_document_requests
 from apps.api.routers import marketplace, public_site, tenant_public_site
+from apps.api.routers import (
+    consumer_auth,
+    consumer_listings,
+    consumer_favorites,
+    consumer_listing_leads,
+)
 
 logging.basicConfig(level=logging.INFO)
 
@@ -171,6 +177,15 @@ app.include_router(
     marketplace_countries_admin.router,
     prefix="/admin/marketplace-countries",
     tags=["admin-marketplace-countries"],
+)
+# Consumer (marketplace end-user) routes
+app.include_router(consumer_auth.router, prefix="/consumer", tags=["consumer-auth"])
+app.include_router(consumer_listings.router, prefix="/consumer", tags=["consumer-listings"])
+app.include_router(consumer_favorites.router, prefix="/consumer", tags=["consumer-favorites"])
+app.include_router(
+    consumer_listing_leads.router,
+    prefix="/public",
+    tags=["consumer-listing-leads"],
 )
 
 

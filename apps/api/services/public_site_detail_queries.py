@@ -126,4 +126,7 @@ async def fetch_listing_detail(
         "tenant_tagline": tenant.public_site_tagline,
         "tenant_contact_email": tenant.contact_email,
         "tenant_contact_phone": tenant.contact_phone,
+        # Consumer listing fields (migration 0044)
+        "_is_consumer_listing": listing.consumer_account_id is not None,
+        "_consumer_account_id": listing.consumer_account_id,
     }

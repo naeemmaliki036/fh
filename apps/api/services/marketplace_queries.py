@@ -12,6 +12,7 @@ from uuid import UUID
 from sqlalchemy import func, select, text
 from sqlalchemy.ext.asyncio import AsyncSession
 
+from apps.api.models.consumer_account import ConsumerAccount
 from apps.api.models.enums import ListingStatus
 from apps.api.models.listing import Listing
 from apps.api.models.property import Property
@@ -84,6 +85,30 @@ async def _next_open_houses_bulk(
 
 
 # ---------------------------------------------------------------------------
+# Consumer display-name bulk fetch
+# ---------------------------------------------------------------------------
+
+
+async def _consumer_names_bulk(
+    session: AsyncSession, rows: list
+) -> dict[UUID, str | None]:
+    """Return {consumer_account_id: full_name} for consumer listings in rows."""
+    consumer_ids = [
+        listing.consumer_account_id
+        for listing, _, _ in rows
+        if listing.consumer_account_id is not None
+    ]
+    if not consumer_ids:
+        return {}
+    result = await session.execute(
+        select(ConsumerAccount.id, ConsumerAccount.full_name).where(
+            ConsumerAccount.id.in_(consumer_ids)
+        )
+    )
+    return {row.id: row.full_name for row in result.all()}
+
+
+# ---------------------------------------------------------------------------
 # Tenant snippet builder
 # ---------------------------------------------------------------------------
 
@@ -115,12 +140,20 @@ def _listing_row_to_dict(
     photo_map: dict,
     agent_map: dict,
     next_open_house_map: dict,
+    consumer_name_map: dict | None = None,
 ) -> dict:
     hero_url = hero_keys.get(listing.hero_media_id) if listing.hero_media_id else None
     price = float(listing.price)
     size = float(prop.size_sqft) if prop.size_sqft else None
     agent_info = agent_map.get(prop.id, {})
     next_oh = next_open_house_map.get(listing.id)
+
+    is_consumer = listing.consumer_account_id is not None
+    if is_consumer and consumer_name_map is not None:
+        owner_display_name = consumer_name_map.get(listing.consumer_account_id)
+    else:
+        owner_display_name = tenant.name
+
     return {
         "id": listing.id,
         "title": listing.title,
@@ -148,6 +181,8 @@ def _listing_row_to_dict(
         "agent_has_license": agent_info.get("agent_has_license", False),
         "next_open_house_at": next_oh.isoformat() if next_oh else None,
         "tenant": _tenant_snippet(tenant),
+        "is_consumer_listing": is_consumer,
+        "owner_display_name": owner_display_name,
     }
 
 
@@ -278,12 +313,14 @@ async def fetch_marketplace_listings(  # noqa: PLR0913
     hero_keys = await _hero_keys_bulk(session, rows)
     listing_ids = [listing.id for listing, _, _ in rows]
     oh_map = await _next_open_houses_bulk(session, listing_ids)
+    consumer_name_map = await _consumer_names_bulk(session, rows)
 
     items = [
         _listing_row_to_dict(
             listing, prop, tenant,
             hero_keys=hero_keys, photo_map=photo_map,
             agent_map=agent_map, next_open_house_map=oh_map,
+            consumer_name_map=consumer_name_map,
         )
         for listing, prop, tenant in rows
     ]

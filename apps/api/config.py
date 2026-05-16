@@ -62,6 +62,10 @@ class Settings(BaseSettings):
     # out of email_from — useful in dev but unlikely to deliver via Resend.
     platform_inbox_email: str = ""
 
+    # Consumer OTP dev override — when set, every generated OTP equals this value.
+    # Set to "" or leave unset in production. Default "123321" for local dev.
+    consumer_otp_dev_override: str = "123321"
+
     model_config = {
         "env_file": ".env",
         "env_file_encoding": "utf-8",

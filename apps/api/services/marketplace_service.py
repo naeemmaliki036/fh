@@ -67,6 +67,18 @@ class MarketplaceService(BaseService):
         detail.pop("tenant_contact_email", None)
         detail.pop("tenant_contact_phone", None)
         detail["tenant"] = _tenant_snippet(tenant)
+
+        # Consumer listing enrichment (migration 0044)
+        is_consumer = detail.pop("_is_consumer_listing", False)
+        consumer_account_id = detail.pop("_consumer_account_id", None)
+        detail["is_consumer_listing"] = is_consumer
+        if is_consumer and consumer_account_id:
+            from apps.api.models.consumer_account import ConsumerAccount
+            ca = await self.session.get(ConsumerAccount, consumer_account_id)
+            detail["owner_display_name"] = ca.full_name if ca else None
+        else:
+            detail["owner_display_name"] = tenant.name
+
         return detail
 
     # ------------------------------------------------------------------
