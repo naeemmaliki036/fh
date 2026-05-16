@@ -68,8 +68,8 @@ class DocumentRequestResponse(BaseModel):
 
 class DocumentRequestCreateResponse(DocumentRequestResponse):
     """Extends base response with one-time plaintext fields."""
-    verification_code: str  # plaintext — returned only on creation
-    public_url: str
+    verification_code: str = ""  # plaintext — always overridden via model_copy
+    public_url: str = ""  # always overridden via model_copy
 
 
 class DocumentRequestListResponse(BaseModel):

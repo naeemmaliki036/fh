@@ -111,7 +111,7 @@ class DealResponse(BaseModel):
     notes: str | None = None
     commission_type: CommissionType
     commission_value: Decimal
-    commission_amount: Decimal  # computed; not a DB column
+    commission_amount: Decimal = Decimal(0)  # computed field; always overridden in router
     commission_overridden: bool
     commission_override_reason: str | None = None
     commission_payout_status: CommissionPayoutStatus

@@ -153,7 +153,7 @@ class ListingDocumentResponse(BaseModel):
     listing_id: uuid.UUID
     tenant_id: uuid.UUID
     storage_key: str
-    url: str  # assembled by service
+    url: str = ""  # assembled by router; always overridden via model_copy
     file_name: str
     mime_type: str
     size_bytes: int
