@@ -71,12 +71,17 @@ function MobileDrawer({ open, onClose }: MobileDrawerProps): React.ReactElement 
           ))}
         </nav>
         <div className="flex flex-col gap-3 mt-auto">
-          <Link href="/login">
+          <Link href="/login" onClick={onClose}>
             <Button variant="outline" className="w-full rounded-full border-[#0f766e] text-[#0f766e] hover:bg-[#0f766e]/5">
               Sign in
             </Button>
           </Link>
-          <Link href="/demo">
+          <Link href="/signup" onClick={onClose}>
+            <Button variant="outline" className="w-full rounded-full border-[#0f766e] text-[#0f766e] hover:bg-[#0f766e]/5">
+              Register
+            </Button>
+          </Link>
+          <Link href="/demo" onClick={onClose}>
             <Button className="w-full rounded-full bg-[#0f766e] hover:bg-[#0e6b63] text-white">
               Request demo
             </Button>
@@ -110,14 +115,22 @@ export function MarketingHeader(): React.ReactElement {
         <div className="max-w-7xl mx-auto px-4 sm:px-6 h-16 flex items-center justify-between">
           <AqarFlowLogo />
           <DesktopNav />
-          <div className="hidden md:flex items-center gap-3">
-            <Link href="/login">
-              <Button variant="outline" size="sm" className="rounded-full border-[#0f766e] text-[#0f766e] hover:bg-[#0f766e]/5">
-                Sign in
-              </Button>
+          <div className="hidden md:flex items-center gap-2.5">
+            <Link
+              href="/login"
+              className="text-sm font-semibold text-[#4a4a4a] hover:text-[#0f766e] transition-colors px-3 py-1.5"
+            >
+              Sign in
+            </Link>
+            <span className="text-slate-300">|</span>
+            <Link
+              href="/signup"
+              className="text-sm font-semibold text-[#4a4a4a] hover:text-[#0f766e] transition-colors px-3 py-1.5"
+            >
+              Register
             </Link>
             <Link href="/demo">
-              <Button size="sm" className="rounded-full bg-[#0f766e] hover:bg-[#0e6b63] text-white px-5">
+              <Button size="sm" className="ml-1 rounded-full bg-[#0f766e] hover:bg-[#0e6b63] text-white px-5">
                 Request demo
               </Button>
             </Link>

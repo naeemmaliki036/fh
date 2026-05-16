@@ -1,5 +1,6 @@
 "use client";
 
+import Link from "next/link";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
@@ -134,8 +135,18 @@ export function LoginForm(): React.ReactElement {
       </button>
 
       {/* Footer */}
-      <p className="text-center text-xs text-slate-400 pt-1">
-        Access is by invitation only. Contact your administrator for access.
+      <p className="text-center text-sm text-slate-600 pt-1">
+        New to the platform?{" "}
+        <Link
+          href="/signup"
+          className="font-semibold text-emerald-600 hover:text-emerald-700 underline-offset-4 hover:underline"
+        >
+          Create an account
+        </Link>
+      </p>
+      <p className="text-center text-xs text-slate-400">
+        Sign-up is open to all real-estate agencies — your account is
+        reviewed and activated by our team after registration.
       </p>
     </form>
   );
