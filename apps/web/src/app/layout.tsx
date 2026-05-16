@@ -1,4 +1,4 @@
-import type { Metadata } from "next";
+import type { Metadata, Viewport } from "next";
 import { GeistSans } from "geist/font/sans";
 import { GeistMono } from "geist/font/mono";
 import "@/styles/globals.css";
@@ -12,6 +12,15 @@ export const metadata: Metadata = {
   description: "Real estate operations platform",
 };
 
+// Pre-render frame: browsers paint the html element's color while the
+// React app is still hydrating. Without an explicit color the browser
+// can fall back to a host-level default (some Chrome installs flash
+// yellow on Mac when the system accent is unset). Lock it to our cream.
+export const viewport: Viewport = {
+  themeColor: "#faf9f6",
+  colorScheme: "light",
+};
+
 export default function RootLayout({
   children,
 }: {
@@ -20,10 +29,10 @@ export default function RootLayout({
   return (
     <html
       lang="en"
-      className={`${GeistSans.variable} ${GeistMono.variable}`}
+      className={`${GeistSans.variable} ${GeistMono.variable} bg-[#faf9f6]`}
       suppressHydrationWarning
     >
-      <body className="font-sans antialiased">
+      <body className="font-sans antialiased bg-[#faf9f6]">
         <ThemeProvider>
           <QueryProvider>
             <AuthProvider>
