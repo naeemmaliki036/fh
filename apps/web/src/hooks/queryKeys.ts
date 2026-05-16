@@ -48,6 +48,7 @@ export const queryKeys = {
     detail: (id: string) => ["properties", id] as const,
     media: (id: string) => ["properties", id, "media"] as const,
     listings: (id: string) => ["properties", id, "listings"] as const,
+    agents: (id: string) => ["properties", id, "agents"] as const,
   },
   listings: {
     all: ["listings"] as const,
@@ -109,6 +110,9 @@ export const queryKeys = {
   },
   offMarketReasons: {
     all: ["off-market-reasons"] as const,
+  },
+  reports: {
+    closedDeals: (params?: Record<string, unknown>) => ["reports", "closed-deals", params] as const,
   },
   locations: {
     tree: ["locations", "tree"] as const,

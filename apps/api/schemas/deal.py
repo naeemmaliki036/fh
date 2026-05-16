@@ -81,6 +81,8 @@ class AgentSummary(BaseModel):
     id: uuid.UUID
     full_name: str
     email: str
+    default_commission_type: CommissionType | None = None
+    default_commission_value: Decimal | None = None
 
 
 class PropertySummary(BaseModel):

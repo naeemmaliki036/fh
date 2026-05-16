@@ -85,6 +85,10 @@ async def create_customer(
             status=body.status,
             notes=body.notes,
             assigned_agent_id=body.assigned_agent_id,
+            customer_type=body.customer_type,
+            company_trade_license=body.company_trade_license,
+            contact_person_name=body.contact_person_name,
+            contact_person_designation=body.contact_person_designation,
         )
     except HTTPException as exc:
         if exc.status_code == status.HTTP_409_CONFLICT:
@@ -120,6 +124,7 @@ async def get_customer(
 async def update_customer(
     customer_id: UUID,
     body: CustomerUpdateRequest,
+    current_user: CurrentUser,
     tenant_id: TenantContext,
     svc: CustomerService = Depends(_cust_svc),
 ) -> CustomerResponse:
@@ -127,7 +132,10 @@ async def update_customer(
     if "email" in updates and updates["email"] is not None:
         updates["email"] = str(updates["email"])
     try:
-        customer = await svc.update_customer(customer_id, tenant_id, updates)
+        customer = await svc.update_customer(
+            customer_id, tenant_id, updates,
+            actor_user_id=UUID(current_user["id"]),
+        )
     except HTTPException as exc:
         if exc.status_code == status.HTTP_409_CONFLICT:
             raise HTTPException(

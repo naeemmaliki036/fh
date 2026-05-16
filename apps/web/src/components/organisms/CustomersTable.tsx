@@ -7,6 +7,7 @@ import { useCustomers } from "@/hooks/queries/useCustomers";
 import { useAgents } from "@/hooks/queries/useAgents";
 import { useDeleteCustomer } from "@/hooks/mutations/useCustomerMutations";
 import { CustomerStatusBadge } from "@/components/atoms/CustomerStatusBadge";
+import { CustomerTypeBadge } from "@/components/atoms/CustomerTypeBadge";
 import { SourceBadge } from "@/components/atoms/SourceBadge";
 import { ConfirmDialog } from "@/components/molecules/ConfirmDialog";
 import { EmptyState } from "@/components/molecules/EmptyState";
@@ -90,6 +91,7 @@ export function CustomersTable(): React.ReactElement {
           <thead className="bg-muted/50">
             <tr>
               <th className="px-3 py-3 text-left font-medium">Name</th>
+              <th className="px-3 py-3 text-left font-medium">Type</th>
               <th className="px-3 py-3 text-left font-medium">Phone</th>
               <th className="px-3 py-3 text-left font-medium">Email</th>
               <th className="px-3 py-3 text-left font-medium">Source</th>
@@ -98,11 +100,21 @@ export function CustomersTable(): React.ReactElement {
               <th className="px-3 py-3 text-left font-medium">Actions</th>
             </tr>
           </thead>
-          {isLoading ? <TableSkeleton rows={5} cols={7} /> : (
+          {isLoading ? <TableSkeleton rows={5} cols={8} /> : (
           <tbody>
             {customers.map((c) => (
               <tr key={c.id} className="border-b">
-                <td className="px-3 py-2.5 font-medium">{c.full_name}</td>
+                <td className="px-3 py-2.5 font-medium">
+                  <div>{c.full_name}</div>
+                  {c.customer_type === "company" && c.contact_person_name && (
+                    <div className="text-xs text-muted-foreground">
+                      Contact: {c.contact_person_name}
+                    </div>
+                  )}
+                </td>
+                <td className="px-3 py-2.5">
+                  <CustomerTypeBadge type={c.customer_type ?? "individual"} />
+                </td>
                 <td className="px-3 py-2.5 text-muted-foreground">{c.phone ?? "—"}</td>
                 <td className="px-3 py-2.5 text-muted-foreground">{c.email ?? "—"}</td>
                 <td className="px-3 py-2.5"><SourceBadge source={c.source} /></td>

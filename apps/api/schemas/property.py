@@ -6,7 +6,7 @@ from decimal import Decimal
 
 from pydantic import BaseModel, ConfigDict, field_validator
 
-from apps.api.models.enums import PropertyStatus, PropertyType
+from apps.api.models.enums import CommissionType, PropertyStatus, PropertyType
 
 
 def _validate_tags(v: list[str] | None) -> list[str] | None:
@@ -38,6 +38,13 @@ class PropertyAgentResponse(BaseModel):
     agent_id: uuid.UUID
     is_primary: bool
     assigned_at: datetime
+    commission_override_type: CommissionType | None = None
+    commission_override_value: Decimal | None = None
+
+
+class CommissionOverrideRequest(BaseModel):
+    commission_type: CommissionType
+    commission_value: Decimal
 
 
 class PropertyAgentAssignRequest(BaseModel):

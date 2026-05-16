@@ -12,6 +12,7 @@ from apps.api.models.customer import Customer
 from apps.api.models.deal import Deal
 from apps.api.models.enums import AuditAction, DealStage, DealType, TenantRole
 from apps.api.models.property import Property
+from apps.api.models.property_agent import PropertyAgent
 from apps.api.services.audit_service import AuditService
 from apps.api.services.base import BaseService
 from apps.api.utils.commission import compute_commission_amount
@@ -117,14 +118,31 @@ class DealService(BaseService):
         if not agent or agent.tenant_id != tenant_id:
             raise not_found("Agent")
 
-        # Resolve commission
+        # Resolve commission — precedence:
+        #   1. Explicit per-deal override (req_type / req_value in request body)
+        #   2. Per-property agent override (PropertyAgent.commission_override_*)
+        #   3. Agent default commission
         req_type = fields.pop("commission_type", None)
         req_value = fields.pop("commission_value", None)
         override_reason = fields.pop("commission_override_reason", None)
 
         if req_type is None and req_value is None:
-            commission_type = agent.default_commission_type
-            commission_value = Decimal(str(agent.default_commission_value))
+            # No explicit deal override — check for property-level override
+            prop_override = (await self.session.execute(
+                select(PropertyAgent).where(
+                    PropertyAgent.tenant_id == tenant_id,
+                    PropertyAgent.property_id == fields["property_id"],
+                    PropertyAgent.agent_id == fields["primary_agent_id"],
+                    PropertyAgent.commission_override_type.is_not(None),
+                )
+            )).scalar_one_or_none()
+
+            if prop_override:
+                commission_type = prop_override.commission_override_type
+                commission_value = Decimal(str(prop_override.commission_override_value))
+            else:
+                commission_type = agent.default_commission_type
+                commission_value = Decimal(str(agent.default_commission_value))
             overridden = False
         else:
             commission_type = req_type or agent.default_commission_type

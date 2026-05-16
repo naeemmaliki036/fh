@@ -9,6 +9,7 @@ from apps.api.models.customer import Customer
 from apps.api.models.customer_listing_interest import CustomerListingInterest
 from apps.api.models.deal import Deal
 from apps.api.models.enums import (
+    AuditAction,
     CustomerListingInterestStatus,
     CustomerStatus,
     PrivateDocumentEntityType,
@@ -17,6 +18,7 @@ from apps.api.models.enums import (
 from apps.api.models.listing import Listing
 from apps.api.models.private_document import PrivateDocument
 from apps.api.models.property import Property
+from apps.api.services.audit_service import AuditService
 from apps.api.services.base import BaseService
 from apps.api.utils.phone import normalize_phone
 from packages.common.utils.error_handlers import conflict, forbidden, not_found
@@ -32,9 +34,19 @@ _CREATE_ROLES = {
 _ADMIN_ROLES = {TenantRole.COMPANY_OWNER.value, TenantRole.COMPANY_ADMIN.value}
 
 
+_COMPANY_FIELDS = {"company_trade_license", "contact_person_name", "contact_person_designation"}
+_ALLOWED_UPDATE = {
+    "full_name", "email", "nationality", "language",
+    "preferred_currency", "source", "notes", "assigned_agent_id",
+    "customer_type", "company_trade_license", "contact_person_name",
+    "contact_person_designation",
+}
+
+
 class CustomerService(BaseService):
     def __init__(self, session: AsyncSession) -> None:
         super().__init__(session)
+        self._audit = AuditService(session)
 
     async def _set_rls(self, tenant_id: UUID) -> None:
         await self.session.execute(text(f"SET LOCAL app.tenant_id = '{tenant_id}'"))
@@ -206,7 +218,11 @@ class CustomerService(BaseService):
     # ------------------------------------------------------------------
 
     async def update_customer(
-        self, customer_id: UUID, tenant_id: UUID, updates: dict
+        self,
+        customer_id: UUID,
+        tenant_id: UUID,
+        updates: dict,
+        actor_user_id: UUID | None = None,
     ) -> Customer:
         customer = await self.get_customer(customer_id, tenant_id)
 
@@ -218,15 +234,28 @@ class CustomerService(BaseService):
                     raise conflict(str(existing.id))
             customer.phone_normalized = new_normalized
 
-        allowed = {
-            "full_name", "email", "nationality", "language",
-            "preferred_currency", "source", "notes", "assigned_agent_id",
-        }
+        # Detect customer_type change for audit trail
+        new_type = updates.get("customer_type")
+        old_type = customer.customer_type
+        type_changing = new_type is not None and new_type != old_type
+
         for field, value in updates.items():
-            if field in allowed:
+            if field in _ALLOWED_UPDATE:
                 setattr(customer, field, value)
 
         await self.session.flush()
+
+        if type_changing:
+            await self._audit.record(
+                AuditAction.CUSTOMER_TYPE_CHANGED,
+                tenant_id=tenant_id,
+                actor_user_id=actor_user_id,
+                entity_type="customer",
+                entity_id=customer_id,
+                before={"customer_type": old_type.value if hasattr(old_type, "value") else str(old_type)},
+                after={"customer_type": new_type},
+            )
+
         await self.session.refresh(customer)
         return customer
 

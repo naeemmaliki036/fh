@@ -10,6 +10,7 @@ from apps.api.models.enums import (
     CustomerListingInterestStatus,
     CustomerSource,
     CustomerStatus,
+    CustomerType,
     DealStage,
     PrivateDocumentApprovalStatus,
     PrivateDocumentKind,
@@ -69,6 +70,7 @@ class CustomerDetailResponse(BaseModel):
 
     id: uuid.UUID
     tenant_id: uuid.UUID
+    customer_type: CustomerType = CustomerType.INDIVIDUAL
     full_name: str
     email: str | None = None
     phone: str | None = None
@@ -81,6 +83,9 @@ class CustomerDetailResponse(BaseModel):
     notes: str | None = None
     assigned_agent_id: uuid.UUID | None = None
     created_by_user_id: uuid.UUID | None = None
+    company_trade_license: str | None = None
+    contact_person_name: str | None = None
+    contact_person_designation: str | None = None
     created_at: datetime
     updated_at: datetime
 

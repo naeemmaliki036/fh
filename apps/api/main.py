@@ -40,6 +40,7 @@ from apps.api.routers import (
     platform_users,
     private_documents,
     properties,
+    reports,
     tenants,
     users,
 )
@@ -161,6 +162,7 @@ app.include_router(admin_locations.router, prefix="/admin/locations", tags=["adm
 # listing_interests must come BEFORE listings prefix="" catch-all
 app.include_router(listing_interests.router, prefix="", tags=["listings"])
 app.include_router(private_documents.router, prefix="/private-documents", tags=["private-documents"])
+app.include_router(reports.router, prefix="/reports", tags=["reports"])
 
 
 @app.get("/health", tags=["health"])

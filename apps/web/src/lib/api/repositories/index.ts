@@ -25,3 +25,4 @@ export { OffMarketReasonRepository, offMarketReasonRepository } from "./off-mark
 export { locationsRepository, adminLocationsRepository } from "./locations.repository";
 export { privateDocumentRepository } from "./private-document.repository";
 export { listingInterestedCustomersRepository } from "./listing-interested-customers.repository";
+export { reportsRepository } from "./reports.repository";

@@ -73,6 +73,7 @@ export type {
 export type {
   CustomerSource,
   CustomerStatus,
+  CustomerType,
   Customer,
   CustomerCreateRequest,
   CustomerUpdateRequest,
@@ -98,6 +99,8 @@ export type {
   PropertyType,
   PropertyStatus,
   PropertyAgentAssignment,
+  PropertyAgentDetail,
+  PropertyAgentCommissionOverrideRequest,
   Property,
   PropertyCreateRequest,
   PropertyUpdateRequest,
@@ -191,6 +194,9 @@ export type {
   DealCommissionPayoutRequest,
   DealListResponse,
   DealListParams,
+  ClosedDealRow,
+  ClosedDealsResponse,
+  ClosedDealsParams,
 } from "./deal";
 export { DEAL_STAGE_TRANSITIONS, DEAL_TERMINAL_STAGES } from "./deal";
 export type { LeaderboardRow, LeaderboardResponse, LeaderboardPeriod } from "./deal";

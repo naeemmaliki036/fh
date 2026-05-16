@@ -5,6 +5,7 @@ import Link from "next/link";
 import { ArrowLeft, FileText, Pencil } from "lucide-react";
 import { useCustomerDetail } from "@/hooks/queries/useCustomers";
 import { CustomerStatusBadge } from "@/components/atoms/CustomerStatusBadge";
+import { CustomerTypeBadge } from "@/components/atoms/CustomerTypeBadge";
 import { CustomerInfoPanel } from "@/components/organisms/CustomerInfoPanel";
 import { CustomerDocumentsPanel } from "@/components/organisms/CustomerDocumentsPanel";
 import { CustomerDealHistoryPanel } from "@/components/organisms/CustomerDealHistoryPanel";
@@ -58,7 +59,18 @@ export default function CustomerDetailPage({ params }: PageProps): React.ReactEl
           <div className="flex items-center gap-2 flex-wrap">
             <h1 className="text-2xl font-semibold tracking-tight">{customer.full_name}</h1>
             <CustomerStatusBadge status={customer.status} />
+            {customer.customer_type === "company" && (
+              <CustomerTypeBadge type="company" />
+            )}
           </div>
+          {customer.customer_type === "company" && customer.contact_person_name && (
+            <p className="text-sm font-medium mt-0.5">
+              Contact: {customer.contact_person_name}
+              {customer.contact_person_designation
+                ? `, ${customer.contact_person_designation}`
+                : ""}
+            </p>
+          )}
           <p className="text-sm text-muted-foreground mt-0.5">
             {customer.phone ?? customer.email ?? "No contact info"}
           </p>

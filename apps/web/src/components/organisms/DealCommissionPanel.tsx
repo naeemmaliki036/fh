@@ -18,6 +18,7 @@ import { formatDate } from "@/lib/utils/format-date";
 import { useMyTenant } from "@/hooks/queries/useTenants";
 import type { Deal, DealCommissionOverrideRequest, DealCommissionPayoutRequest } from "@/lib/types/deal";
 import { formatCommission } from "@/lib/utils/format-commission";
+import { DealCommissionBreakdown } from "@/components/organisms/DealCommissionBreakdown";
 
 function fmt(v: string, cur: string): string {
   try { return new Intl.NumberFormat("en-AE", { style: "currency", currency: cur, maximumFractionDigits: 2 }).format(Number(v)); }
@@ -77,6 +78,12 @@ export function DealCommissionPanel({ deal }: DealCommissionPanelProps): React.R
       </div>
 
       {/* Commission breakdown */}
+      <div className="space-y-2">
+        <p className="text-sm font-medium">Commission Breakdown</p>
+        <DealCommissionBreakdown deal={deal} />
+      </div>
+
+      {/* Commission details */}
       <div className="rounded-md border p-4 space-y-3">
         <p className="text-sm font-medium">Commission Details</p>
         <div className="grid grid-cols-2 gap-y-2 text-sm">

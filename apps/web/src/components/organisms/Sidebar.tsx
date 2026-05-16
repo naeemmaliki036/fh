@@ -21,6 +21,7 @@ import {
   ClipboardList,
   Trophy,
   Wallet,
+  BarChart2,
 } from "lucide-react";
 import { cn } from "@/lib/utils/cn";
 import { useAuth } from "@/contexts/AuthContext";
@@ -53,6 +54,10 @@ const MANAGE_ITEMS: NavItem[] = [
   { href: "/deals", label: "Deals", icon: Handshake },
   { href: "/leaderboard", label: "Leaderboard", icon: Trophy, adminOnly: true },
   { href: "/my-earnings", label: "My Earnings", icon: Wallet, agentOnly: true },
+];
+
+const REPORTS_ITEMS: NavItem[] = [
+  { href: "/reports/closed-deals", label: "Closed Deals", icon: BarChart2, adminOnly: true },
 ];
 
 const TOOLS_ITEMS: NavItem[] = [
@@ -180,6 +185,15 @@ export function Sidebar(): React.ReactElement {
             badge={item.href === "/listings/pending-reviews" ? pendingReviewCount : undefined}
           />
         ))}
+
+        {filterNav(REPORTS_ITEMS).length > 0 && (
+          <>
+            <SectionLabel label="Reports" />
+            {filterNav(REPORTS_ITEMS).map((item) => (
+              <NavLink key={item.href} item={item} isActive={pathname.startsWith(item.href)} />
+            ))}
+          </>
+        )}
 
         <SectionLabel label="Tools" />
         {filterNav(TOOLS_ITEMS).map((item) => (

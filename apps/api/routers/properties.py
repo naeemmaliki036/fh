@@ -8,6 +8,7 @@ from fastapi import APIRouter, Depends, Query
 from apps.api.dependencies import CurrentUser, DbSession, ReqCtx, TenantContext
 from apps.api.models.enums import PropertyStatus, PropertyType
 from apps.api.schemas.property import (
+    CommissionOverrideRequest,
     PropertyAgentAssignRequest,
     PropertyAgentPatchRequest,
     PropertyAgentResponse,
@@ -183,6 +184,16 @@ async def change_property_status(
 # Property↔Agent assignments
 # ------------------------------------------------------------------
 
+@router.get("/{property_id}/agents", response_model=list[PropertyAgentResponse])
+async def list_property_agents(
+    property_id: UUID,
+    tenant_id: TenantContext,
+    svc: PropertyAgentService = Depends(_agent_svc),
+) -> list[PropertyAgentResponse]:
+    assignments = await svc.list_assignments(property_id, tenant_id)
+    return [PropertyAgentResponse.model_validate(pa) for pa in assignments]
+
+
 @router.post("/{property_id}/agents", response_model=PropertyAgentResponse, status_code=201)
 async def add_agent(
     property_id: UUID,
@@ -221,3 +232,34 @@ async def remove_agent(
     svc: PropertyAgentService = Depends(_agent_svc),
 ) -> None:
     await svc.remove_agent(property_id, agent_id, tenant_id, current_user)
+
+
+@router.put(
+    "/{property_id}/agents/{agent_id}/commission-override",
+    response_model=PropertyAgentResponse,
+)
+async def set_commission_override(
+    property_id: UUID,
+    agent_id: UUID,
+    body: CommissionOverrideRequest,
+    current_user: CurrentUser,
+    tenant_id: TenantContext,
+    svc: PropertyAgentService = Depends(_agent_svc),
+) -> PropertyAgentResponse:
+    pa = await svc.set_commission_override(
+        property_id, agent_id, tenant_id, current_user,
+        commission_type=body.commission_type,
+        commission_value=body.commission_value,
+    )
+    return PropertyAgentResponse.model_validate(pa)
+
+
+@router.delete("/{property_id}/agents/{agent_id}/commission-override", status_code=204)
+async def clear_commission_override(
+    property_id: UUID,
+    agent_id: UUID,
+    current_user: CurrentUser,
+    tenant_id: TenantContext,
+    svc: PropertyAgentService = Depends(_agent_svc),
+) -> None:
+    await svc.clear_commission_override(property_id, agent_id, tenant_id, current_user)

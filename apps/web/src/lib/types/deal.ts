@@ -1,5 +1,41 @@
 import type { CommissionType } from "./agent";
 
+export interface ClosedDealRow {
+  deal_id: string;
+  closed_at: string;
+  deal_type: DealType;
+  transaction_value: string;
+  transaction_currency: string;
+  property_id: string;
+  property_title: string;
+  customer_id: string;
+  customer_display_name: string;
+  primary_agent_id: string;
+  primary_agent_name: string;
+  secondary_agent_id: string | null;
+  secondary_agent_name: string | null;
+  commission_type: CommissionType;
+  commission_value: string;
+  commission_paid_amount: string;
+}
+
+export interface ClosedDealsResponse {
+  items: ClosedDealRow[];
+  total: number;
+  page: number;
+  page_size: number;
+}
+
+export interface ClosedDealsParams {
+  from_date?: string;
+  to_date?: string;
+  agent_id?: string;
+  deal_type?: DealType;
+  page?: number;
+  page_size?: number;
+  format?: "json" | "csv";
+}
+
 export type DealType = "sale" | "rent_short" | "rent_long";
 export type DealStage =
   | "initiated" | "documents_pending" | "deposit_pending"
@@ -17,6 +53,8 @@ export interface DealAgentSummary {
   id: string;
   full_name: string;
   email: string;
+  default_commission_type: CommissionType;
+  default_commission_value: string;
 }
 
 export interface DealPropertySummary {

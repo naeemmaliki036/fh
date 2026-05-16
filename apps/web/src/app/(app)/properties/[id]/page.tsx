@@ -5,6 +5,7 @@ import Link from "next/link";
 import { ArrowLeft } from "lucide-react";
 import { useProperty } from "@/hooks/queries/useProperties";
 import { useChangePropertyStatus } from "@/hooks/mutations/usePropertyMutations";
+import { useAuth } from "@/contexts/AuthContext";
 import { PropertyOverviewPanel } from "@/components/organisms/PropertyOverviewPanel";
 import { PropertyMediaGallery } from "@/components/organisms/PropertyMediaGallery";
 import { PropertyListingsPanel } from "@/components/organisms/PropertyListingsPanel";
@@ -36,12 +37,16 @@ const TRANSITIONS: Array<{
   { fromStatuses: ["available", "reserved"], status: "rented", label: "Mark Rented" },
 ];
 
+const OVERRIDE_ROLES = new Set(["company_owner", "company_admin", "property_admin"]);
+
 interface PageProps { params: Promise<{ id: string }> }
 
 export default function PropertyDetailPage({ params }: PageProps): React.ReactElement {
   const { id } = use(params);
   const { data: property, isLoading, error } = useProperty(id);
   const { mutateAsync: changeStatus } = useChangePropertyStatus();
+  const { currentUser } = useAuth();
+  const canOverride = !!currentUser && OVERRIDE_ROLES.has(currentUser.role);
 
   const [showOffMarket, setShowOffMarket] = useState(false);
   const [soldRentedTarget, setSoldRentedTarget] = useState<Extract<PropertyStatus, "sold" | "rented"> | null>(null);
@@ -121,7 +126,7 @@ export default function PropertyDetailPage({ params }: PageProps): React.ReactEl
         <TabsContent value="media" className="pt-4"><PropertyMediaGallery propertyId={property.id} /></TabsContent>
         <TabsContent value="listings" className="pt-4"><PropertyListingsPanel propertyId={property.id} /></TabsContent>
         <TabsContent value="agents" className="pt-4">
-          <PropertyAgentsPanel propertyId={property.id} assignedAgents={property.assigned_agents} />
+          <PropertyAgentsPanel propertyId={property.id} canOverride={canOverride} />
         </TabsContent>
         <TabsContent value="activity" className="pt-4">
           <AuditTimelinePanel entityType="property" entityId={property.id} />

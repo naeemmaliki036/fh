@@ -12,6 +12,21 @@ export interface PropertyAgentAssignment {
   assigned_at: string;
 }
 
+export interface PropertyAgentDetail {
+  property_id: string;
+  agent_id: string;
+  agent_full_name: string;
+  is_primary: boolean;
+  commission_override_type: "percentage" | "fixed" | null;
+  commission_override_value: string | null;
+  assigned_at: string;
+}
+
+export interface PropertyAgentCommissionOverrideRequest {
+  commission_type: "percentage" | "fixed";
+  commission_value: number;
+}
+
 export interface Property {
   id: string;
   tenant_id: string;

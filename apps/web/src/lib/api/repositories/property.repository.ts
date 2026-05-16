@@ -9,6 +9,8 @@ import type {
   PropertyAgentAssignRequest,
   PropertyAgentPatchRequest,
   PropertyStatusChangeRequest,
+  PropertyAgentDetail,
+  PropertyAgentCommissionOverrideRequest,
 } from "@/lib/types/property";
 import type { Media, MediaListResponse, MediaKind } from "@/lib/types/media";
 
@@ -75,6 +77,27 @@ export class PropertyRepository extends BaseRepository<
   async changeStatus(id: string, body: PropertyStatusChangeRequest): Promise<Property> {
     const res = await this.client.patch<Property>(`${this.basePath}/${id}/status`, body);
     return res.data;
+  }
+
+  async listPropertyAgents(id: string): Promise<PropertyAgentDetail[]> {
+    const res = await this.client.get<PropertyAgentDetail[]>(`${this.basePath}/${id}/agents`);
+    return res.data;
+  }
+
+  async setCommissionOverride(
+    id: string,
+    agentId: string,
+    body: PropertyAgentCommissionOverrideRequest,
+  ): Promise<PropertyAgentDetail> {
+    const res = await this.client.put<PropertyAgentDetail>(
+      `${this.basePath}/${id}/agents/${agentId}/commission-override`,
+      body,
+    );
+    return res.data;
+  }
+
+  async clearCommissionOverride(id: string, agentId: string): Promise<void> {
+    await this.client.delete(`${this.basePath}/${id}/agents/${agentId}/commission-override`);
   }
 }
 

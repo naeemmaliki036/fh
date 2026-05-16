@@ -140,6 +140,13 @@ class AuditAction(str, enum.Enum):
     # Document request lifecycle
     DOCUMENT_REQUEST_REACTIVATED = "document_request_reactivated"
 
+    # Customer type changes
+    CUSTOMER_TYPE_CHANGED = "customer_type_changed"
+
+    # Per-property commission override on agent assignment
+    PROPERTY_COMMISSION_OVERRIDE_SET = "property_commission_override_set"
+    PROPERTY_COMMISSION_OVERRIDE_CLEARED = "property_commission_override_cleared"
+
     # Catch-all for ad-hoc events
     OTHER = "other"
 
@@ -190,6 +197,11 @@ class PrivateDocumentKind(str, enum.Enum):
     EJARI = "ejari"
     MAKANI = "makani"
     TITLE_DEED = "title_deed"
+
+
+class CustomerType(str, enum.Enum):
+    INDIVIDUAL = "individual"
+    COMPANY = "company"
 
 
 class CustomerSource(str, enum.Enum):

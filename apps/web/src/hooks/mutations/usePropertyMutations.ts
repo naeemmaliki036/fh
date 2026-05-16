@@ -11,6 +11,8 @@ import type {
   PropertyAgentAssignRequest,
   PropertyAgentPatchRequest,
   PropertyStatusChangeRequest,
+  PropertyAgentDetail,
+  PropertyAgentCommissionOverrideRequest,
 } from "@/lib/types/property";
 import { queryKeys } from "../queryKeys";
 
@@ -74,6 +76,7 @@ export function useAssignAgent(propertyId: string) {
       propertyRepository.assignAgent(propertyId, body),
     onSuccess: () => {
       qc.invalidateQueries({ queryKey: queryKeys.properties.detail(propertyId) });
+      qc.invalidateQueries({ queryKey: queryKeys.properties.agents(propertyId) });
       toast.success("Agent assigned");
     },
     onError: (e: Error) => { toast.error(e.message); },
@@ -87,6 +90,7 @@ export function useUpdateAgentAssignment(propertyId: string) {
       propertyRepository.updateAgentAssignment(propertyId, agentId, body),
     onSuccess: () => {
       qc.invalidateQueries({ queryKey: queryKeys.properties.detail(propertyId) });
+      qc.invalidateQueries({ queryKey: queryKeys.properties.agents(propertyId) });
     },
     onError: (e: Error) => { toast.error(e.message); },
   });
@@ -99,7 +103,40 @@ export function useUnassignAgent(propertyId: string) {
       propertyRepository.unassignAgent(propertyId, agentId),
     onSuccess: () => {
       qc.invalidateQueries({ queryKey: queryKeys.properties.detail(propertyId) });
+      qc.invalidateQueries({ queryKey: queryKeys.properties.agents(propertyId) });
       toast.success("Agent removed");
+    },
+    onError: (e: Error) => { toast.error(e.message); },
+  });
+}
+
+export function useSetCommissionOverride(propertyId: string) {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: ({
+      agentId,
+      body,
+    }: {
+      agentId: string;
+      body: PropertyAgentCommissionOverrideRequest;
+    }): Promise<PropertyAgentDetail> =>
+      propertyRepository.setCommissionOverride(propertyId, agentId, body),
+    onSuccess: () => {
+      qc.invalidateQueries({ queryKey: queryKeys.properties.agents(propertyId) });
+      toast.success("Commission override saved");
+    },
+    onError: (e: Error) => { toast.error(e.message); },
+  });
+}
+
+export function useClearCommissionOverride(propertyId: string) {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: (agentId: string): Promise<void> =>
+      propertyRepository.clearCommissionOverride(propertyId, agentId),
+    onSuccess: () => {
+      qc.invalidateQueries({ queryKey: queryKeys.properties.agents(propertyId) });
+      toast.success("Override cleared");
     },
     onError: (e: Error) => { toast.error(e.message); },
   });
