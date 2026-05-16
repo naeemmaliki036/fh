@@ -42,8 +42,20 @@ COPY --from=deps /app /app
 COPY apps/web ./apps/web
 COPY packages ./packages
 
+# NEXT_PUBLIC_* env vars must be present at build time — Next.js bakes
+# them into the client bundle. Railway passes service variables to the
+# build via these build-args; defaults are local-dev fallbacks.
+ARG NEXT_PUBLIC_API_URL=http://localhost:8000
+ARG NEXT_PUBLIC_SITE_URL=http://localhost:3000
+ARG NEXT_PUBLIC_PLATFORM_CONTACT_EMAIL=support@fh-platform.com
+ARG NEXT_PUBLIC_PLATFORM_CONTACT_PHONE="+971 4 000 0000"
+
 ENV NEXT_TELEMETRY_DISABLED=1 \
-    NODE_ENV=production
+    NODE_ENV=production \
+    NEXT_PUBLIC_API_URL=$NEXT_PUBLIC_API_URL \
+    NEXT_PUBLIC_SITE_URL=$NEXT_PUBLIC_SITE_URL \
+    NEXT_PUBLIC_PLATFORM_CONTACT_EMAIL=$NEXT_PUBLIC_PLATFORM_CONTACT_EMAIL \
+    NEXT_PUBLIC_PLATFORM_CONTACT_PHONE=$NEXT_PUBLIC_PLATFORM_CONTACT_PHONE
 
 RUN pnpm --filter fh-web build
 

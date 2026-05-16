@@ -42,8 +42,24 @@ COPY --from=deps /app /app
 COPY apps/marketplace ./apps/marketplace
 COPY packages ./packages
 
+# NEXT_PUBLIC_* env vars must be present at build time — Next.js bakes
+# them into the client bundle. Railway passes service variables to the
+# build via these build-args; defaults are local-dev fallbacks.
+ARG NEXT_PUBLIC_API_BASE_URL=http://localhost:8000
+ARG NEXT_PUBLIC_PORTAL_BRAND_NAME=PropertyPoint
+ARG NEXT_PUBLIC_PORTAL_BRAND_TAGLINE="The global open property marketplace"
+ARG NEXT_PUBLIC_AQARFLOW_PORTAL_URL=https://af-staging-portal.up.railway.app
+ARG NEXT_PUBLIC_AQARFLOW_MARKETING_URL=https://af-staging-public.up.railway.app
+ARG NEXT_PUBLIC_AQARFLOW_BRAND_NAME=AqarFlow
+
 ENV NEXT_TELEMETRY_DISABLED=1 \
-    NODE_ENV=production
+    NODE_ENV=production \
+    NEXT_PUBLIC_API_BASE_URL=$NEXT_PUBLIC_API_BASE_URL \
+    NEXT_PUBLIC_PORTAL_BRAND_NAME=$NEXT_PUBLIC_PORTAL_BRAND_NAME \
+    NEXT_PUBLIC_PORTAL_BRAND_TAGLINE=$NEXT_PUBLIC_PORTAL_BRAND_TAGLINE \
+    NEXT_PUBLIC_AQARFLOW_PORTAL_URL=$NEXT_PUBLIC_AQARFLOW_PORTAL_URL \
+    NEXT_PUBLIC_AQARFLOW_MARKETING_URL=$NEXT_PUBLIC_AQARFLOW_MARKETING_URL \
+    NEXT_PUBLIC_AQARFLOW_BRAND_NAME=$NEXT_PUBLIC_AQARFLOW_BRAND_NAME
 
 RUN pnpm --filter fh-marketplace build
 
