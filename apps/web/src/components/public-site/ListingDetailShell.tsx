@@ -6,7 +6,13 @@ import { ArrowLeft, BedDouble, Bath, Square, Building2, MapPin } from "lucide-re
 import type { PublicListingDetail } from "@/lib/types/public-site";
 import { AgentCard } from "./AgentCard";
 import { ContactForm } from "./ContactForm";
+import { ListingCard } from "./ListingCard";
 import { formatAed } from "@/lib/utils/format-currency";
+import { VerifiedBadge } from "@/components/atoms/VerifiedBadge";
+import { ReferenceBadge } from "@/components/atoms/ReferenceBadge";
+import { PostedAgo } from "@/components/atoms/PostedAgo";
+import { CheckoutCTAs } from "@/components/molecules/CheckoutCTAs";
+import { useSimilarListings } from "@/hooks/queries/useSimilarListings";
 
 interface ListingDetailShellProps {
   listing: PublicListingDetail;
@@ -44,6 +50,7 @@ export function ListingDetailShell({ listing, slug }: ListingDetailShellProps): 
     : [];
   const urls = listing.media_urls;
   const [activeImage, setActiveImage] = useState(0);
+  const { data: similarListings } = useSimilarListings(slug, listing.id, 4);
 
   const statCount =
     (listing.beds != null ? 1 : 0) + (listing.baths != null ? 1 : 0) + (listing.area_sqft != null ? 1 : 0) + 1;
@@ -96,6 +103,7 @@ export function ListingDetailShell({ listing, slug }: ListingDetailShellProps): 
               </span>
             </div>
             <h1 className="text-2xl font-bold leading-tight text-white md:text-3xl">{listing.title}</h1>
+            {listing.is_verified && <VerifiedBadge verifiedBy={listing.verified_by_user_name} />}
             {listing.address && (
               <p className="mt-1 inline-flex items-center gap-1.5 text-sm text-white/80">
                 <MapPin className="h-3.5 w-3.5" /> {listing.address}
@@ -110,11 +118,23 @@ export function ListingDetailShell({ listing, slug }: ListingDetailShellProps): 
           <div className="absolute right-4 top-4 z-10 hidden w-[340px] rounded-2xl bg-white/95 p-5 shadow-lg backdrop-blur-sm lg:block">
             <p className="text-[11px] uppercase tracking-wide text-slate-400">Price</p>
             <p className="text-2xl font-black text-slate-950">{formatAed(listing.price)}</p>
+            {listing.price_per_sqft != null && (
+              <p className="text-xs text-slate-400 mt-0.5">AED {listing.price_per_sqft.toLocaleString()} / sqft</p>
+            )}
+            <div className="flex items-center gap-2 mt-1">
+              <ReferenceBadge reference={listing.internal_reference} />
+              <PostedAgo days={listing.days_since_posted} />
+            </div>
             <div className="my-4 h-px bg-slate-100" />
             {listing.agent ? (
               <AgentCardCompact agent={listing.agent} />
             ) : (
               <ContactForm slug={slug} listingId={listing.id} compact />
+            )}
+            {listing.agent?.phone && (
+              <div className="mt-3">
+                <CheckoutCTAs agentPhone={listing.agent.phone} agentName={listing.agent.full_name} listingTitle={listing.title} />
+              </div>
             )}
           </div>
         </div>
@@ -199,14 +219,32 @@ export function ListingDetailShell({ listing, slug }: ListingDetailShellProps): 
             {/* Mobile: agent + contact form */}
             <div className="space-y-4 lg:hidden">
               {listing.agent && <AgentCard agent={listing.agent} />}
+              {listing.agent?.phone && (
+                <CheckoutCTAs agentPhone={listing.agent.phone} agentName={listing.agent.full_name} listingTitle={listing.title} />
+              )}
               <ContactForm slug={slug} listingId={listing.id} compact />
             </div>
+
+            {/* Similar listings */}
+            {similarListings && similarListings.length > 0 && (
+              <section className="pt-4">
+                <h2 className="mb-4 text-base font-bold text-slate-950">Similar listings</h2>
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                  {similarListings.map((s) => (
+                    <ListingCard key={s.id} listing={s} slug={slug} />
+                  ))}
+                </div>
+              </section>
+            )}
           </div>
 
           {/* RIGHT — sticky agent + contact (desktop) */}
           <div className="hidden lg:block">
             <div className="sticky top-24 space-y-4">
               {listing.agent && <AgentCard agent={listing.agent} />}
+              {listing.agent?.phone && (
+                <CheckoutCTAs agentPhone={listing.agent.phone} agentName={listing.agent.full_name} listingTitle={listing.title} />
+              )}
               <ContactForm slug={slug} listingId={listing.id} compact />
             </div>
           </div>

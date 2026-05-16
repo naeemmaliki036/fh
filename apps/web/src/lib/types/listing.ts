@@ -1,5 +1,6 @@
 export type ListingPurpose = "sale" | "rent_short" | "rent_long";
 export type RentPeriod = "daily" | "weekly" | "monthly" | "quarterly" | "yearly";
+export type RentChequeCount = 1 | 2 | 4 | 6 | 12;
 export type ListingStatus =
   | "draft"
   | "active"
@@ -31,6 +32,15 @@ export interface Listing {
   hero_media_url?: string | null;
   thumbnail_url?: string | null;
   thumbnail_kind?: "image" | "video" | null;
+  rent_cheque_count: RentChequeCount | null;
+  trakheesi_permit: string | null;
+  is_verified: boolean;
+  verified_at: string | null;
+  verified_by_user_name: string | null;
+  internal_reference: string | null;
+  price_per_sqft: number | null;
+  price_drop_pct: number | null;
+  days_since_posted: number;
   tags: string[] | null;
   valid_from: string | null;
   valid_until: string | null;
@@ -62,6 +72,8 @@ export interface ListingCreateRequest {
   currency: string;
   description?: string | null;
   rent_period?: RentPeriod | null;
+  rent_cheque_count?: RentChequeCount | null;
+  trakheesi_permit?: string | null;
   status?: ListingStatus;
   listing_tier?: ListingTier;
   valid_from?: string | null;
@@ -76,6 +88,8 @@ export interface ListingUpdateRequest {
   price?: string | number | null;
   currency?: string | null;
   rent_period?: RentPeriod | null;
+  rent_cheque_count?: RentChequeCount | null;
+  trakheesi_permit?: string | null;
   listing_tier?: ListingTier | null;
   valid_from?: string | null;
   valid_until?: string | null;
@@ -121,4 +135,9 @@ export interface ListingListParams {
   furnishing_status?: string;
   completion_status?: string;
   view_orientation?: string;
+  is_verified?: boolean;
+  rent_cheque_count?: RentChequeCount;
+  min_build_year?: number;
+  max_build_year?: number;
+  has_floor_plan?: boolean;
 }

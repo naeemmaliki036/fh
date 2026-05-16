@@ -21,9 +21,11 @@ from apps.api.schemas.listing import (
     ListingListResponse,
     ListingResponse,
     ListingUpdateRequest,
+    ListingVerifyRequest,
 )
 from apps.api.schemas.status_change import ListingStatusChangeRequest
 from apps.api.services.listing_service import ListingService
+from apps.api.services.listing_verify_service import ListingVerifyService
 from packages.common.storage import get_public_storage
 
 router = APIRouter()
@@ -31,6 +33,10 @@ router = APIRouter()
 
 def _svc(db: DbSession) -> ListingService:
     return ListingService(db)
+
+
+def _verify_svc(db: DbSession) -> ListingVerifyService:
+    return ListingVerifyService(db)
 
 
 def _hero_url(listing: Listing) -> str | None:
@@ -46,13 +52,18 @@ def _hero_url(listing: Listing) -> str | None:
     return f"/_local-public/{m.storage_key}"
 
 
-def _to_resp(listing: Listing, thumbnails: dict | None = None) -> ListingResponse:
+def _to_resp(
+    listing: Listing,
+    thumbnails: dict | None = None,
+    enrichments: dict | None = None,
+) -> ListingResponse:
     thumb = (thumbnails or {}).get(str(listing.id), {})
     return ListingResponse.model_validate({
         **listing.__dict__,
         "hero_media_url": _hero_url(listing),
         "thumbnail_url": thumb.get("thumbnail_url"),
         "thumbnail_kind": thumb.get("thumbnail_kind"),
+        **(enrichments or {}),
     })
 
 
@@ -117,6 +128,12 @@ async def list_all_listings(
     furnishing_status: FurnishingStatus | None = Query(None),
     completion_status: CompletionStatus | None = Query(None),
     view_orientation: ViewOrientation | None = Query(None),
+    # migration 0040 filters
+    is_verified: bool | None = Query(None),
+    rent_cheque_count: int | None = Query(None),
+    min_build_year: int | None = Query(None),
+    max_build_year: int | None = Query(None),
+    has_floor_plan: bool | None = Query(None),
     sort_by: str = Query("created_at", pattern="^(created_at|updated_at|price|title)$"),
     sort_dir: str = Query("desc", pattern="^(asc|desc)$"),
     skip: int = Query(0, ge=0),
@@ -151,6 +168,11 @@ async def list_all_listings(
         furnishing_status=furnishing_status.value if furnishing_status else None,
         completion_status=completion_status.value if completion_status else None,
         view_orientation=view_orientation.value if view_orientation else None,
+        is_verified=is_verified,
+        rent_cheque_count=rent_cheque_count,
+        min_build_year=min_build_year,
+        max_build_year=max_build_year,
+        has_floor_plan=has_floor_plan,
         sort_by=sort_by,
         sort_dir=sort_dir,
         skip=skip,
@@ -165,8 +187,11 @@ async def get_listing(
     listing_id: UUID,
     tenant_id: TenantContext,
     svc: ListingService = Depends(_svc),
+    vsvc: ListingVerifyService = Depends(_verify_svc),
 ) -> ListingResponse:
-    return _to_resp(await svc.get_listing(listing_id, tenant_id))
+    listing = await svc.get_listing(listing_id, tenant_id)
+    enrichments = await vsvc.compute_enrichments(listing)
+    return _to_resp(listing, enrichments=enrichments)
 
 
 @router.patch("/listings/{listing_id}", response_model=ListingResponse)
@@ -242,3 +267,42 @@ async def change_listing_status(
         ip_address=ctx.ip_address,
         user_agent=ctx.user_agent,
     ))
+
+
+# ------------------------------------------------------------------
+# Verification endpoints (migration 0040)
+# ------------------------------------------------------------------
+
+
+@router.post("/listings/{listing_id}/verify", response_model=ListingResponse)
+async def verify_listing(
+    listing_id: UUID,
+    body: ListingVerifyRequest,
+    current_user: CurrentUser,
+    tenant_id: TenantContext,
+    vsvc: ListingVerifyService = Depends(_verify_svc),
+) -> ListingResponse:
+    """Mark a listing as verified (company_owner / company_admin / listing_manager).
+
+    Returns 422 if the listing is already verified.
+    """
+    listing = await vsvc.verify(listing_id, tenant_id, current_user, note=body.note)
+    enrichments = await vsvc.compute_enrichments(listing)
+    return _to_resp(listing, enrichments=enrichments)
+
+
+@router.post("/listings/{listing_id}/unverify", response_model=ListingResponse)
+async def unverify_listing(
+    listing_id: UUID,
+    body: ListingVerifyRequest,
+    current_user: CurrentUser,
+    tenant_id: TenantContext,
+    vsvc: ListingVerifyService = Depends(_verify_svc),
+) -> ListingResponse:
+    """Remove verification from a listing (company_owner / company_admin / listing_manager).
+
+    Returns 422 if the listing is not currently verified.
+    """
+    listing = await vsvc.unverify(listing_id, tenant_id, current_user, note=body.note)
+    enrichments = await vsvc.compute_enrichments(listing)
+    return _to_resp(listing, enrichments=enrichments)

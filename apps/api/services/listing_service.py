@@ -120,6 +120,12 @@ class ListingService(BaseService):
         furnishing_status: str | None = None,
         completion_status: str | None = None,
         view_orientation: str | None = None,
+        # --- migration 0040 filters ---
+        is_verified: bool | None = None,
+        rent_cheque_count: int | None = None,
+        min_build_year: int | None = None,
+        max_build_year: int | None = None,
+        has_floor_plan: bool | None = None,
         sort_by: str = "created_at",
         sort_dir: str = "desc",
         skip: int = 0,
@@ -145,6 +151,11 @@ class ListingService(BaseService):
             furnishing_status=furnishing_status,
             completion_status=completion_status,
             view_orientation=view_orientation,
+            is_verified=is_verified,
+            rent_cheque_count=rent_cheque_count,
+            min_build_year=min_build_year,
+            max_build_year=max_build_year,
+            has_floor_plan=has_floor_plan,
         )
 
         _col_map = {
@@ -220,6 +231,8 @@ class ListingService(BaseService):
         allowed = {
             "purpose", "title", "short_description", "description", "currency",
             "rent_period", "listing_tier", "valid_from", "valid_until",
+            # migration 0040 UAE market fields
+            "rent_cheque_count", "trakheesi_permit",
             # "price" excluded — use PATCH /{id}/price (audited price history)
         }
         for k, v in updates.items():

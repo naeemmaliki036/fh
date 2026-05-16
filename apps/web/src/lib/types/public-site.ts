@@ -122,7 +122,15 @@ export interface PublicListingItem {
   purpose: string;
   listing_tier?: string | null;
   created_at?: string | null;
+  is_verified: boolean;
+  price_per_sqft: number | null;
+  price_drop_pct: number | null;
+  days_since_posted: number;
+  internal_reference: string | null;
 }
+
+/** Alias for card usage — same shape */
+export type PublicListingCard = PublicListingItem;
 
 export interface PublicListingListResponse {
   items: PublicListingItem[];
@@ -158,6 +166,12 @@ export interface PublicListingDetail {
   media_urls: string[];
   hero_media_url?: string | null;
   agent: PublicAgentSnippet | null;
+  is_verified: boolean;
+  verified_by_user_name: string | null;
+  internal_reference: string | null;
+  price_per_sqft: number | null;
+  price_drop_pct: number | null;
+  days_since_posted: number;
   // Branding — always present; used by listing-detail page in direct_only mode
   // without requiring a separate profile fetch.
   tenant_name: string | null;
@@ -225,4 +239,13 @@ export interface PublicListingsParams {
   furnishing_status?: string | null;
   completion_status?: string | null;
   view_orientation?: string | null;
+  is_verified?: boolean | null;
+  rent_cheque_count?: number | null;
+  min_build_year?: number | null;
+  max_build_year?: number | null;
+  has_floor_plan?: boolean | null;
+}
+
+export interface SimilarListingsResponse {
+  items: PublicListingCard[];
 }

@@ -21,6 +21,8 @@ export const VIEW_ORIENTATIONS: ViewOrientation[] = [
 export const FLOOR_LEVELS: FloorLevel[] = ["low","mid","high"];
 export const FIT_OUT_STATUSES: FitOutStatus[] = ["fitted","shell_and_core","partially_fitted"];
 
+const CURRENT_YEAR = new Date().getFullYear();
+
 export const propertyFormSchema = z.object({
   title: z.string().min(2, "Title required"),
   country: z.string().optional().nullable(),
@@ -34,8 +36,12 @@ export const propertyFormSchema = z.object({
   price: z.string().optional().nullable()
     .refine((v) => !v || /^\d+$/.test(v), "Must be a whole number (no decimals)"),
   currency: z.string().optional().nullable(),
-  internal_reference: z.string().optional().nullable(),
+  internal_reference: z.string().optional().nullable()
+    .refine((v) => !v || /^[A-Z0-9]{3}-[A-Z]{2}-[A-Z0-9]{4,10}$/i.test(v), "Format: PREFIX-TT-XXXXXX"),
   address_line: z.string().optional().nullable(),
+  latitude: z.coerce.number().min(-90, "Min -90").max(90, "Max 90").optional().nullable(),
+  longitude: z.coerce.number().min(-180, "Min -180").max(180, "Max 180").optional().nullable(),
+  build_year: z.coerce.number().int().min(1900, "Min 1900").max(CURRENT_YEAR + 5, `Max ${CURRENT_YEAR + 5}`).optional().nullable(),
   tags: z.array(z.string()).max(5).optional(),
   description: z.string().optional(),
   status: z.enum(STATUSES as [PropertyStatus, ...PropertyStatus[]]).optional(),

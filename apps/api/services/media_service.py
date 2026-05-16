@@ -201,6 +201,8 @@ class MediaService(BaseService):
         for k, v in updates.items():
             if k in {"ordering", "alt_text"} and v is not None:
                 setattr(media, k, v)
+            elif k == "is_floor_plan" and v is not None:
+                setattr(media, k, v)
         await self.session.flush()
         await self.session.refresh(media)
         return media, self._url(media.storage_key)

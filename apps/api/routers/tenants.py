@@ -19,6 +19,7 @@ from apps.api.dependencies import (
 )
 from apps.api.models.enums import PlatformRole, TenantStatus
 from apps.api.schemas.tenant import (
+    PropertyRefPrefixRequest,
     PublicSiteFeatureRequest,
     TenantApproveRequest,
     TenantDetailResponse,
@@ -36,6 +37,7 @@ from apps.api.security.platform_roles import (
     require_platform_role,
 )
 from apps.api.services.tenant_detail_service import TenantDetailService
+from apps.api.services.tenant_prefix_service import TenantPrefixService
 from apps.api.services.tenant_service import TenantService
 
 router = APIRouter()
@@ -47,6 +49,10 @@ def _svc(db: DbSession) -> TenantService:
 
 def _detail_svc(db: DbSession) -> TenantDetailService:
     return TenantDetailService(db)
+
+
+def _prefix_svc(db: DbSession) -> TenantPrefixService:
+    return TenantPrefixService(db)
 
 
 # Annotated shortcut types for RBAC deps
@@ -218,6 +224,29 @@ async def set_public_site_feature(
         tenant_id,
         UUID(platform_user["id"]),
         enabled=body.enabled,
+        ip_address=ctx.ip_address,
+        user_agent=ctx.user_agent,
+    )
+
+
+@router.patch("/{tenant_id}/property-ref-prefix", response_model=TenantResponse)
+async def update_property_ref_prefix(
+    tenant_id: UUID,
+    body: PropertyRefPrefixRequest,
+    platform_user: _OpsAndAbove,
+    ctx: ReqCtx,
+    svc: TenantPrefixService = Depends(_prefix_svc),
+) -> TenantResponse:
+    """Update the 3-char property reference prefix for a tenant.
+
+    Platform ops/super admins may call this.
+    Returns 409 if the prefix is already used by another tenant.
+    """
+    platform_user_dict = {**platform_user, "is_platform": True}
+    return await svc.update_prefix(  # type: ignore[return-value]
+        tenant_id,
+        platform_user_dict,
+        body.property_ref_prefix,
         ip_address=ctx.ip_address,
         user_agent=ctx.user_agent,
     )

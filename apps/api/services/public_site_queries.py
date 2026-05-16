@@ -6,7 +6,7 @@ All functions receive an AsyncSession and return plain dicts or None.
 
 from uuid import UUID
 
-from sqlalchemy import func, select, text
+from sqlalchemy import exists, func, select, text
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from apps.api.models.agent import Agent
@@ -92,6 +92,11 @@ async def fetch_listing_list(  # noqa: PLR0913
     view_orientation: str | None = None,
     city: str | None = None,
     area: str | None = None,
+    is_verified: bool | None = None,
+    rent_cheque_count: int | None = None,
+    min_build_year: int | None = None,
+    max_build_year: int | None = None,
+    has_floor_plan: bool | None = None,
 ) -> dict:
     """Return paginated active listings for the tenant."""
     tid = tenant.id
@@ -125,6 +130,29 @@ async def fetch_listing_list(  # noqa: PLR0913
         stmt = stmt.where(Property.city.ilike(f"%{city}%"))
     if area:
         stmt = stmt.where(Property.area.ilike(f"%{area}%"))
+    # migration 0040 filters
+    if is_verified is not None:
+        stmt = stmt.where(Listing.is_verified.is_(is_verified))
+    if rent_cheque_count is not None:
+        stmt = stmt.where(Listing.rent_cheque_count == rent_cheque_count)
+    if min_build_year is not None:
+        stmt = stmt.where(Property.build_year >= min_build_year)
+    if max_build_year is not None:
+        stmt = stmt.where(Property.build_year <= max_build_year)
+    if has_floor_plan is True:
+        stmt = stmt.where(
+            exists(select(Media.id).where(
+                Media.property_id == Property.id,
+                Media.is_floor_plan.is_(True),
+            ))
+        )
+    elif has_floor_plan is False:
+        stmt = stmt.where(
+            ~exists(select(Media.id).where(
+                Media.property_id == Property.id,
+                Media.is_floor_plan.is_(True),
+            ))
+        )
 
     count_q = select(func.count()).select_from(stmt.subquery())
     total = (await session.execute(count_q)).scalar_one()

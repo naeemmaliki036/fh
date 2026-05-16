@@ -1,11 +1,15 @@
 """Property query filter helpers — extracted from PropertyService.
 
 apply_property_attribute_filters() is a pure function that appends the
-migration-0039 structured column filters to a Property SELECT statement.
+migration-0039 + migration-0040 structured column filters to a Property SELECT.
 """
 
 from __future__ import annotations
 
+from sqlalchemy import exists, select
+
+from apps.api.models.listing import Listing
+from apps.api.models.media import Media
 from apps.api.models.property import Property
 
 
@@ -25,6 +29,11 @@ def apply_property_attribute_filters(
     min_parking_spaces: int | None = None,
     has_payment_plan: bool | None = None,
     handover_year: int | None = None,
+    # --- migration 0040 filters ---
+    min_build_year: int | None = None,
+    max_build_year: int | None = None,
+    listing_verified: bool | None = None,
+    has_floor_plan: bool | None = None,
 ):
     """Append migration-0039 attribute WHERE clauses to a Property SELECT statement.
 
@@ -57,4 +66,48 @@ def apply_property_attribute_filters(
         stmt = stmt.where(Property.payment_plan.is_(has_payment_plan))
     if handover_year is not None:
         stmt = stmt.where(Property.handover_year == handover_year)
+
+    # --- migration 0040 filters ---
+    if min_build_year is not None:
+        stmt = stmt.where(Property.build_year >= min_build_year)
+    if max_build_year is not None:
+        stmt = stmt.where(Property.build_year <= max_build_year)
+    if listing_verified is True:
+        stmt = stmt.where(
+            exists(
+                select(Listing.id).where(
+                    Listing.property_id == Property.id,
+                    Listing.is_verified.is_(True),
+                    Listing.status == "active",
+                )
+            )
+        )
+    elif listing_verified is False:
+        stmt = stmt.where(
+            ~exists(
+                select(Listing.id).where(
+                    Listing.property_id == Property.id,
+                    Listing.is_verified.is_(True),
+                    Listing.status == "active",
+                )
+            )
+        )
+    if has_floor_plan is True:
+        stmt = stmt.where(
+            exists(
+                select(Media.id).where(
+                    Media.property_id == Property.id,
+                    Media.is_floor_plan.is_(True),
+                )
+            )
+        )
+    elif has_floor_plan is False:
+        stmt = stmt.where(
+            ~exists(
+                select(Media.id).where(
+                    Media.property_id == Property.id,
+                    Media.is_floor_plan.is_(True),
+                )
+            )
+        )
     return stmt

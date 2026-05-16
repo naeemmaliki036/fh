@@ -23,6 +23,7 @@ from apps.api.schemas.public_site import (
 )
 from apps.api.services.public_site_extras_service import PublicSiteExtrasService
 from apps.api.services.public_site_service import PublicSiteService
+from apps.api.services.public_site_similar_service import PublicSiteSimilarService
 from packages.common.utils.error_handlers import too_many_requests
 from packages.common.utils.rate_limit import is_rate_limited
 
@@ -38,6 +39,10 @@ def _svc(db: DbSession) -> PublicSiteService:
 
 def _extras_svc(db: DbSession) -> PublicSiteExtrasService:
     return PublicSiteExtrasService(db)
+
+
+def _similar_svc(db: DbSession) -> PublicSiteSimilarService:
+    return PublicSiteSimilarService(db)
 
 
 # ---------------------------------------------------------------------------
@@ -90,6 +95,12 @@ async def list_public_listings(
     view_orientation: ViewOrientation | None = Query(default=None),
     city: str | None = Query(default=None),
     area: str | None = Query(default=None),
+    # migration 0040 filters
+    is_verified: bool | None = Query(default=None),
+    rent_cheque_count: int | None = Query(default=None),
+    min_build_year: int | None = Query(default=None),
+    max_build_year: int | None = Query(default=None),
+    has_floor_plan: bool | None = Query(default=None),
     svc: PublicSiteService = Depends(_svc),
 ) -> PublicListingListResponse:
     """Paginated active listings for a public site.
@@ -112,6 +123,11 @@ async def list_public_listings(
         view_orientation=view_orientation.value if view_orientation else None,
         city=city,
         area=area,
+        is_verified=is_verified,
+        rent_cheque_count=rent_cheque_count,
+        min_build_year=min_build_year,
+        max_build_year=max_build_year,
+        has_floor_plan=has_floor_plan,
     )
     return PublicListingListResponse(**data)
 
@@ -157,6 +173,26 @@ async def list_public_agents(
 # ---------------------------------------------------------------------------
 # Endpoint 5 — POST /public/sites/{slug}/leads
 # ---------------------------------------------------------------------------
+
+
+# ---------------------------------------------------------------------------
+# Endpoint 3b — GET /public/sites/{slug}/listings/{listing_id}/similar
+# ---------------------------------------------------------------------------
+
+
+@router.get("/{slug}/listings/{listing_id}/similar", response_model=PublicListingListResponse)
+async def get_similar_listings(
+    slug: str,
+    listing_id: UUID,
+    limit: int = Query(default=4, ge=1, le=20),
+    svc: PublicSiteSimilarService = Depends(_similar_svc),
+) -> PublicListingListResponse:
+    """Return up to `limit` similar active listings (same type, city, price ±25%).
+
+    404 if slug not found, site disabled, or source listing not found/visible.
+    """
+    items = await svc.get_similar(slug, listing_id, limit=limit)
+    return PublicListingListResponse(items=items, total=len(items), page=1, page_size=limit)
 
 
 @router.post("/{slug}/leads", response_model=PublicLeadResponse, status_code=status.HTTP_201_CREATED)

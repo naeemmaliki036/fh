@@ -71,6 +71,16 @@ export class ListingRepository extends BaseRepository<
     const res = await this.client.post<Listing>(`${this.basePath}/${id}/publish`);
     return res.data;
   }
+
+  async verify(id: string, note?: string): Promise<Listing> {
+    const res = await this.client.post<Listing>(`${this.basePath}/${id}/verify`, { note });
+    return res.data;
+  }
+
+  async unverify(id: string, note?: string): Promise<Listing> {
+    const res = await this.client.post<Listing>(`${this.basePath}/${id}/unverify`, { note });
+    return res.data;
+  }
 }
 
 export const listingRepository = new ListingRepository();

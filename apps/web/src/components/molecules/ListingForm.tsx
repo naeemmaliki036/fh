@@ -9,11 +9,12 @@ import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { CURRENCIES } from "@/lib/constants/regions";
 import { Textarea } from "@/components/atoms/Textarea";
-import type { Listing, ListingCreateRequest, ListingUpdateRequest, ListingPurpose, RentPeriod, ListingTier } from "@/lib/types/listing";
+import type { Listing, ListingCreateRequest, ListingUpdateRequest, ListingPurpose, RentPeriod, ListingTier, RentChequeCount } from "@/lib/types/listing";
 
 const PURPOSES: ListingPurpose[] = ["sale", "rent_short", "rent_long"];
 const RENT_PERIODS: RentPeriod[] = ["daily", "weekly", "monthly", "quarterly", "yearly"];
 const TIERS: ListingTier[] = ["standard", "premium", "featured"];
+const CHEQUE_COUNTS: RentChequeCount[] = [1, 2, 4, 6, 12];
 
 const schema = z
   .object({
@@ -27,6 +28,8 @@ const schema = z
     currency: z.string().min(1),
     description: z.string().optional().nullable(),
     rent_period: z.enum(RENT_PERIODS as [RentPeriod, ...RentPeriod[]]).optional().nullable(),
+    rent_cheque_count: z.coerce.number().refine((v) => CHEQUE_COUNTS.includes(v as RentChequeCount)).optional().nullable(),
+    trakheesi_permit: z.string().max(64).optional().nullable(),
     listing_tier: z.enum(TIERS as [ListingTier, ...ListingTier[]]).optional(),
     valid_from: z.string().optional().nullable(),
     valid_until: z.string().optional().nullable(),
@@ -62,6 +65,8 @@ export function ListingForm({ defaultValues, isPending, submitLabel, onSubmit, o
       currency: defaultValues?.currency ?? "AED",
       description: defaultValues?.description ?? "",
       rent_period: defaultValues?.rent_period ?? null,
+      rent_cheque_count: defaultValues?.rent_cheque_count ?? null,
+      trakheesi_permit: defaultValues?.trakheesi_permit ?? null,
       listing_tier: defaultValues?.listing_tier ?? "standard",
       valid_from: defaultValues?.valid_from?.slice(0, 10) ?? null,
       valid_until: defaultValues?.valid_until?.slice(0, 10) ?? null,
@@ -71,9 +76,16 @@ export function ListingForm({ defaultValues, isPending, submitLabel, onSubmit, o
 
   const purpose = useWatch({ control, name: "purpose" });
   const isRent = purpose === "rent_short" || purpose === "rent_long";
+  const isRentLong = purpose === "rent_long";
+  const isRentShort = purpose === "rent_short";
 
   const handleFormSubmit = (v: FormValues): void => {
-    onSubmit({ ...v, rent_period: isRent ? (v.rent_period ?? null) : null });
+    onSubmit({
+      ...v,
+      rent_period: isRent ? (v.rent_period ?? null) : null,
+      rent_cheque_count: isRentLong ? ((v.rent_cheque_count ?? null) as RentChequeCount | null) : null,
+      trakheesi_permit: isRentShort ? (v.trakheesi_permit ?? null) : null,
+    });
   };
 
   return (
@@ -121,6 +133,23 @@ export function ListingForm({ defaultValues, isPending, submitLabel, onSubmit, o
                 <SelectContent>{RENT_PERIODS.map(p => <SelectItem key={p} value={p}>{p.charAt(0).toUpperCase()+p.slice(1)}</SelectItem>)}</SelectContent>
               </Select>
             )} />
+          </div>
+        )}
+        {isRentLong && (
+          <div className="space-y-1.5">
+            <Label>Cheques <span className="text-xs text-muted-foreground">(optional)</span></Label>
+            <Controller name="rent_cheque_count" control={control} render={({ field }) => (
+              <Select value={field.value != null ? String(field.value) : ""} onValueChange={(v) => field.onChange(v ? Number(v) : null)}>
+                <SelectTrigger><SelectValue placeholder="No. of cheques" /></SelectTrigger>
+                <SelectContent>{CHEQUE_COUNTS.map(n => <SelectItem key={n} value={String(n)}>{n} {n === 1 ? "cheque" : "cheques"}</SelectItem>)}</SelectContent>
+              </Select>
+            )} />
+          </div>
+        )}
+        {isRentShort && (
+          <div className="space-y-1.5 col-span-2">
+            <Label>Trakheesi Permit <span className="text-xs text-muted-foreground">(optional, max 64 chars)</span></Label>
+            <Input {...register("trakheesi_permit")} maxLength={64} placeholder="e.g. DTCM-12345" />
           </div>
         )}
         <div className="space-y-1.5">

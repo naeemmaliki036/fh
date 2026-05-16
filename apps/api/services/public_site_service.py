@@ -107,6 +107,11 @@ class PublicSiteService(BaseService):
         view_orientation: str | None = None,
         city: str | None = None,
         area: str | None = None,
+        is_verified: bool | None = None,
+        rent_cheque_count: int | None = None,
+        min_build_year: int | None = None,
+        max_build_year: int | None = None,
+        has_floor_plan: bool | None = None,
     ) -> dict:
         tenant = await self._resolve_tenant(slug)
         return await fetch_listing_list(
@@ -120,6 +125,11 @@ class PublicSiteService(BaseService):
             completion_status=completion_status,
             view_orientation=view_orientation,
             city=city, area=area,
+            is_verified=is_verified,
+            rent_cheque_count=rent_cheque_count,
+            min_build_year=min_build_year,
+            max_build_year=max_build_year,
+            has_floor_plan=has_floor_plan,
         )
 
     # ------------------------------------------------------------------

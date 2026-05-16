@@ -14,6 +14,7 @@ export interface Media {
   variants: Record<string, unknown> | null;
   width: number | null;
   height: number | null;
+  is_floor_plan: boolean;
   uploaded_by_user_id: string | null;
   created_at: string;
   updated_at: string;
@@ -22,6 +23,7 @@ export interface Media {
 export interface MediaUpdateRequest {
   ordering?: number | null;
   alt_text?: string | null;
+  is_floor_plan?: boolean | null;
 }
 
 export interface MediaListResponse {

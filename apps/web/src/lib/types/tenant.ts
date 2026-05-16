@@ -13,6 +13,7 @@ export interface Tenant {
   operating_countries: string[];
   contact_email: string;
   contact_phone: string;
+  property_ref_prefix: string;
   /** Platform master switch — only platform admins can toggle. */
   public_site_feature_enabled: boolean;
   /** Tenant's own on/off toggle. */
@@ -102,4 +103,8 @@ export interface PublicSiteFeatureRequest {
 export interface TenantSendMessageRequest {
   subject: string;
   body_text: string;
+}
+
+export interface PropertyRefPrefixRequest {
+  property_ref_prefix: string;
 }

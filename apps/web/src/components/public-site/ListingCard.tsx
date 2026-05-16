@@ -3,6 +3,10 @@ import { ArrowRight, BedDouble, Bath, Square } from "lucide-react";
 import type { PublicListingItem } from "@/lib/types/public-site";
 import { formatAed } from "@/lib/utils/format-currency";
 import { listingHandle } from "@/lib/utils/listing-url";
+import { VerifiedBadge } from "@/components/atoms/VerifiedBadge";
+import { ReferenceBadge } from "@/components/atoms/ReferenceBadge";
+import { PriceDropBadge } from "@/components/atoms/PriceDropBadge";
+import { PostedAgo } from "@/components/atoms/PostedAgo";
 
 interface ListingCardProps {
   listing: PublicListingItem;
@@ -47,11 +51,26 @@ export function ListingCard({ listing, slug }: ListingCardProps): React.ReactEle
           <div className="absolute inset-0 bg-gradient-to-br from-slate-100 to-slate-200" />
         )}
 
+        {/* PriceDrop overlay — top right of image */}
+        {listing.price_drop_pct && listing.price_drop_pct > 0 && (
+          <div className="absolute right-3 top-3 z-10">
+            <PriceDropBadge pct={listing.price_drop_pct} />
+          </div>
+        )}
+
+        {/* Reference badge — bottom-right of media frame */}
+        {listing.internal_reference && (
+          <div className="absolute bottom-[74px] right-3 z-10">
+            <ReferenceBadge reference={listing.internal_reference} />
+          </div>
+        )}
+
         {/* Status pills — top left */}
         <div className="absolute left-4 top-4 flex items-center gap-2">
           <span className="inline-flex items-center rounded-full bg-white/95 px-3 py-1 text-xs font-semibold text-slate-900 shadow-sm backdrop-blur-sm">
             {purposeLabel(listing.purpose)}
           </span>
+          {listing.is_verified && <VerifiedBadge />}
           {tags.map((tag) => (
             <span
               key={tag}
@@ -113,6 +132,10 @@ export function ListingCard({ listing, slug }: ListingCardProps): React.ReactEle
           <div>
             <p className="text-[11px] uppercase tracking-wide text-slate-400">Price</p>
             <p className="text-[15px] font-bold text-slate-950">{formatAed(listing.price)}</p>
+            {listing.price_per_sqft != null && (
+              <p className="text-[11px] text-slate-400">AED {listing.price_per_sqft.toLocaleString()} / sqft</p>
+            )}
+            <PostedAgo days={listing.days_since_posted} />
           </div>
           <span
             className="inline-flex items-center gap-1.5 rounded-full px-4 py-2 text-[12px] font-semibold text-white transition-opacity group-hover:opacity-90"

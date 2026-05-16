@@ -38,7 +38,7 @@ function labelFor(key: string, value: string): string {
     property_type: Object.fromEntries(TYPES.map((t) => [t, t.charAt(0).toUpperCase() + t.slice(1)])),
     country: { AE: "UAE", SA: "Saudi Arabia" },
     has_listing: { true: "Has listing", false: "No listing" },
-    has_payment_plan: { true: "Payment plan" },
+    has_payment_plan: { true: "Payment plan" }, listing_verified: { true: "Verified only" }, has_floor_plan: { true: "Floor plan" },
   };
   return MAP[key]?.[value] ?? labelify(value);
 }
@@ -52,6 +52,7 @@ const ADVANCED_FILTER_KEYS = [
   "amenities", "furnishing_status", "completion_status", "view_orientation",
   "min_service_charge_aed_sqft", "max_service_charge_aed_sqft",
   "min_plot_area_sqft", "max_plot_area_sqft", "min_parking_spaces", "has_payment_plan",
+  "min_build_year", "max_build_year", "listing_verified", "has_floor_plan",
 ];
 const FILTER_KEYS = [...BASE_FILTER_KEYS, ...ADVANCED_FILTER_KEYS];
 
@@ -210,40 +211,35 @@ export function PropertyFiltersBar(): ReactElement {
               <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-3">
                 <Select value={get("furnishing_status")} onValueChange={(v) => apply({ furnishing_status: v === "_all" ? "" : v })}>
                   <SelectTrigger className="h-8 text-xs"><SelectValue placeholder="Furnishing" /></SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="_all">Any furnishing</SelectItem>
-                    {FURNISHING.map((s) => <SelectItem key={s} value={s}>{labelify(s)}</SelectItem>)}
-                  </SelectContent>
+                  <SelectContent><SelectItem value="_all">Any furnishing</SelectItem>{FURNISHING.map((s) => <SelectItem key={s} value={s}>{labelify(s)}</SelectItem>)}</SelectContent>
                 </Select>
-
                 <Select value={get("completion_status")} onValueChange={(v) => apply({ completion_status: v === "_all" ? "" : v })}>
                   <SelectTrigger className="h-8 text-xs"><SelectValue placeholder="Completion" /></SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="_all">Any completion</SelectItem>
-                    {COMPLETION.map((s) => <SelectItem key={s} value={s}>{labelify(s)}</SelectItem>)}
-                  </SelectContent>
+                  <SelectContent><SelectItem value="_all">Any completion</SelectItem>{COMPLETION.map((s) => <SelectItem key={s} value={s}>{labelify(s)}</SelectItem>)}</SelectContent>
                 </Select>
-
                 <Select value={get("view_orientation")} onValueChange={(v) => apply({ view_orientation: v === "_all" ? "" : v })}>
                   <SelectTrigger className="h-8 text-xs"><SelectValue placeholder="View" /></SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="_all">Any view</SelectItem>
-                    {VIEWS.map((s) => <SelectItem key={s} value={s}>{labelify(s)}</SelectItem>)}
-                  </SelectContent>
+                  <SelectContent><SelectItem value="_all">Any view</SelectItem>{VIEWS.map((s) => <SelectItem key={s} value={s}>{labelify(s)}</SelectItem>)}</SelectContent>
                 </Select>
-
                 <Input placeholder="Min service charge" defaultValue={get("min_service_charge_aed_sqft")} onBlur={(e) => apply({ min_service_charge_aed_sqft: e.target.value })} className="h-8 text-xs" />
                 <Input placeholder="Max service charge" defaultValue={get("max_service_charge_aed_sqft")} onBlur={(e) => apply({ max_service_charge_aed_sqft: e.target.value })} className="h-8 text-xs" />
                 <Input placeholder="Min plot area (sqft)" type="number" defaultValue={get("min_plot_area_sqft")} onBlur={(e) => apply({ min_plot_area_sqft: e.target.value })} className="h-8 text-xs" />
                 <Input placeholder="Max plot area (sqft)" type="number" defaultValue={get("max_plot_area_sqft")} onBlur={(e) => apply({ max_plot_area_sqft: e.target.value })} className="h-8 text-xs" />
                 <Input placeholder="Min parking spaces" type="number" defaultValue={get("min_parking_spaces")} onBlur={(e) => apply({ min_parking_spaces: e.target.value })} className="h-8 text-xs" />
-
                 <Select value={get("has_payment_plan")} onValueChange={(v) => apply({ has_payment_plan: v === "_all" ? "" : v })}>
                   <SelectTrigger className="h-8 text-xs"><SelectValue placeholder="Payment plan?" /></SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="_all">Any</SelectItem>
-                    <SelectItem value="true">Has payment plan</SelectItem>
-                  </SelectContent>
+                  <SelectContent><SelectItem value="_all">Any</SelectItem><SelectItem value="true">Has payment plan</SelectItem></SelectContent>
+                </Select>
+
+                <Input placeholder="Min build year" type="number" defaultValue={get("min_build_year")} onBlur={(e) => apply({ min_build_year: e.target.value })} className="h-8 text-xs" />
+                <Input placeholder="Max build year" type="number" defaultValue={get("max_build_year")} onBlur={(e) => apply({ max_build_year: e.target.value })} className="h-8 text-xs" />
+                <Select value={get("listing_verified")} onValueChange={(v) => apply({ listing_verified: v === "_all" ? "" : v })}>
+                  <SelectTrigger className="h-8 text-xs"><SelectValue placeholder="Verified?" /></SelectTrigger>
+                  <SelectContent><SelectItem value="_all">Any</SelectItem><SelectItem value="true">Verified only</SelectItem></SelectContent>
+                </Select>
+                <Select value={get("has_floor_plan")} onValueChange={(v) => apply({ has_floor_plan: v === "_all" ? "" : v })}>
+                  <SelectTrigger className="h-8 text-xs"><SelectValue placeholder="Floor plan?" /></SelectTrigger>
+                  <SelectContent><SelectItem value="_all">Any</SelectItem><SelectItem value="true">Has floor plan</SelectItem></SelectContent>
                 </Select>
               </div>
 

@@ -97,3 +97,29 @@ export function useChangeListingStatus(propertyId: string) {
     onError: (e: Error) => { toast.error(e.message); },
   });
 }
+
+export function useVerifyListing(id: string) {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: (note?: string): Promise<Listing> => listingRepository.verify(id, note),
+    onSuccess: (data) => {
+      qc.setQueryData(queryKeys.listings.detail(data.id), data);
+      qc.invalidateQueries({ queryKey: queryKeys.listings.all });
+      toast.success("Listing verified");
+    },
+    onError: (e: Error) => { toast.error(e.message); },
+  });
+}
+
+export function useUnverifyListing(id: string) {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: (note?: string): Promise<Listing> => listingRepository.unverify(id, note),
+    onSuccess: (data) => {
+      qc.setQueryData(queryKeys.listings.detail(data.id), data);
+      qc.invalidateQueries({ queryKey: queryKeys.listings.all });
+      toast.success("Listing unverified");
+    },
+    onError: (e: Error) => { toast.error(e.message); },
+  });
+}

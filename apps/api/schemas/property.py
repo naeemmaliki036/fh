@@ -109,6 +109,8 @@ class PropertyCreateRequest(BaseModel):
     handover_year: int | None = None
     handover_quarter: int | None = None
     payment_plan: bool | None = None
+    # --- migration 0040 attributes ---
+    build_year: int | None = None
 
     @field_validator("tags", mode="before")
     @classmethod
@@ -125,6 +127,13 @@ class PropertyCreateRequest(BaseModel):
     def validate_handover_quarter(cls, v: int | None) -> int | None:
         if v is not None and not (1 <= v <= 4):
             raise ValueError("handover_quarter must be 1–4")
+        return v
+
+    @field_validator("build_year", mode="before")
+    @classmethod
+    def validate_build_year(cls, v: int | None) -> int | None:
+        if v is not None and not (1900 <= v <= 2100):
+            raise ValueError("build_year must be between 1900 and 2100")
         return v
 
 
@@ -161,6 +170,8 @@ class PropertyUpdateRequest(BaseModel):
     handover_year: int | None = None
     handover_quarter: int | None = None
     payment_plan: bool | None = None
+    # --- migration 0040 attributes ---
+    build_year: int | None = None
     # status intentionally omitted — use PATCH /{id}/status (audited)
 
     @field_validator("tags", mode="before")
@@ -178,6 +189,13 @@ class PropertyUpdateRequest(BaseModel):
     def validate_handover_quarter(cls, v: int | None) -> int | None:
         if v is not None and not (1 <= v <= 4):
             raise ValueError("handover_quarter must be 1–4")
+        return v
+
+    @field_validator("build_year", mode="before")
+    @classmethod
+    def validate_build_year(cls, v: int | None) -> int | None:
+        if v is not None and not (1900 <= v <= 2100):
+            raise ValueError("build_year must be between 1900 and 2100")
         return v
 
 
@@ -225,6 +243,8 @@ class PropertyResponse(BaseModel):
     handover_year: int | None = None
     handover_quarter: int | None = None
     payment_plan: bool = False
+    # migration 0040
+    build_year: int | None = None
     created_at: datetime
     updated_at: datetime
 

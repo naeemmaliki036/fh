@@ -24,6 +24,8 @@ class MediaResponse(BaseModel):
     width: int | None = None
     height: int | None = None
     uploaded_by_user_id: uuid.UUID | None = None
+    # migration 0040 — floor plan flag
+    is_floor_plan: bool = False
     created_at: datetime
     updated_at: datetime
 
@@ -36,6 +38,7 @@ class MediaListResponse(BaseModel):
 class MediaUpdateRequest(BaseModel):
     ordering: int | None = None
     alt_text: str | None = None
+    is_floor_plan: bool | None = None
 
 
 class MediaReorderRequest(BaseModel):

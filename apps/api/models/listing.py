@@ -19,7 +19,7 @@ import uuid
 from datetime import datetime
 from typing import TYPE_CHECKING
 
-from sqlalchemy import Boolean, Date, DateTime, Enum, ForeignKey, Numeric, String, Text
+from sqlalchemy import Boolean, Date, DateTime, Enum, ForeignKey, Numeric, SmallInteger, String, Text
 from sqlalchemy.dialects.postgresql import UUID
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 
@@ -29,6 +29,7 @@ from .enums import ListingPurpose, ListingStatus, ListingTier, RentPeriod
 
 if TYPE_CHECKING:
     from .media import Media
+    from .user import User
 
 _ev = lambda x: [e.value for e in x]  # noqa: E731
 
@@ -129,3 +130,36 @@ class Listing(Base, UUIDMixin, TimestampMixin, TenantMixin):
     # Short description (added in migration 0029)
     # ------------------------------------------------------------------
     short_description: Mapped[str | None] = mapped_column(Text, nullable=True)
+
+    # ------------------------------------------------------------------
+    # UAE market fields (added in migration 0040)
+    # ------------------------------------------------------------------
+
+    # Number of post-dated cheques accepted for rent_long payments.
+    # Valid values: 1, 2, 4, 6, 12 (CHECK constraint in migration).
+    rent_cheque_count: Mapped[int | None] = mapped_column(
+        SmallInteger, nullable=True
+    )
+
+    # DTCM permit number for short-term rental (holiday home) listings.
+    trakheesi_permit: Mapped[str | None] = mapped_column(
+        String(64), nullable=True
+    )
+
+    # Verification workflow — platform/company-admin marks listing as verified.
+    is_verified: Mapped[bool] = mapped_column(
+        Boolean, nullable=False, default=False, server_default="false"
+    )
+    verified_at: Mapped[datetime | None] = mapped_column(
+        DateTime(timezone=True), nullable=True
+    )
+    verified_by_user_id: Mapped[uuid.UUID | None] = mapped_column(
+        UUID(as_uuid=True),
+        ForeignKey("users.id", ondelete="SET NULL"),
+        nullable=True,
+    )
+    verified_by: Mapped[User | None] = relationship(
+        "User",
+        foreign_keys=[verified_by_user_id],
+        lazy="select",
+    )

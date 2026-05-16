@@ -73,11 +73,17 @@ export interface AdvancedFilterValues {
   completion: string;
   views: string[];
   amenities: string[];
+  isVerified: boolean;
+  rentChequeCount: string;
+  hasFloorPlan: boolean;
 }
+
+const CHEQUE_OPTIONS = ["1","2","4","6","12"] as const;
 
 interface PublicListingsAdvancedFiltersProps {
   values: AdvancedFilterValues;
   onChange: (values: AdvancedFilterValues) => void;
+  purpose?: string;
 }
 
 // ---------------------------------------------------------------------------
@@ -95,6 +101,7 @@ function labelify(s: string): string {
 export function PublicListingsAdvancedFilters({
   values,
   onChange,
+  purpose,
 }: PublicListingsAdvancedFiltersProps): ReactElement {
   const [showAllAmenities, setShowAllAmenities] = useState(false);
   const { data: catalog } = useAmenityCatalog();
@@ -228,6 +235,26 @@ export function PublicListingsAdvancedFilters({
           )}
         </div>
       )}
+
+      {/* Row: verified + floor plan + cheques */}
+      <div className="flex flex-wrap gap-2 items-center">
+        <button type="button" onClick={() => set({ isVerified: !values.isVerified })} className={pillClass(values.isVerified)}>
+          Verified only
+        </button>
+        <button type="button" onClick={() => set({ hasFloorPlan: !values.hasFloorPlan })} className={pillClass(values.hasFloorPlan)}>
+          Has floor plan
+        </button>
+        {purpose === "rent_long" && (
+          <>
+            <span className="text-xs text-muted-foreground font-medium">Cheques:</span>
+            {CHEQUE_OPTIONS.map((n) => (
+              <button key={n} type="button" onClick={() => set({ rentChequeCount: values.rentChequeCount === n ? "" : n })} className={pillClass(values.rentChequeCount === n)}>
+                {n}
+              </button>
+            ))}
+          </>
+        )}
+      </div>
     </div>
   );
 }

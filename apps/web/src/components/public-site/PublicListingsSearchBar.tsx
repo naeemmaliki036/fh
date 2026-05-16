@@ -41,6 +41,9 @@ function buildParams(c: string, ar: string, p: string, adv: AdvancedFilterValues
     completion_status: adv.completion || null,
     view_orientation: adv.views.length > 0 ? adv.views[0] : null,
     amenities: adv.amenities.length > 0 ? adv.amenities.join(",") : null,
+    is_verified: adv.isVerified ? true : null,
+    rent_cheque_count: adv.rentChequeCount !== "" ? Number(adv.rentChequeCount) : null,
+    has_floor_plan: adv.hasFloorPlan ? true : null,
   };
 }
 
@@ -58,11 +61,14 @@ function buildSearchParams(c: string, ar: string, p: string, adv: AdvancedFilter
   if (adv.completion) sp.set("completion_status", adv.completion);
   if (adv.views.length > 0) sp.set("view_orientation", adv.views[0]);
   if (adv.amenities.length > 0) sp.set("amenities", adv.amenities.join(","));
+  if (adv.isVerified) sp.set("is_verified", "true");
+  if (adv.rentChequeCount !== "") sp.set("rent_cheque_count", adv.rentChequeCount);
+  if (adv.hasFloorPlan) sp.set("has_floor_plan", "true");
   return sp;
 }
 
 function emptyAdv(): AdvancedFilterValues {
-  return { propertyType: "", beds: "", baths: "", minPrice: "", maxPrice: "", furnishing: "", completion: "", views: [], amenities: [] };
+  return { propertyType: "", beds: "", baths: "", minPrice: "", maxPrice: "", furnishing: "", completion: "", views: [], amenities: [], isVerified: false, rentChequeCount: "", hasFloorPlan: false };
 }
 
 function advFromSearchParams(sp: URLSearchParams): AdvancedFilterValues {
@@ -76,6 +82,9 @@ function advFromSearchParams(sp: URLSearchParams): AdvancedFilterValues {
     completion: sp.get("completion_status") ?? "",
     views: sp.get("view_orientation") ? [sp.get("view_orientation")!] : [],
     amenities: sp.get("amenities") ? sp.get("amenities")!.split(",").filter(Boolean) : [],
+    isVerified: sp.get("is_verified") === "true",
+    rentChequeCount: sp.get("rent_cheque_count") ?? "",
+    hasFloorPlan: sp.get("has_floor_plan") === "true",
   };
 }
 
@@ -168,7 +177,8 @@ export function PublicListingsSearchBar({
     adv.propertyType || adv.beds !== "" || adv.baths !== "" ||
     adv.minPrice !== "" || adv.maxPrice !== "" ||
     adv.furnishing || adv.completion ||
-    adv.views.length > 0 || adv.amenities.length > 0;
+    adv.views.length > 0 || adv.amenities.length > 0 ||
+    adv.isVerified || adv.rentChequeCount !== "" || adv.hasFloorPlan;
 
   const clearAll = (): void => {
     setCity(""); setArea(""); setPurpose(""); setAdv(emptyAdv());
@@ -246,7 +256,7 @@ export function PublicListingsSearchBar({
       </div>
 
       {showAdvanced && (
-        <PublicListingsAdvancedFilters values={adv} onChange={handleAdvChange} />
+        <PublicListingsAdvancedFilters values={adv} onChange={handleAdvChange} purpose={purpose} />
       )}
     </div>
   );

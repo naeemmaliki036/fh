@@ -8,8 +8,11 @@ from __future__ import annotations
 
 from uuid import UUID
 
+from sqlalchemy import exists, select
+
 from apps.api.models.enums import ListingPurpose, ListingStatus, ListingTier, PropertyType
 from apps.api.models.listing import Listing
+from apps.api.models.media import Media
 from apps.api.models.property import Property
 from apps.api.models.property_agent import PropertyAgent
 
@@ -43,6 +46,12 @@ def apply_listing_filters(  # noqa: PLR0913
     furnishing_status: str | None = None,
     completion_status: str | None = None,
     view_orientation: str | None = None,
+    # --- migration 0040 filters ---
+    is_verified: bool | None = None,
+    rent_cheque_count: int | None = None,
+    min_build_year: int | None = None,
+    max_build_year: int | None = None,
+    has_floor_plan: bool | None = None,
 ):
     """Append optional filter clauses to a Listing SELECT statement.
 
@@ -79,7 +88,9 @@ def apply_listing_filters(  # noqa: PLR0913
         country or city or area or property_type or
         min_bedrooms is not None or max_bedrooms is not None or
         min_bathrooms is not None or max_bathrooms is not None or
-        amenities or furnishing_status or completion_status or view_orientation
+        amenities or furnishing_status or completion_status or view_orientation or
+        min_build_year is not None or max_build_year is not None or
+        has_floor_plan is not None
     )
     if needs_property and not property_joined:
         stmt = stmt.join(Property, Listing.property_id == Property.id)
@@ -111,6 +122,35 @@ def apply_listing_filters(  # noqa: PLR0913
         stmt = stmt.where(Property.completion_status == completion_status)
     if view_orientation:
         stmt = stmt.where(Property.view_orientation == view_orientation)
+
+    # --- migration 0040 filters ---
+    if min_build_year is not None:
+        stmt = stmt.where(Property.build_year >= min_build_year)
+    if max_build_year is not None:
+        stmt = stmt.where(Property.build_year <= max_build_year)
+    if has_floor_plan is True:
+        stmt = stmt.where(
+            exists(
+                select(Media.id).where(
+                    Media.property_id == Property.id,
+                    Media.is_floor_plan.is_(True),
+                )
+            )
+        )
+    elif has_floor_plan is False:
+        stmt = stmt.where(
+            ~exists(
+                select(Media.id).where(
+                    Media.property_id == Property.id,
+                    Media.is_floor_plan.is_(True),
+                )
+            )
+        )
+
+    if is_verified is not None:
+        stmt = stmt.where(Listing.is_verified.is_(is_verified))
+    if rent_cheque_count is not None:
+        stmt = stmt.where(Listing.rent_cheque_count == rent_cheque_count)
 
     if created_from:
         stmt = stmt.where(Listing.created_at >= created_from)

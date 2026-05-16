@@ -158,6 +158,10 @@ class AuditAction(str, enum.Enum):
     PROPERTY_COMMISSION_OVERRIDE_SET = "property_commission_override_set"
     PROPERTY_COMMISSION_OVERRIDE_CLEARED = "property_commission_override_cleared"
 
+    # Listing verification (added in migration 0040)
+    LISTING_VERIFIED = "listing_verified"
+    LISTING_UNVERIFIED = "listing_unverified"
+
     # Catch-all for ad-hoc events
     OTHER = "other"
 

@@ -17,7 +17,7 @@ rather than using fractional indexing, for simplicity in Phase 1.
 
 import uuid
 
-from sqlalchemy import BigInteger, Enum, ForeignKey, Integer, SmallInteger, String
+from sqlalchemy import BigInteger, Boolean, Enum, ForeignKey, Integer, SmallInteger, String
 from sqlalchemy.dialects.postgresql import JSONB, UUID
 from sqlalchemy.orm import Mapped, mapped_column
 
@@ -66,4 +66,10 @@ class Media(Base, UUIDMixin, TimestampMixin, TenantMixin):
         UUID(as_uuid=True),
         ForeignKey("users.id", ondelete="SET NULL"),
         nullable=True,
+    )
+
+    # True when this image is a floor plan rather than a property photo.
+    # Added in migration 0040.
+    is_floor_plan: Mapped[bool] = mapped_column(
+        Boolean, nullable=False, default=False, server_default="false"
     )

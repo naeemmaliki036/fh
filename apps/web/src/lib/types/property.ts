@@ -51,8 +51,9 @@ export interface Property {
   city: string | null;
   area: string | null;
   country: string | null;
-  latitude: string | null;
-  longitude: string | null;
+  latitude: number | null;
+  longitude: number | null;
+  build_year: number | null;
   amenities: string[] | null;
   tags: string[] | null;
   internal_reference: string | null;
@@ -96,6 +97,9 @@ export interface PropertyCreateRequest {
   city?: string | null;
   area?: string | null;
   country?: string | null;
+  latitude?: number | null;
+  longitude?: number | null;
+  build_year?: number | null;
   internal_reference?: string | null;
   tags?: string[] | null;
   amenities?: string[] | null;
@@ -129,6 +133,9 @@ export interface PropertyUpdateRequest {
   city?: string | null;
   area?: string | null;
   country?: string | null;
+  latitude?: number | null;
+  longitude?: number | null;
+  build_year?: number | null;
   status?: PropertyStatus | null;
   internal_reference?: string | null;
   tags?: string[] | null;
@@ -174,6 +181,10 @@ export interface PropertyListParams {
   created_from?: string;
   created_to?: string;
   has_listing?: boolean;
+  min_build_year?: number;
+  max_build_year?: number;
+  listing_verified?: boolean;
+  has_floor_plan?: boolean;
   q?: string;
   sort_by?: string;
   sort_dir?: "asc" | "desc";

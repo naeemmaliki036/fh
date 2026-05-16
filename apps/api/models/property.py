@@ -69,8 +69,12 @@ class Property(Base, UUIDMixin, TimestampMixin, TenantMixin):
     country: Mapped[str | None] = mapped_column(String(8), nullable=True)
 
     # Phase 1 geo: plain coordinates. Phase 2 adds PostGIS geometry column.
+    # CHECK constraints (range) enforced at DB level in migration 0040.
     latitude: Mapped[float | None] = mapped_column(Numeric(9, 6), nullable=True)
     longitude: Mapped[float | None] = mapped_column(Numeric(9, 6), nullable=True)
+
+    # Year the building was constructed. CHECK 1900–2100 in migration 0040.
+    build_year: Mapped[int | None] = mapped_column(SmallInteger, nullable=True)
 
     # Array of feature strings — grows without migrations.
     amenities: Mapped[list | None] = mapped_column(

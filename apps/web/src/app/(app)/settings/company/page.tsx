@@ -11,26 +11,15 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
+  Select, SelectContent, SelectItem, SelectTrigger, SelectValue,
 } from "@/components/ui/select";
 import { CURRENCIES } from "@/lib/constants/regions";
-import { OPERATING_COUNTRIES } from "@/lib/constants/operating-countries";
-import { cn } from "@/lib/utils/cn";
+import { PropertyRefPrefixCard, OperatingCountriesField } from "./CompanySettingsHelpers";
 
 const OWNER_ROLES = new Set(["company_owner", "company_admin"]);
 const TIMEZONES = [
-  "Asia/Dubai",
-  "Asia/Riyadh",
-  "Asia/Qatar",
-  "Asia/Bahrain",
-  "Asia/Kuwait",
-  "Asia/Muscat",
-  "Asia/Karachi",
-  "UTC",
+  "Asia/Dubai", "Asia/Riyadh", "Asia/Qatar", "Asia/Bahrain",
+  "Asia/Kuwait", "Asia/Muscat", "Asia/Karachi", "UTC",
 ];
 const LOCALES = [
   { value: "en", label: "English" },
@@ -71,20 +60,16 @@ export default function CompanyPage(): React.ReactElement {
     },
   });
 
-  const onSubmit = (data: FormValues): void => {
-    update(data);
-  };
+  const onSubmit = (data: FormValues): void => { update(data); };
 
   if (isLoading) return <p className="text-sm text-muted-foreground">Loading...</p>;
 
-  const mediaLimits = tenant
-    ? [
-        { label: "Max images / property", value: tenant.max_images_per_property },
-        { label: "Max videos / property", value: tenant.max_videos_per_property },
-        { label: "Max image size", value: `${tenant.max_image_mb} MB` },
-        { label: "Max video size", value: `${tenant.max_video_mb} MB` },
-      ]
-    : [];
+  const mediaLimits = tenant ? [
+    { label: "Max images / property", value: tenant.max_images_per_property },
+    { label: "Max videos / property", value: tenant.max_videos_per_property },
+    { label: "Max image size", value: `${tenant.max_image_mb} MB` },
+    { label: "Max video size", value: `${tenant.max_video_mb} MB` },
+  ] : [];
 
   return (
     <div className="space-y-6">
@@ -104,97 +89,46 @@ export default function CompanyPage(): React.ReactElement {
               <Input id="name" disabled={!canEdit} {...register("name")} />
               {errors.name && <p className="text-xs text-destructive">{errors.name.message}</p>}
             </div>
-
             <div className="space-y-1.5">
               <Label htmlFor="currency">Currency</Label>
-              <Controller
-                name="currency"
-                control={control}
-                render={({ field }) => (
-                  <Select value={field.value} onValueChange={field.onChange} disabled={!canEdit}>
-                    <SelectTrigger id="currency"><SelectValue /></SelectTrigger>
-                    <SelectContent>
-                      {CURRENCIES.map((c) => (
-                        <SelectItem key={c.value} value={c.value}>{c.label}</SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
-                )}
-              />
+              <Controller name="currency" control={control} render={({ field }) => (
+                <Select value={field.value} onValueChange={field.onChange} disabled={!canEdit}>
+                  <SelectTrigger id="currency"><SelectValue /></SelectTrigger>
+                  <SelectContent>{CURRENCIES.map((c) => <SelectItem key={c.value} value={c.value}>{c.label}</SelectItem>)}</SelectContent>
+                </Select>
+              )} />
             </div>
-
             <div className="space-y-1.5">
               <Label htmlFor="timezone">Timezone</Label>
-              <Controller
-                name="timezone"
-                control={control}
-                render={({ field }) => (
-                  <Select value={field.value} onValueChange={field.onChange} disabled={!canEdit}>
-                    <SelectTrigger id="timezone"><SelectValue /></SelectTrigger>
-                    <SelectContent>
-                      {TIMEZONES.map((tz) => (
-                        <SelectItem key={tz} value={tz}>{tz}</SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
-                )}
-              />
+              <Controller name="timezone" control={control} render={({ field }) => (
+                <Select value={field.value} onValueChange={field.onChange} disabled={!canEdit}>
+                  <SelectTrigger id="timezone"><SelectValue /></SelectTrigger>
+                  <SelectContent>{TIMEZONES.map((tz) => <SelectItem key={tz} value={tz}>{tz}</SelectItem>)}</SelectContent>
+                </Select>
+              )} />
             </div>
-
             <div className="space-y-1.5">
               <Label htmlFor="locale">Locale</Label>
-              <Controller
-                name="locale"
-                control={control}
-                render={({ field }) => (
-                  <Select value={field.value} onValueChange={field.onChange} disabled={!canEdit}>
-                    <SelectTrigger id="locale"><SelectValue /></SelectTrigger>
-                    <SelectContent>
-                      {LOCALES.map((l) => (
-                        <SelectItem key={l.value} value={l.value}>{l.label}</SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
-                )}
-              />
+              <Controller name="locale" control={control} render={({ field }) => (
+                <Select value={field.value} onValueChange={field.onChange} disabled={!canEdit}>
+                  <SelectTrigger id="locale"><SelectValue /></SelectTrigger>
+                  <SelectContent>{LOCALES.map((l) => <SelectItem key={l.value} value={l.value}>{l.label}</SelectItem>)}</SelectContent>
+                </Select>
+              )} />
             </div>
-
             <div className="space-y-1.5">
               <Label htmlFor="default_properties_view">Default properties view</Label>
-              <Controller
-                name="default_properties_view"
-                control={control}
-                render={({ field }) => (
-                  <Select value={field.value} onValueChange={field.onChange} disabled={!canEdit}>
-                    <SelectTrigger id="default_properties_view"><SelectValue /></SelectTrigger>
-                    <SelectContent>
-                      {VIEW_OPTIONS.map((v) => (
-                        <SelectItem key={v.value} value={v.value}>{v.label}</SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
-                )}
-              />
+              <Controller name="default_properties_view" control={control} render={({ field }) => (
+                <Select value={field.value} onValueChange={field.onChange} disabled={!canEdit}>
+                  <SelectTrigger id="default_properties_view"><SelectValue /></SelectTrigger>
+                  <SelectContent>{VIEW_OPTIONS.map((v) => <SelectItem key={v.value} value={v.value}>{v.label}</SelectItem>)}</SelectContent>
+                </Select>
+              )} />
             </div>
-
-            <Controller
-              name="operating_countries"
-              control={control}
-              render={({ field }) => (
-                <OperatingCountriesField
-                  value={field.value}
-                  onChange={field.onChange}
-                  disabled={!canEdit}
-                  error={errors.operating_countries?.message}
-                />
-              )}
-            />
-
-            {canEdit && (
-              <Button type="submit" disabled={isPending}>
-                {isPending ? "Saving..." : "Save changes"}
-              </Button>
-            )}
+            <Controller name="operating_countries" control={control} render={({ field }) => (
+              <OperatingCountriesField value={field.value} onChange={field.onChange} disabled={!canEdit} error={errors.operating_countries?.message} />
+            )} />
+            {canEdit && <Button type="submit" disabled={isPending}>{isPending ? "Saving..." : "Save changes"}</Button>}
           </form>
         </CardContent>
       </Card>
@@ -203,9 +137,7 @@ export default function CompanyPage(): React.ReactElement {
         <Card className="max-w-md">
           <CardHeader>
             <CardTitle>Media Limits</CardTitle>
-            <CardDescription>
-              Upload caps set by your account manager. Need higher limits? Contact your account manager.
-            </CardDescription>
+            <CardDescription>Upload caps set by your account manager. Need higher limits? Contact your account manager.</CardDescription>
           </CardHeader>
           <CardContent>
             <dl className="grid grid-cols-2 gap-x-6 gap-y-2 text-sm">
@@ -219,59 +151,14 @@ export default function CompanyPage(): React.ReactElement {
           </CardContent>
         </Card>
       )}
-    </div>
-  );
-}
 
-interface OperatingCountriesFieldProps {
-  value: string[];
-  onChange: (v: string[]) => void;
-  disabled: boolean;
-  error?: string;
-}
-
-function OperatingCountriesField({
-  value,
-  onChange,
-  disabled,
-  error,
-}: OperatingCountriesFieldProps): React.ReactElement {
-  function toggle(code: string): void {
-    if (disabled) return;
-    if (value.includes(code)) {
-      onChange(value.filter((c) => c !== code));
-    } else if (value.length < 20) {
-      onChange([...value, code]);
-    }
-  }
-
-  return (
-    <div className="space-y-1.5">
-      <Label>Countries we operate in</Label>
-      <p className="text-xs text-muted-foreground">Select 1–20 countries</p>
-      <div className="flex flex-wrap gap-2">
-        {OPERATING_COUNTRIES.map((c) => {
-          const selected = value.includes(c.code);
-          return (
-            <button
-              key={c.code}
-              type="button"
-              disabled={disabled}
-              onClick={() => toggle(c.code)}
-              className={cn(
-                "rounded-md border px-2.5 py-1 text-xs font-medium transition-colors",
-                selected
-                  ? "bg-primary text-primary-foreground border-primary"
-                  : "bg-background text-foreground border-input hover:bg-muted",
-                disabled && "opacity-50 cursor-not-allowed",
-              )}
-            >
-              {c.label} ({c.code})
-            </button>
-          );
-        })}
-      </div>
-      {error && <p className="text-xs text-destructive">{error}</p>}
+      {tenant && (
+        <PropertyRefPrefixCard
+          tenantId={tenant.id}
+          currentPrefix={tenant.property_ref_prefix}
+          canEdit={canEdit}
+        />
+      )}
     </div>
   );
 }

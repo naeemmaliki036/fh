@@ -3,12 +3,15 @@
 import uuid
 from datetime import date, datetime
 from decimal import Decimal
+from typing import Literal
 
 from pydantic import BaseModel, ConfigDict, Field, model_validator
 
 from apps.api.models.enums import ListingPurpose, ListingStatus, ListingTier, RentPeriod
 
 _RENT_PURPOSES = {ListingPurpose.RENT_SHORT, ListingPurpose.RENT_LONG}
+
+_VALID_CHEQUE_COUNTS = {1, 2, 4, 6, 12}
 
 
 class ListingCreateRequest(BaseModel):
@@ -23,6 +26,9 @@ class ListingCreateRequest(BaseModel):
     listing_tier: ListingTier = ListingTier.STANDARD
     valid_from: date | None = None
     valid_until: date | None = None
+    # migration 0040 UAE market fields
+    rent_cheque_count: Literal[1, 2, 4, 6, 12] | None = None
+    trakheesi_permit: str | None = Field(None, max_length=64)
 
     @model_validator(mode="after")
     def check_rent_period(self) -> "ListingCreateRequest":
@@ -44,6 +50,9 @@ class ListingUpdateRequest(BaseModel):
     listing_tier: ListingTier | None = None
     valid_from: date | None = None
     valid_until: date | None = None
+    # migration 0040 UAE market fields
+    rent_cheque_count: Literal[1, 2, 4, 6, 12] | None = None
+    trakheesi_permit: str | None = Field(None, max_length=64)
 
     @model_validator(mode="after")
     def check_rent_period(self) -> "ListingUpdateRequest":
@@ -56,6 +65,10 @@ class ListingUpdateRequest(BaseModel):
         if purpose in _RENT_PURPOSES and rent_period is None:
             raise ValueError("rent_period is required for rent listings")
         return self
+
+
+class ListingVerifyRequest(BaseModel):
+    note: str | None = Field(None, max_length=1000)
 
 
 class ListingPriceChangeRequest(BaseModel):
@@ -95,6 +108,19 @@ class ListingResponse(BaseModel):
     reviewed_at: datetime | None = None
     reviewed_by_user_id: uuid.UUID | None = None
     review_notes: str | None = None
+    # migration 0040 UAE market fields
+    rent_cheque_count: int | None = None
+    trakheesi_permit: str | None = None
+    is_verified: bool = False
+    verified_at: datetime | None = None
+    verified_by_user_id: uuid.UUID | None = None
+    verified_by_user_name: str | None = None  # joined from user.full_name by service
+    # Property cross-reference (surfaced from related Property row)
+    internal_reference: str | None = None
+    # Computed metrics (populated by service/router, not DB columns)
+    price_per_sqft: int | None = None
+    price_drop_pct: int | None = None
+    days_since_posted: int | None = None
     created_at: datetime
     updated_at: datetime
 

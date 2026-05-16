@@ -7,6 +7,8 @@ import type {
   PublicLeadResponse,
   PublicListingsParams,
   PublicAgentSnippet,
+  PublicListingCard,
+  SimilarListingsResponse,
 } from "@/lib/types/public-site";
 
 const API_BASE = process.env.NEXT_PUBLIC_API_URL ?? "http://localhost:8000";
@@ -62,5 +64,17 @@ export const publicSiteRepository = {
       data,
     );
     return res.data;
+  },
+
+  async getSimilarListings(
+    slug: string,
+    listingId: string,
+    limit: number = 4,
+  ): Promise<PublicListingCard[]> {
+    const res = await publicHttp.get<SimilarListingsResponse>(
+      `/public/sites/${slug}/listings/${listingId}/similar`,
+      { params: { limit } },
+    );
+    return res.data.items;
   },
 } as const;

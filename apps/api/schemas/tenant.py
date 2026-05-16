@@ -12,6 +12,9 @@ from apps.api.schemas.audit import AuditLogResponse
 # ISO 3166-1 alpha-2 pattern
 _COUNTRY_RE = re.compile(r"^[A-Z]{2}$")
 
+# 3 uppercase alphanumeric chars (no special chars)
+_PREFIX_RE = re.compile(r"^[A-Z0-9]{3}$")
+
 
 def _validate_countries(v: list[str]) -> list[str]:
     if not v:
@@ -74,6 +77,8 @@ class TenantResponse(BaseModel):
     max_videos_per_property: int = 2
     max_image_mb: int = 10
     max_video_mb: int = 25
+    # migration 0040 — property reference prefix
+    property_ref_prefix: str | None = None
     created_at: datetime
     updated_at: datetime
 
@@ -136,6 +141,20 @@ class PublicSiteFeatureRequest(BaseModel):
     """POST /tenants/{id}/public-site-feature — platform admin only."""
 
     enabled: bool
+
+
+class PropertyRefPrefixRequest(BaseModel):
+    """PATCH /tenants/{id}/property-ref-prefix — update tenant's 3-char property reference prefix."""
+
+    property_ref_prefix: str = Field(..., min_length=3, max_length=3, description="3 uppercase alphanumeric chars")
+
+    @field_validator("property_ref_prefix", mode="before")
+    @classmethod
+    def _validate_prefix(cls, v: str) -> str:
+        upper = v.upper()
+        if not _PREFIX_RE.match(upper):
+            raise ValueError("property_ref_prefix must be exactly 3 uppercase letters or digits (A-Z, 0-9)")
+        return upper
 
 
 class TenantMediaLimitsRequest(BaseModel):

@@ -11,10 +11,12 @@ from apps.api.models.listing import Listing
 from apps.api.models.media import Media
 from apps.api.models.property import Property
 from apps.api.models.property_agent import PropertyAgent
+from apps.api.models.tenant import Tenant
 from apps.api.services._media_thumbs import batch_first_active_listing, batch_first_media
 from apps.api.services.audit_service import AuditService
 from apps.api.services.base import BaseService
 from apps.api.services.property_filters import apply_property_attribute_filters
+from apps.api.services.property_ref import generate_unique_reference
 from packages.common.utils.error_handlers import bad_request, forbidden, not_found
 
 _MANAGER_ROLES = {
@@ -97,6 +99,11 @@ class PropertyService(BaseService):
         min_parking_spaces: int | None = None,
         has_payment_plan: bool | None = None,
         handover_year: int | None = None,
+        # --- migration 0040 attribute filters ---
+        min_build_year: int | None = None,
+        max_build_year: int | None = None,
+        listing_verified: bool | None = None,
+        has_floor_plan: bool | None = None,
         sort_by: str = "created_at",
         sort_dir: str = "desc",
         skip: int = 0,
@@ -181,6 +188,10 @@ class PropertyService(BaseService):
             min_parking_spaces=min_parking_spaces,
             has_payment_plan=has_payment_plan,
             handover_year=handover_year,
+            min_build_year=min_build_year,
+            max_build_year=max_build_year,
+            listing_verified=listing_verified,
+            has_floor_plan=has_floor_plan,
         )
 
         # Sorting
@@ -245,11 +256,40 @@ class PropertyService(BaseService):
         country = fields.pop("country", None) or "AE"
         await validate_country_for_tenant(self.session, tenant_id, country)
         tags = fields.pop("tags", None) or []
+
+        # Auto-generate internal_reference when the caller omits it.
+        internal_reference = fields.pop("internal_reference", None)
+        if not internal_reference:
+            tenant_obj = await self.session.get(Tenant, tenant_id)
+            prefix = tenant_obj.property_ref_prefix if tenant_obj else "UNK"
+            property_type = fields.get("property_type", "other")
+            pt_str = property_type.value if hasattr(property_type, "value") else str(property_type)
+            internal_reference = await generate_unique_reference(
+                self.session, tenant_id, pt_str, prefix=prefix
+            )
+        else:
+            # Caller supplied a reference — verify uniqueness within the tenant.
+            from sqlalchemy import text as _text
+            dup_q = (
+                select(_text("1"))
+                .select_from(Property)
+                .where(
+                    Property.tenant_id == tenant_id,
+                    Property.internal_reference == internal_reference,
+                )
+                .limit(1)
+            )
+            if (await self.session.execute(dup_q)).first() is not None:
+                raise bad_request(
+                    f"internal_reference '{internal_reference}' is already in use for this tenant"
+                )
+
         prop = Property(
             tenant_id=tenant_id,
             country=country,
             created_by_user_id=UUID(current_user["id"]),
             tags=tags,
+            internal_reference=internal_reference,
             **fields,
         )
         self.session.add(prop)
@@ -290,6 +330,8 @@ class PropertyService(BaseService):
             "service_charge_aed_sqft", "rera_permit_number", "plot_area_sqft", "parking_spaces",
             "floor_level", "fit_out_status", "ceiling_height_m", "handover_year",
             "handover_quarter", "payment_plan",
+            # migration 0040 attributes
+            "build_year",
             # "status" excluded — must go through change_status() for audit trail
         }
         if "country" in updates and updates["country"]:

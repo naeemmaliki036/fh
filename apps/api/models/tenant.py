@@ -144,6 +144,13 @@ class Tenant(Base, UUIDMixin, TimestampMixin):
         Integer, nullable=False, default=25, server_default="25"
     )
 
+    # 3-char uppercase alphanumeric prefix used to build property reference
+    # numbers (e.g. "MAR" → "MAR-00042").  Set once on tenant creation;
+    # uniqueness enforced by a case-insensitive functional index in migration 0040.
+    property_ref_prefix: Mapped[str] = mapped_column(
+        String(3), nullable=False
+    )
+
     # Suspension audit trail — populated when status transitions to SUSPENDED.
     suspended_at: Mapped[datetime | None] = mapped_column(
         nullable=True,

@@ -53,3 +53,20 @@ export function useUpdateMyTenant() {
     },
   });
 }
+
+export function useUpdatePropertyRefPrefix(tenantId: string) {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: (prefix: string): Promise<Tenant> =>
+      tenantRepository.updatePropertyRefPrefix(tenantId, { property_ref_prefix: prefix }),
+    onSuccess: (data) => {
+      queryClient.setQueryData(queryKeys.tenants.detail(data.id), data);
+      queryClient.setQueryData(queryKeys.tenants.my, data);
+      toast.success("Property reference prefix updated");
+    },
+    onError: (error: Error) => {
+      toast.error(error.message);
+    },
+  });
+}

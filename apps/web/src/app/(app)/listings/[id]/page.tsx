@@ -2,15 +2,17 @@
 
 import { use, useState } from "react";
 import Link from "next/link";
-import { ArrowLeft, DollarSign, ExternalLink, Pencil, Rocket, ClipboardCheck } from "lucide-react";
+import { ArrowLeft, DollarSign, ExternalLink, Pencil, Rocket, ClipboardCheck, ShieldCheck, ShieldOff } from "lucide-react";
 import { useListing } from "@/hooks/queries/useListings";
 import { useListingPriceHistory } from "@/hooks/queries/useListingPrice";
-import { useChangeListingStatus } from "@/hooks/mutations/useListingMutations";
+import { useChangeListingStatus, useVerifyListing, useUnverifyListing } from "@/hooks/mutations/useListingMutations";
 import { usePublishListing } from "@/hooks/mutations/useListingReviewMutations";
 import { usePublicSiteSettings } from "@/hooks/queries/tenant-public-site/usePublicSiteSettings";
 import { ListingStatusBadge } from "@/components/atoms/ListingStatusBadge";
 import { ListingPurposeBadge } from "@/components/atoms/ListingPurposeBadge";
 import { PriceChangeBadge } from "@/components/atoms/PriceChangeBadge";
+import { VerifiedBadge } from "@/components/atoms/VerifiedBadge";
+import { ReferenceBadge } from "@/components/atoms/ReferenceBadge";
 import { StatusHeaderBar } from "@/components/molecules/StatusHeaderBar";
 import { ChangePriceModal } from "@/components/molecules/ChangePriceModal";
 import { ListingMediaPanel } from "@/components/organisms/ListingMediaPanel";
@@ -33,6 +35,7 @@ import type { ListingStatus } from "@/lib/types/listing";
 import { listingHandle } from "@/lib/utils/listing-url";
 
 const REVIEWER_ROLES = new Set(["listing_manager", "company_admin", "company_owner"]);
+const VERIFY_ROLES = new Set(["company_owner", "company_admin", "listing_manager"]);
 
 const LISTING_TRANSITIONS: Array<{
   fromStatuses: ListingStatus[];
@@ -69,10 +72,15 @@ export default function ListingDetailPage({ params }: PageProps): React.ReactEle
   const { data: publicSite } = usePublicSiteSettings();
   const { mutateAsync: changeStatus } = useChangeListingStatus(listing?.property_id ?? "");
   const { mutateAsync: publish, isPending: publishing } = usePublishListing(id);
+  const { mutateAsync: verify, isPending: verifying } = useVerifyListing(id);
+  const { mutateAsync: unverify, isPending: unverifying } = useUnverifyListing(id);
   const [showPriceModal, setShowPriceModal] = useState(false);
+  const [showVerifyNote, setShowVerifyNote] = useState(false);
+  const [verifyNote, setVerifyNote] = useState("");
 
   const isReviewer = !!currentUser && REVIEWER_ROLES.has(currentUser.role);
   const isAssignedReviewer = isReviewer && listing?.assigned_reviewer_id === currentUser?.id;
+  const canVerify = !!currentUser && VERIFY_ROLES.has(currentUser.role);
 
   if (isLoading) {
     return <p className="text-sm text-muted-foreground p-6">Loading listing...</p>;
@@ -107,7 +115,11 @@ export default function ListingDetailPage({ params }: PageProps): React.ReactEle
           <Link href="/listings"><ArrowLeft className="h-4 w-4" /></Link>
         </Button>
         <div className="flex-1 min-w-0">
-          <h1 className="text-2xl font-semibold tracking-tight truncate">{listing.title}</h1>
+          <div className="flex flex-wrap items-center gap-2">
+            <h1 className="text-2xl font-semibold tracking-tight truncate">{listing.title}</h1>
+            {listing.is_verified && <VerifiedBadge verifiedBy={listing.verified_by_user_name} />}
+            <ReferenceBadge reference={listing.internal_reference} />
+          </div>
           <div className="flex items-center flex-wrap gap-2 mt-0.5">
             <ListingPurposeBadge purpose={listing.purpose} />
             <StatusHeaderBar
@@ -182,7 +194,39 @@ export default function ListingDetailPage({ params }: PageProps): React.ReactEle
                 </Link>
               </Button>
             )}
+            {canVerify && !listing.is_verified && (
+              <Button size="sm" variant="outline" className="gap-1.5" onClick={() => setShowVerifyNote(true)}>
+                <ShieldCheck className="h-3.5 w-3.5" />
+                Verify listing
+              </Button>
+            )}
+            {canVerify && listing.is_verified && (
+              <Button size="sm" variant="outline" className="gap-1.5 text-muted-foreground" disabled={unverifying} onClick={() => unverify(undefined)}>
+                <ShieldOff className="h-3.5 w-3.5" />
+                Unverify
+              </Button>
+            )}
           </div>
+
+          {/* Verify dialog */}
+          {showVerifyNote && (
+            <div className="mt-3 rounded-md border p-3 space-y-2 bg-card">
+              <p className="text-sm font-medium">Add a note (optional)</p>
+              <textarea
+                className="w-full rounded border border-border bg-background px-2 py-1.5 text-sm resize-none"
+                rows={2}
+                value={verifyNote}
+                onChange={(e) => setVerifyNote(e.target.value)}
+                placeholder="Verification note..."
+              />
+              <div className="flex gap-2 justify-end">
+                <Button size="sm" variant="outline" onClick={() => setShowVerifyNote(false)}>Cancel</Button>
+                <Button size="sm" disabled={verifying} onClick={async () => { await verify(verifyNote || undefined); setShowVerifyNote(false); setVerifyNote(""); }}>
+                  {verifying ? "Verifying..." : "Confirm Verify"}
+                </Button>
+              </div>
+            </div>
+          )}
         </div>
       </div>
 
