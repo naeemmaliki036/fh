@@ -33,25 +33,12 @@ const SORT_OPTIONS = [
 ];
 
 const BEDS_OPTIONS = [
-  { value: "", label: "Any" },
+  { value: "", label: "Any beds" },
   { value: "0", label: "Studio" },
-  { value: "1", label: "1" },
-  { value: "2", label: "2" },
-  { value: "3", label: "3" },
-  { value: "4", label: "4+" },
-];
-
-const FURNISHING_OPTIONS = [
-  { value: "", label: "Any" },
-  { value: "furnished", label: "Furnished" },
-  { value: "unfurnished", label: "Unfurnished" },
-  { value: "partly_furnished", label: "Partly" },
-];
-
-const COMPLETION_OPTIONS = [
-  { value: "", label: "Any" },
-  { value: "ready", label: "Ready" },
-  { value: "off_plan", label: "Off-plan" },
+  { value: "1", label: "1 bed" },
+  { value: "2", label: "2 beds" },
+  { value: "3", label: "3 beds" },
+  { value: "4", label: "4+ beds" },
 ];
 
 function PillSelect({
@@ -66,17 +53,17 @@ function PillSelect({
   onChange: (v: string) => void;
 }): React.ReactElement {
   return (
-    <div className="flex flex-col gap-0.5">
-      <label className="text-[10px] font-semibold uppercase tracking-wider text-slate-500 px-1">
+    <div className="flex flex-col gap-1">
+      <label className="text-[10px] font-bold uppercase tracking-wider text-slate-400 px-0.5">
         {label}
       </label>
       <select
         value={value}
         onChange={(e) => onChange(e.target.value)}
         className={cn(
-          "h-9 rounded-lg border border-slate-300 bg-white px-2.5 text-sm font-semibold text-slate-700",
-          "focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition",
-          "min-w-[100px] cursor-pointer",
+          "h-9 rounded-full border border-slate-200 bg-white px-3 text-sm font-semibold text-slate-700",
+          "focus:outline-none focus:ring-2 focus:ring-teal-500 focus:border-teal-500 transition",
+          "min-w-[110px] cursor-pointer",
         )}
       >
         {options.map((o) => (
@@ -101,7 +88,7 @@ export function MarketplaceFiltersBar({
   };
 
   return (
-    <div className="bg-white border border-slate-200 rounded-xl p-3 flex flex-wrap items-end gap-3 shadow-sm">
+    <div className="bg-white border border-slate-200 rounded-2xl px-4 py-3 flex flex-wrap items-end gap-3 shadow-sm">
       <PillSelect
         label="Purpose"
         value={params.purpose ?? ""}
@@ -121,43 +108,31 @@ export function MarketplaceFiltersBar({
         onChange={(v) => set("beds", v ? Number(v) : undefined)}
       />
       <PillSelect
-        label="Furnishing"
-        value={params.furnishing_status ?? ""}
-        options={FURNISHING_OPTIONS}
-        onChange={(v) => set("furnishing_status", v)}
-      />
-      <PillSelect
-        label="Status"
-        value={params.completion_status ?? ""}
-        options={COMPLETION_OPTIONS}
-        onChange={(v) => set("completion_status", v)}
-      />
-      <PillSelect
         label="Sort"
         value={params.sort ?? "verified_first"}
         options={SORT_OPTIONS}
         onChange={(v) => set("sort", v as MarketplaceListingsParams["sort"])}
       />
 
-      <div className="flex flex-col gap-0.5">
-        <label className="text-[10px] font-semibold uppercase tracking-wider text-slate-500 px-1">
+      <div className="flex flex-col gap-1">
+        <label className="text-[10px] font-bold uppercase tracking-wider text-slate-400 px-0.5">
           Verified
         </label>
         <button
           onClick={() => set("is_verified", params.is_verified ? undefined : true)}
           className={cn(
-            "h-9 rounded-lg border px-3 text-sm font-semibold transition",
+            "h-9 rounded-full border px-4 text-sm font-semibold transition",
             params.is_verified
-              ? "bg-emerald-600 border-emerald-600 text-white"
-              : "border-slate-300 bg-white text-slate-700 hover:border-slate-400",
+              ? "bg-teal-600 border-teal-600 text-white"
+              : "border-slate-200 bg-white text-slate-700 hover:border-teal-400 hover:text-teal-700",
           )}
         >
           Verified only
         </button>
       </div>
 
-      <div className="flex flex-col gap-0.5 flex-1 min-w-[160px]">
-        <label className="text-[10px] font-semibold uppercase tracking-wider text-slate-500 px-1">
+      <div className="flex flex-col gap-1 flex-1 min-w-[160px]">
+        <label className="text-[10px] font-bold uppercase tracking-wider text-slate-400 px-0.5">
           Search
         </label>
         <input
@@ -165,7 +140,10 @@ export function MarketplaceFiltersBar({
           placeholder="City, area or keyword..."
           value={params.q ?? ""}
           onChange={(e) => set("q", e.target.value || undefined)}
-          className="h-9 rounded-lg border border-slate-300 bg-white px-3 text-sm text-slate-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition"
+          className={cn(
+            "h-9 rounded-full border border-slate-200 bg-white px-4 text-sm text-slate-700",
+            "focus:outline-none focus:ring-2 focus:ring-teal-500 focus:border-teal-500 transition",
+          )}
         />
       </div>
     </div>

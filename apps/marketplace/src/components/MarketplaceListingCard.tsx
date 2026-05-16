@@ -1,7 +1,7 @@
 "use client";
 
 import Link from "next/link";
-import { MapPin, Phone, Mail } from "lucide-react";
+import { MapPin } from "lucide-react";
 import { cn } from "@/lib/cn";
 import type { MarketplaceListingItem } from "@fh/portal-types";
 
@@ -9,22 +9,18 @@ interface MarketplaceListingCardProps {
   listing: MarketplaceListingItem;
 }
 
-function formatPrice(
-  price: number,
-  currency: string,
-  purpose: string,
-  rentPeriod: string | null,
-): string {
+function formatPrice(price: number, currency: string, purpose: string): string {
   const formatted = price.toLocaleString("en-AE");
   const base = `${currency} ${formatted}`;
   if (purpose === "sale") return base;
-  if (rentPeriod === "yearly") return `${base} / Yearly`;
-  if (rentPeriod === "monthly") return `${base} / Mo`;
-  return base;
+  return `${base} / yr`;
 }
 
-function daysAgoLabel(n: number): string {
-  if (n === 0) return "Just now";
+function daysAgoLabel(createdAt: string | null): string {
+  if (!createdAt) return "";
+  const diffMs = Date.now() - new Date(createdAt).getTime();
+  const n = Math.floor(diffMs / (1000 * 60 * 60 * 24));
+  if (n <= 0) return "Just now";
   if (n === 1) return "1 day ago";
   if (n < 7) return `${n} days ago`;
   if (n < 30) return `${Math.floor(n / 7)}w ago`;
@@ -40,7 +36,6 @@ export function MarketplaceListingCard({
     price,
     currency,
     purpose,
-    rent_period,
     listing_tier,
     property_type,
     beds,
@@ -51,121 +46,113 @@ export function MarketplaceListingCard({
     primary_photo_url,
     is_verified,
     price_per_sqft,
-    rent_cheque_count,
-    days_since_posted,
     agent_name,
     agent_has_license,
+    created_at,
     tenant,
   } = listing;
 
   const isPremium = listing_tier === "premium" || listing_tier === "featured";
+  const locationStr = [area, city].filter(Boolean).join(", ") || "Location TBC";
 
   return (
     <Link
       href={`/listings/${id}`}
-      className="group flex gap-0 rounded-xl border border-slate-200 bg-white shadow-sm hover:shadow-md hover:border-slate-300 transition-all overflow-hidden"
+      className={cn(
+        "group flex flex-col rounded-2xl bg-white shadow-sm border border-slate-100",
+        "hover:shadow-md hover:border-teal-200 transition-all overflow-hidden",
+      )}
     >
-      <div className="relative w-52 md:w-64 shrink-0 bg-slate-100">
+      {/* Image — 3:2 ratio */}
+      <div className="relative aspect-[3/2] bg-slate-100 overflow-hidden">
         {primary_photo_url ? (
-          <img src={primary_photo_url} alt={title} className="h-full w-full object-cover" />
+          <img
+            src={primary_photo_url}
+            alt={title}
+            className="h-full w-full object-cover group-hover:scale-105 transition-transform duration-300"
+          />
         ) : (
-          <div className="h-full w-full flex items-center justify-center text-slate-300 text-xs">
+          <div className="h-full w-full flex items-center justify-center text-slate-300 text-xs select-none">
             No image
           </div>
         )}
-        {is_verified && (
-          <span className="absolute bottom-2 left-2 inline-flex items-center gap-1 rounded bg-emerald-600 px-1.5 py-0.5 text-[10px] font-bold text-white">
-            Verified
-          </span>
-        )}
-        {isPremium && (
-          <span className="absolute top-2 right-2 inline-flex rounded bg-amber-500 px-1.5 py-0.5 text-[10px] font-bold text-white uppercase">
-            Premium
-          </span>
-        )}
-        {rent_cheque_count != null && rent_cheque_count > 1 && (
-          <span className="absolute top-2 left-2 rounded bg-blue-700 px-1.5 py-0.5 text-[10px] font-bold text-white">
-            {rent_cheque_count} cheques
-          </span>
+
+        {/* Badges */}
+        <div className="absolute top-2.5 left-2.5 flex flex-col gap-1.5">
+          {is_verified && (
+            <span className="inline-flex items-center gap-1 rounded-full bg-amber-500 px-2 py-0.5 text-[10px] font-bold text-white shadow">
+              Verified
+            </span>
+          )}
+          {isPremium && (
+            <span className="inline-flex rounded-full bg-teal-600 px-2 py-0.5 text-[10px] font-bold text-white uppercase shadow">
+              Premium
+            </span>
+          )}
+        </div>
+
+        {/* Agency logo overlay */}
+        {tenant.logo_url && (
+          <div className="absolute bottom-2 right-2">
+            <img
+              src={tenant.logo_url}
+              alt={tenant.name}
+              className="h-7 w-7 rounded-md object-contain bg-white border border-slate-100 shadow"
+            />
+          </div>
         )}
       </div>
 
-      <div className="flex flex-1 min-w-0 flex-col justify-between p-3.5 gap-2">
-        <div>
-          <p className="text-lg font-black text-slate-900 leading-tight">
-            {formatPrice(price, currency, purpose, rent_period)}
-            {price_per_sqft != null && (
-              <span className="ml-2 text-xs font-normal text-slate-400">
-                {currency} {price_per_sqft.toLocaleString("en-AE")}/sqft
-              </span>
-            )}
-          </p>
-          <p className="text-xs text-slate-500 mt-0.5">
-            <span className="capitalize">{property_type.replace("_", " ")}</span>
-            {beds != null && <> &bull; {beds}BD</>}
-            {baths != null && <> &bull; {baths}BA</>}
-            {area_sqft != null && <> &bull; {area_sqft.toLocaleString("en-AE")} sqft</>}
-          </p>
-        </div>
+      {/* Card body */}
+      <div className="flex flex-col gap-1.5 p-4">
+        {/* Price */}
+        <p className="text-base font-black text-slate-900 leading-tight">
+          {formatPrice(price, currency, purpose)}
+          {price_per_sqft != null && (
+            <span className="ml-1.5 text-xs font-normal text-slate-400">
+              {currency} {price_per_sqft.toLocaleString("en-AE")}/sqft
+            </span>
+          )}
+        </p>
 
-        <p className="text-sm font-semibold text-slate-800 line-clamp-2 leading-snug">{title}</p>
+        {/* Specs */}
+        <p className="text-xs text-slate-500">
+          <span className="capitalize">{property_type.replace(/_/g, " ")}</span>
+          {beds != null && <> &middot; {beds} BD</>}
+          {baths != null && <> &middot; {baths} BA</>}
+          {area_sqft != null && (
+            <> &middot; {area_sqft.toLocaleString("en-AE")} sqft</>
+          )}
+        </p>
 
+        {/* Title */}
+        <p className="text-sm font-semibold text-slate-800 line-clamp-2 leading-snug">
+          {title}
+        </p>
+
+        {/* Location */}
         <div className="flex items-center gap-1 text-xs text-slate-400">
-          <MapPin className="h-3 w-3 shrink-0" />
-          <span className="truncate">
-            {[area, city].filter(Boolean).join(", ") || "Location TBC"}
-          </span>
+          <MapPin className="h-3 w-3 shrink-0 text-teal-500" />
+          <span className="truncate">{locationStr}</span>
         </div>
 
-        <div className="flex items-center justify-between gap-2 pt-1 border-t border-slate-100">
-          <div className="flex flex-col min-w-0">
-            {agent_name && (
-              <span className="text-xs font-semibold text-slate-700 truncate">
+        {/* Footer */}
+        <div className="flex items-center justify-between gap-2 pt-2 border-t border-slate-100 mt-1">
+          <div className="min-w-0">
+            {agent_name ? (
+              <p className="text-xs font-semibold text-slate-700 truncate">
                 {agent_name}
                 {agent_has_license && (
-                  <span className="ml-1 text-[9px] font-bold text-emerald-600 uppercase">RERA</span>
+                  <span className="ml-1 text-[9px] font-bold text-teal-600 uppercase">
+                    RERA
+                  </span>
                 )}
-              </span>
+              </p>
+            ) : (
+              <p className="text-xs text-slate-400 truncate">{tenant.name}</p>
             )}
-            <span className="text-[10px] text-slate-400">{daysAgoLabel(days_since_posted)}</span>
-          </div>
-
-          <div className="flex items-center gap-1.5 shrink-0">
-            {tenant.contact_email && (
-              <span
-                onClick={(e) => e.preventDefault()}
-                className={cn(
-                  "inline-flex items-center gap-1 rounded-full border border-slate-200 px-2.5 py-1 text-[11px] font-semibold text-slate-600",
-                  "hover:bg-slate-50 transition cursor-pointer",
-                )}
-              >
-                <Mail className="h-3 w-3" /> Email
-              </span>
-            )}
-            {tenant.contact_phone && (
-              <span
-                onClick={(e) => e.preventDefault()}
-                className={cn(
-                  "inline-flex items-center gap-1 rounded-full bg-emerald-600 px-2.5 py-1 text-[11px] font-bold text-white",
-                  "hover:bg-emerald-700 transition cursor-pointer",
-                )}
-              >
-                <Phone className="h-3 w-3" /> Call
-              </span>
-            )}
-            {tenant.logo_url && (
-              <Link
-                href={`/agencies/${tenant.slug}`}
-                onClick={(e) => e.stopPropagation()}
-                className="ml-1 shrink-0"
-                aria-label={tenant.name}
-              >
-                <img
-                  src={tenant.logo_url}
-                  alt={tenant.name}
-                  className="h-8 w-8 rounded object-contain border border-slate-100"
-                />
-              </Link>
+            {created_at && (
+              <p className="text-[10px] text-slate-400">{daysAgoLabel(created_at)}</p>
             )}
           </div>
         </div>

@@ -37,45 +37,50 @@ export function ListingsContent(): React.ReactElement {
   const currentPage = filters.page ?? 1;
 
   return (
-    <div className="mx-auto w-[min(100%-24px,1440px)] py-6 space-y-5">
+    <div className="mx-auto w-[min(100%-24px,1440px)] py-8 space-y-6">
       <MarketplaceFiltersBar params={filters} onChange={setFilters} />
 
-      <div className="grid grid-cols-1 md:grid-cols-[1fr_260px] gap-6">
+      <div className="grid grid-cols-1 lg:grid-cols-[1fr_280px] gap-8">
         <section>
           {isLoading && (
-            <div className="flex items-center justify-center py-20 text-slate-400">
+            <div className="flex items-center justify-center py-24 text-slate-400">
               <Loader2 className="h-6 w-6 animate-spin mr-2" />
               Loading listings...
             </div>
           )}
+
           {isError && (
             <p className="py-10 text-center text-sm text-red-500">
               Failed to load listings. Please try again.
             </p>
           )}
+
           {!isLoading && !isError && listings.length === 0 && (
-            <div className="py-20 text-center text-slate-400">
+            <div className="py-24 text-center text-slate-400">
               <p className="text-base font-semibold">No listings found</p>
               <p className="text-sm mt-1">Try adjusting your filters</p>
             </div>
           )}
+
           {!isLoading && !isError && listings.length > 0 && (
             <>
-              <p className="text-sm text-slate-500 mb-3">
+              <p className="text-sm text-slate-500 mb-5">
                 <span className="font-bold text-slate-800">{total.toLocaleString()}</span>{" "}
                 listings found
               </p>
-              <div className="flex flex-col gap-3">
+
+              <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-3 gap-5">
                 {listings.map((l) => (
                   <MarketplaceListingCard key={l.id} listing={l} />
                 ))}
               </div>
+
               {totalPages > 1 && (
-                <div className="flex items-center justify-center gap-2 mt-8">
+                <div className="flex items-center justify-center gap-3 mt-10">
                   <button
                     disabled={currentPage <= 1}
                     onClick={() => setFilters((f) => ({ ...f, page: (f.page ?? 1) - 1 }))}
-                    className="px-4 py-2 rounded-lg border border-slate-300 text-sm font-semibold disabled:opacity-40 hover:bg-slate-50 transition"
+                    className="px-5 py-2.5 rounded-full border border-slate-200 text-sm font-semibold disabled:opacity-40 hover:border-teal-400 hover:text-teal-700 transition"
                   >
                     Previous
                   </button>
@@ -85,7 +90,7 @@ export function ListingsContent(): React.ReactElement {
                   <button
                     disabled={currentPage >= totalPages}
                     onClick={() => setFilters((f) => ({ ...f, page: (f.page ?? 1) + 1 }))}
-                    className="px-4 py-2 rounded-lg border border-slate-300 text-sm font-semibold disabled:opacity-40 hover:bg-slate-50 transition"
+                    className="px-5 py-2.5 rounded-full border border-slate-200 text-sm font-semibold disabled:opacity-40 hover:border-teal-400 hover:text-teal-700 transition"
                   >
                     Next
                   </button>

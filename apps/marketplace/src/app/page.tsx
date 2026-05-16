@@ -3,7 +3,7 @@
 import { useState } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { Search, Building2, ArrowRight } from "lucide-react";
+import { Search, ArrowRight } from "lucide-react";
 import { PORTAL_BRAND_NAME } from "@/lib/portal-brand";
 import { useMarketplaceStats } from "@/hooks/queries/useMarketplaceStats";
 import { useMarketplaceFeatured } from "@/hooks/queries/useMarketplaceFeatured";
@@ -14,7 +14,7 @@ import { MarketplaceFooter } from "@/components/MarketplaceFooter";
 
 const PROPERTY_TYPES = [
   "apartment", "villa", "townhouse", "penthouse", "land", "office",
-];
+] as const;
 
 export default function MarketplaceHomePage(): React.ReactElement {
   const router = useRouter();
@@ -32,108 +32,66 @@ export default function MarketplaceHomePage(): React.ReactElement {
     router.push(`/listings?${params.toString()}`);
   }
 
+  const typeList =
+    stats && stats.by_type.length > 0
+      ? stats.by_type
+      : PROPERTY_TYPES.map((pt) => ({ property_type: pt, count: 0 }));
+
   return (
-    <div className="min-h-screen bg-slate-50 flex flex-col">
+    <div className="min-h-screen bg-white flex flex-col">
       <MarketplaceHeader />
       <main className="flex-1">
-        {/* Hero */}
-        <section className="bg-slate-900 text-white py-20 px-4">
-          <div className="mx-auto max-w-3xl text-center space-y-6">
-            <div className="flex items-center justify-center gap-2 mb-2">
-              <Building2 className="h-8 w-8 text-amber-400" />
-              <h1 className="text-4xl md:text-5xl font-black">{PORTAL_BRAND_NAME}</h1>
-            </div>
-            <p className="text-slate-300 text-lg">
-              Search properties across the UAE&apos;s leading agencies
-            </p>
-
-            <div className="inline-flex rounded-xl border border-slate-700 p-1 bg-slate-800">
-              {(["sale", "rent_long"] as const).map((p) => (
-                <button
-                  key={p}
-                  onClick={() => setPurpose(p)}
-                  className={`px-6 py-2 rounded-lg text-sm font-bold transition ${
-                    purpose === p ? "bg-amber-400 text-slate-900" : "text-slate-300 hover:text-white"
-                  }`}
-                >
-                  {p === "sale" ? "Buy" : "Rent"}
-                </button>
-              ))}
-            </div>
-
-            <form onSubmit={handleSearch} className="flex gap-2">
-              <input
-                type="text"
-                value={q}
-                onChange={(e) => setQ(e.target.value)}
-                placeholder="City, community, or keyword..."
-                className="flex-1 rounded-xl border border-slate-600 bg-slate-800 px-4 py-3.5 text-white placeholder:text-slate-400 text-sm focus:outline-none focus:ring-2 focus:ring-amber-400"
-              />
-              <button
-                type="submit"
-                className="rounded-xl bg-amber-400 px-5 py-3.5 text-slate-900 font-black hover:bg-amber-300 transition"
-              >
-                <Search className="h-5 w-5" />
-              </button>
-            </form>
-          </div>
-        </section>
+        <HeroSection
+          q={q}
+          setQ={setQ}
+          purpose={purpose}
+          setPurpose={setPurpose}
+          onSearch={handleSearch}
+          brandName={PORTAL_BRAND_NAME}
+        />
 
         {stats && (
-          <section className="bg-amber-400 py-3 px-4">
-            <p className="text-center text-sm font-black text-slate-900">
-              {PORTAL_BRAND_NAME}: {stats.total_listings.toLocaleString()} listings across{" "}
+          <section className="bg-teal-600 py-3.5 px-4">
+            <p className="text-center text-sm font-bold text-white">
+              {stats.total_listings.toLocaleString()} listings across{" "}
               {stats.total_agencies} agencies
             </p>
           </section>
         )}
 
-        <div className="mx-auto w-[min(100%-32px,1280px)] py-12 space-y-14">
-          {stats && stats.by_type.length > 0 ? (
-            <section>
-              <h2 className="text-lg font-black text-slate-900 mb-4">Browse by type</h2>
-              <div className="flex flex-wrap gap-2">
-                {stats.by_type.map(({ property_type, count }) => (
-                  <Link
-                    key={property_type}
-                    href={`/listings?property_type=${property_type}`}
-                    className="inline-flex items-center gap-1.5 rounded-full border-2 border-slate-200 bg-white px-4 py-2 text-sm font-semibold text-slate-700 hover:border-slate-900 hover:text-slate-900 transition"
-                  >
-                    <span className="capitalize">{property_type.replace("_", " ")}</span>
-                    <span className="text-slate-400 text-xs">{count}</span>
-                  </Link>
-                ))}
-              </div>
-            </section>
-          ) : (
-            <section>
-              <h2 className="text-lg font-black text-slate-900 mb-4">Browse by type</h2>
-              <div className="flex flex-wrap gap-2">
-                {PROPERTY_TYPES.map((pt) => (
-                  <Link
-                    key={pt}
-                    href={`/listings?property_type=${pt}`}
-                    className="inline-flex rounded-full border-2 border-slate-200 bg-white px-4 py-2 text-sm font-semibold text-slate-700 hover:border-slate-900 transition capitalize"
-                  >
-                    {pt.replace("_", " ")}
-                  </Link>
-                ))}
-              </div>
-            </section>
-          )}
+        <div className="mx-auto w-[min(100%-32px,1280px)] py-16 space-y-20">
+          <section>
+            <h2 className="text-xl font-black text-slate-900 mb-5">Browse by type</h2>
+            <div className="flex flex-wrap gap-2.5">
+              {typeList.map(({ property_type, count }) => (
+                <Link
+                  key={property_type}
+                  href={`/listings?property_type=${property_type}`}
+                  className="inline-flex items-center gap-2 rounded-full border border-slate-200 bg-white px-4 py-2 text-sm font-semibold text-slate-700 hover:border-teal-400 hover:text-teal-700 transition capitalize"
+                >
+                  {property_type.replace(/_/g, " ")}
+                  {count > 0 && (
+                    <span className="text-xs text-slate-400">{count}</span>
+                  )}
+                </Link>
+              ))}
+            </div>
+          </section>
 
           {featured.length > 0 && (
             <section>
-              <div className="flex items-center justify-between mb-4">
-                <h2 className="text-lg font-black text-slate-900">Verified properties</h2>
+              <div className="flex items-center justify-between mb-6">
+                <h2 className="text-xl font-black text-slate-900">
+                  Verified properties
+                </h2>
                 <Link
                   href="/listings?is_verified=true"
-                  className="flex items-center gap-1 text-sm font-semibold text-blue-600 hover:text-blue-800"
+                  className="flex items-center gap-1 text-sm font-semibold text-teal-600 hover:text-teal-700"
                 >
-                  View all <ArrowRight className="h-3.5 w-3.5" />
+                  View all <ArrowRight className="h-4 w-4" />
                 </Link>
               </div>
-              <div className="flex flex-col gap-3">
+              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-5">
                 {featured.slice(0, 6).map((l) => (
                   <MarketplaceListingCard key={l.id} listing={l} />
                 ))}
@@ -143,13 +101,15 @@ export default function MarketplaceHomePage(): React.ReactElement {
 
           {agencies.length > 0 && (
             <section>
-              <div className="flex items-center justify-between mb-4">
-                <h2 className="text-lg font-black text-slate-900">Trusted agencies</h2>
+              <div className="flex items-center justify-between mb-6">
+                <h2 className="text-xl font-black text-slate-900">
+                  Trusted agencies
+                </h2>
                 <Link
                   href="/agencies"
-                  className="flex items-center gap-1 text-sm font-semibold text-blue-600 hover:text-blue-800"
+                  className="flex items-center gap-1 text-sm font-semibold text-teal-600 hover:text-teal-700"
                 >
-                  All agencies <ArrowRight className="h-3.5 w-3.5" />
+                  All agencies <ArrowRight className="h-4 w-4" />
                 </Link>
               </div>
               <div className="grid grid-cols-3 sm:grid-cols-4 md:grid-cols-6 gap-4">
@@ -157,16 +117,16 @@ export default function MarketplaceHomePage(): React.ReactElement {
                   <Link
                     key={agency.id}
                     href={`/agencies/${agency.slug}`}
-                    className="flex flex-col items-center gap-2 rounded-xl border border-slate-200 bg-white p-3 hover:border-slate-400 transition"
+                    className="flex flex-col items-center gap-2.5 rounded-2xl border border-slate-100 bg-white p-4 hover:border-teal-200 hover:shadow-sm transition"
                   >
                     {agency.logo_url ? (
                       <img
                         src={agency.logo_url}
                         alt={agency.name}
-                        className="h-12 w-12 rounded object-contain"
+                        className="h-12 w-12 rounded-xl object-contain"
                       />
                     ) : (
-                      <span className="h-12 w-12 rounded bg-slate-100 flex items-center justify-center text-sm font-bold text-slate-500">
+                      <span className="h-12 w-12 rounded-xl bg-teal-50 flex items-center justify-center text-sm font-bold text-teal-600">
                         {agency.name.slice(0, 2).toUpperCase()}
                       </span>
                     )}
@@ -182,5 +142,90 @@ export default function MarketplaceHomePage(): React.ReactElement {
       </main>
       <MarketplaceFooter />
     </div>
+  );
+}
+
+interface HeroSectionProps {
+  q: string;
+  setQ: (v: string) => void;
+  purpose: "sale" | "rent_long";
+  setPurpose: (v: "sale" | "rent_long") => void;
+  onSearch: (e: React.FormEvent) => void;
+  brandName: string;
+}
+
+function HeroSection({
+  q,
+  setQ,
+  purpose,
+  setPurpose,
+  onSearch,
+  brandName,
+}: HeroSectionProps): React.ReactElement {
+  return (
+    <section className="relative overflow-hidden bg-gradient-to-br from-teal-50 via-white to-amber-50 py-24 px-4">
+      {/* Decorative blobs */}
+      <div
+        aria-hidden="true"
+        className="pointer-events-none absolute -top-20 -left-20 h-80 w-80 rounded-full bg-teal-100 opacity-40 blur-3xl"
+      />
+      <div
+        aria-hidden="true"
+        className="pointer-events-none absolute -bottom-10 -right-10 h-72 w-72 rounded-full bg-amber-100 opacity-30 blur-3xl"
+      />
+
+      <div className="relative mx-auto max-w-3xl text-center space-y-8">
+        <div>
+          <p className="text-xs font-bold uppercase tracking-widest text-teal-600 mb-3">
+            UAE&apos;s open property marketplace
+          </p>
+          <h1 className="text-5xl md:text-6xl font-black text-slate-900 leading-tight">
+            Find your next{" "}
+            <span className="text-teal-600">home</span>
+          </h1>
+          <p className="mt-4 text-lg text-slate-500">
+            Search properties from {brandName}&apos;s verified agencies across the UAE
+          </p>
+        </div>
+
+        {/* Purpose toggle */}
+        <div className="inline-flex rounded-full border border-slate-200 bg-white p-1 shadow-sm">
+          {(["sale", "rent_long"] as const).map((p) => (
+            <button
+              key={p}
+              onClick={() => setPurpose(p)}
+              className={`px-6 py-2 rounded-full text-sm font-bold transition ${
+                purpose === p
+                  ? "bg-teal-600 text-white shadow-sm"
+                  : "text-slate-500 hover:text-slate-900"
+              }`}
+            >
+              {p === "sale" ? "Buy" : "Rent"}
+            </button>
+          ))}
+        </div>
+
+        {/* Search bar */}
+        <form
+          onSubmit={onSearch}
+          className="flex gap-2 bg-white rounded-2xl shadow-lg border border-slate-100 p-2"
+        >
+          <input
+            type="text"
+            value={q}
+            onChange={(e) => setQ(e.target.value)}
+            placeholder="City, community, or keyword..."
+            className="flex-1 rounded-xl px-4 py-3 text-slate-900 placeholder:text-slate-400 text-sm focus:outline-none"
+          />
+          <button
+            type="submit"
+            className="rounded-xl bg-teal-600 px-6 py-3 text-white font-bold hover:bg-teal-700 transition flex items-center gap-2"
+          >
+            <Search className="h-4 w-4" />
+            <span className="hidden sm:inline">Search</span>
+          </button>
+        </form>
+      </div>
+    </section>
   );
 }

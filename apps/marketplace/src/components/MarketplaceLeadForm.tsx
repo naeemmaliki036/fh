@@ -18,7 +18,7 @@ interface FormState {
 
 const EMAIL_RE = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 const inputCls =
-  "w-full rounded-lg border border-slate-200 px-3 py-2.5 text-sm text-slate-900 focus:outline-none focus:ring-2 focus:ring-blue-500 placeholder:text-slate-400";
+  "w-full rounded-lg border border-slate-200 px-3 py-2.5 text-sm text-slate-900 focus:outline-none focus:ring-2 focus:ring-teal-500 placeholder:text-slate-400";
 const errCls = "text-[11px] text-red-500 mt-0.5";
 
 export function MarketplaceLeadForm({
@@ -127,7 +127,7 @@ export function MarketplaceLeadForm({
       <button
         type="submit"
         disabled={pending}
-        className="w-full rounded-xl bg-blue-600 py-3 text-sm font-black text-white hover:bg-blue-700 transition disabled:opacity-60"
+        className="w-full rounded-xl bg-teal-600 py-3 text-sm font-black text-white hover:bg-teal-700 transition disabled:opacity-60"
       >
         {pending ? "Sending..." : "Send enquiry"}
       </button>

@@ -19,13 +19,15 @@ export default function AgenciesPage(): React.ReactElement {
   const totalPages = Math.max(1, Math.ceil(total / PAGE_SIZE));
 
   return (
-    <div className="min-h-screen bg-slate-50 flex flex-col">
+    <div className="min-h-screen bg-white flex flex-col">
       <MarketplaceHeader />
       <main className="flex-1">
-        <div className="mx-auto w-[min(100%-24px,1200px)] py-8 space-y-8">
+        <div className="mx-auto w-[min(100%-24px,1200px)] py-16 space-y-10">
           <div>
-            <h1 className="text-2xl font-black text-slate-900">All Agencies</h1>
-            <p className="text-slate-500 text-sm mt-1">{total} agencies on the marketplace</p>
+            <h1 className="text-3xl font-black text-slate-900">All Agencies</h1>
+            <p className="text-slate-500 text-sm mt-2">
+              {total} agencies on the marketplace
+            </p>
           </div>
 
           <form
@@ -33,13 +35,13 @@ export default function AgenciesPage(): React.ReactElement {
             className="flex gap-2 max-w-md"
           >
             <div className="relative flex-1">
-              <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-slate-400" />
+              <Search className="absolute left-3.5 top-1/2 -translate-y-1/2 h-4 w-4 text-slate-400" />
               <input
                 type="text"
                 value={q}
                 onChange={(e) => { setQ(e.target.value); setPage(1); }}
                 placeholder="Search agencies..."
-                className="w-full rounded-xl border border-slate-200 bg-white pl-10 pr-4 py-2.5 text-sm text-slate-900 focus:outline-none focus:ring-2 focus:ring-blue-500"
+                className="w-full rounded-full border border-slate-200 bg-white pl-10 pr-4 py-2.5 text-sm text-slate-900 focus:outline-none focus:ring-2 focus:ring-teal-500 focus:border-teal-500 transition"
               />
             </div>
           </form>
@@ -54,30 +56,30 @@ export default function AgenciesPage(): React.ReactElement {
             <p className="py-12 text-center text-slate-400">No agencies found.</p>
           )}
 
-          <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4">
+          <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-5">
             {agencies.map((agency) => (
               <Link
                 key={agency.id}
                 href={`/agencies/${agency.slug}`}
-                className="flex flex-col rounded-2xl border border-slate-200 bg-white shadow-sm hover:shadow-md hover:border-slate-300 transition overflow-hidden"
+                className="flex flex-col rounded-2xl border border-slate-100 bg-white shadow-sm hover:shadow-md hover:border-teal-200 transition overflow-hidden"
               >
-                <div className="h-20 bg-gradient-to-br from-slate-700 to-slate-900 relative overflow-hidden">
+                <div className="h-24 bg-gradient-to-br from-teal-50 to-slate-100 relative overflow-hidden">
                   {agency.banner_url && (
                     <img
                       src={agency.banner_url}
                       alt=""
-                      className="w-full h-full object-cover opacity-50"
+                      className="w-full h-full object-cover opacity-60"
                     />
                   )}
                   {agency.logo_url && (
                     <img
                       src={agency.logo_url}
                       alt={agency.name}
-                      className="absolute bottom-0 left-4 translate-y-1/2 h-12 w-12 rounded-xl border-2 border-white object-contain bg-white"
+                      className="absolute bottom-0 left-4 translate-y-1/2 h-12 w-12 rounded-xl border-2 border-white object-contain bg-white shadow"
                     />
                   )}
                 </div>
-                <div className="pt-8 px-4 pb-4 space-y-1">
+                <div className="pt-8 px-4 pb-5 space-y-1">
                   <p className="font-black text-slate-900 text-sm">{agency.name}</p>
                   {agency.tagline && (
                     <p className="text-xs text-slate-500 line-clamp-2">{agency.tagline}</p>
@@ -92,11 +94,11 @@ export default function AgenciesPage(): React.ReactElement {
           </div>
 
           {totalPages > 1 && (
-            <div className="flex items-center justify-center gap-2 pt-4">
+            <div className="flex items-center justify-center gap-3 pt-4">
               <button
                 disabled={page <= 1}
                 onClick={() => setPage((p) => p - 1)}
-                className="px-4 py-2 rounded-lg border border-slate-300 text-sm font-semibold disabled:opacity-40 hover:bg-slate-50 transition"
+                className="px-5 py-2.5 rounded-full border border-slate-200 text-sm font-semibold disabled:opacity-40 hover:border-teal-400 hover:text-teal-700 transition"
               >
                 Previous
               </button>
@@ -106,7 +108,7 @@ export default function AgenciesPage(): React.ReactElement {
               <button
                 disabled={page >= totalPages}
                 onClick={() => setPage((p) => p + 1)}
-                className="px-4 py-2 rounded-lg border border-slate-300 text-sm font-semibold disabled:opacity-40 hover:bg-slate-50 transition"
+                className="px-5 py-2.5 rounded-full border border-slate-200 text-sm font-semibold disabled:opacity-40 hover:border-teal-400 hover:text-teal-700 transition"
               >
                 Next
               </button>

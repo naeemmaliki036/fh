@@ -24,16 +24,16 @@ export default function AgencyProfilePage({ params }: PageProps): React.ReactEle
   const { data: agency, isLoading: agencyLoading } = useMarketplaceAgency(slug);
   const { data: listingsData, isLoading: listingsLoading } = useMarketplaceAgencyListings(slug, {
     page,
-    page_size: 10,
+    page_size: 12,
   });
 
   const listings = listingsData?.items ?? [];
   const total = listingsData?.total ?? 0;
-  const totalPages = Math.max(1, Math.ceil(total / 10));
+  const totalPages = Math.max(1, Math.ceil(total / 12));
 
   if (agencyLoading) {
     return (
-      <div className="min-h-screen bg-slate-50 flex flex-col">
+      <div className="min-h-screen bg-white flex flex-col">
         <MarketplaceHeader />
         <main className="flex-1 flex items-center justify-center py-20 text-slate-400">
           <Loader2 className="h-5 w-5 animate-spin mr-2" /> Loading...
@@ -45,7 +45,7 @@ export default function AgencyProfilePage({ params }: PageProps): React.ReactEle
 
   if (!agency) {
     return (
-      <div className="min-h-screen bg-slate-50 flex flex-col">
+      <div className="min-h-screen bg-white flex flex-col">
         <MarketplaceHeader />
         <main className="flex-1 flex items-center justify-center py-20 text-red-500 text-sm">
           Agency not found.
@@ -56,19 +56,20 @@ export default function AgencyProfilePage({ params }: PageProps): React.ReactEle
   }
 
   return (
-    <div className="min-h-screen bg-slate-50 flex flex-col">
+    <div className="min-h-screen bg-white flex flex-col">
       <MarketplaceHeader />
       <main className="flex-1">
-        <div className="relative h-48 md:h-64 bg-gradient-to-br from-slate-700 to-slate-900 overflow-hidden">
+        {/* Banner */}
+        <div className="relative h-52 md:h-72 bg-gradient-to-br from-teal-600 to-teal-800 overflow-hidden">
           {agency.banner_url && (
             <img
               src={agency.banner_url}
               alt=""
-              className="w-full h-full object-cover opacity-60"
+              className="w-full h-full object-cover opacity-50"
             />
           )}
-          <div className="absolute inset-0 bg-gradient-to-t from-black/60 to-transparent" />
-          <div className="absolute bottom-4 left-4 md:left-8 flex items-end gap-4">
+          <div className="absolute inset-0 bg-gradient-to-t from-black/50 to-transparent" />
+          <div className="absolute bottom-5 left-5 md:left-8 flex items-end gap-4">
             {agency.logo_url && (
               <img
                 src={agency.logo_url}
@@ -79,16 +80,16 @@ export default function AgencyProfilePage({ params }: PageProps): React.ReactEle
             <div className="text-white mb-1">
               <h1 className="text-2xl font-black leading-tight">{agency.name}</h1>
               {agency.tagline && (
-                <p className="text-sm text-slate-200 mt-0.5">{agency.tagline}</p>
+                <p className="text-sm text-white/80 mt-0.5">{agency.tagline}</p>
               )}
             </div>
           </div>
         </div>
 
-        <div className="mx-auto w-[min(100%-24px,1200px)] py-6 space-y-6">
+        <div className="mx-auto w-[min(100%-24px,1200px)] py-8 space-y-6">
           <Link
             href="/agencies"
-            className="inline-flex items-center gap-1 text-sm text-slate-500 hover:text-slate-900"
+            className="inline-flex items-center gap-1 text-sm text-slate-500 hover:text-teal-600 transition"
           >
             <ChevronLeft className="h-4 w-4" /> All agencies
           </Link>
@@ -99,18 +100,20 @@ export default function AgencyProfilePage({ params }: PageProps): React.ReactEle
               listings
             </span>
             <span>
-              <strong className="text-slate-900 font-black">{agency.agents_count}</strong> agents
+              <strong className="text-slate-900 font-black">{agency.agents_count}</strong>{" "}
+              agents
             </span>
           </div>
 
-          <div className="border-b border-slate-200 flex gap-6">
+          {/* Tabs */}
+          <div className="border-b border-slate-100 flex gap-6">
             {TABS.map((t) => (
               <button
                 key={t}
                 onClick={() => setTab(t)}
                 className={`pb-3 text-sm font-bold capitalize transition border-b-2 -mb-px ${
                   tab === t
-                    ? "border-blue-600 text-blue-600"
+                    ? "border-teal-600 text-teal-600"
                     : "border-transparent text-slate-500 hover:text-slate-900"
                 }`}
               >
@@ -120,7 +123,7 @@ export default function AgencyProfilePage({ params }: PageProps): React.ReactEle
           </div>
 
           {tab === "listings" && (
-            <div className="space-y-4">
+            <div className="space-y-5">
               {listingsLoading && (
                 <div className="flex items-center justify-center py-10 text-slate-400">
                   <Loader2 className="h-5 w-5 animate-spin mr-2" /> Loading...
@@ -129,15 +132,17 @@ export default function AgencyProfilePage({ params }: PageProps): React.ReactEle
               {!listingsLoading && listings.length === 0 && (
                 <p className="py-10 text-center text-slate-400">No listings found.</p>
               )}
-              {listings.map((l) => (
-                <MarketplaceListingCard key={l.id} listing={l} />
-              ))}
+              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-5">
+                {listings.map((l) => (
+                  <MarketplaceListingCard key={l.id} listing={l} />
+                ))}
+              </div>
               {totalPages > 1 && (
-                <div className="flex items-center justify-center gap-2 pt-2">
+                <div className="flex items-center justify-center gap-3 pt-2">
                   <button
                     disabled={page <= 1}
                     onClick={() => setPage((p) => p - 1)}
-                    className="px-4 py-2 rounded-lg border border-slate-300 text-sm font-semibold disabled:opacity-40 hover:bg-slate-50"
+                    className="px-5 py-2.5 rounded-full border border-slate-200 text-sm font-semibold disabled:opacity-40 hover:border-teal-400 hover:text-teal-700 transition"
                   >
                     Previous
                   </button>
@@ -147,7 +152,7 @@ export default function AgencyProfilePage({ params }: PageProps): React.ReactEle
                   <button
                     disabled={page >= totalPages}
                     onClick={() => setPage((p) => p + 1)}
-                    className="px-4 py-2 rounded-lg border border-slate-300 text-sm font-semibold disabled:opacity-40 hover:bg-slate-50"
+                    className="px-5 py-2.5 rounded-full border border-slate-200 text-sm font-semibold disabled:opacity-40 hover:border-teal-400 hover:text-teal-700 transition"
                   >
                     Next
                   </button>
@@ -166,10 +171,10 @@ export default function AgencyProfilePage({ params }: PageProps): React.ReactEle
             <div className="max-w-sm space-y-3">
               {agency.contact_phone && (
                 <div className="flex items-center gap-2 text-sm">
-                  <Phone className="h-4 w-4 text-slate-400 shrink-0" />
+                  <Phone className="h-4 w-4 text-teal-500 shrink-0" />
                   <a
                     href={`tel:${agency.contact_phone}`}
-                    className="text-blue-600 hover:underline"
+                    className="text-teal-600 hover:underline"
                   >
                     {agency.contact_phone}
                   </a>
@@ -177,10 +182,10 @@ export default function AgencyProfilePage({ params }: PageProps): React.ReactEle
               )}
               {agency.contact_email && (
                 <div className="flex items-center gap-2 text-sm">
-                  <Mail className="h-4 w-4 text-slate-400 shrink-0" />
+                  <Mail className="h-4 w-4 text-teal-500 shrink-0" />
                   <a
                     href={`mailto:${agency.contact_email}`}
-                    className="text-blue-600 hover:underline"
+                    className="text-teal-600 hover:underline"
                   >
                     {agency.contact_email}
                   </a>

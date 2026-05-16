@@ -11,21 +11,20 @@ export interface MarketplaceTenantSnippet {
   contact_email: string | null;
 }
 
+// Matches MarketplaceListingItem in apps/api/schemas/marketplace.py.
+// Fields dropped: handle, address, rent_period, rent_cheque_count,
+// days_since_posted, furnishing_status, completion_status, has_floor_plan.
 export interface MarketplaceListingItem {
   id: string;
-  handle: string;
   title: string;
   short_description: string | null;
   price: number;
   currency: string;
   purpose: string;
-  rent_period: string | null;
-  rent_cheque_count: number | null;
   property_type: string;
   beds: number | null;
   baths: number | null;
   area_sqft: number | null;
-  address: string | null;
   area: string | null;
   city: string | null;
   primary_photo_url: string | null;
@@ -33,37 +32,58 @@ export interface MarketplaceListingItem {
   is_verified: boolean;
   price_per_sqft: number | null;
   price_drop_pct: number | null;
-  days_since_posted: number;
   internal_reference: string | null;
   build_year: number | null;
-  furnishing_status: string | null;
-  completion_status: string | null;
   agent_name: string | null;
   agent_phone: string | null;
   agent_photo_url: string | null;
   agent_has_license: boolean;
   next_open_house_at: string | null;
-  has_floor_plan: boolean;
-  created_at: string;
+  created_at: string | null;
   tenant: MarketplaceTenantSnippet;
 }
 
-export interface MarketplaceListingDetail extends MarketplaceListingItem {
+// Matches MarketplaceListingDetailResponse in apps/api/schemas/marketplace.py.
+export interface MarketplaceListingDetail {
+  id: string;
+  title: string;
+  short_description: string | null;
   description: string | null;
+  price: number;
+  currency: string;
+  purpose: string;
+  status: string;
+  beds: number | null;
+  baths: number | null;
+  area_sqft: number | null;
+  address: string | null;
+  area: string | null;
+  city: string | null;
+  internal_reference: string | null;
+  build_year: number | null;
+  property_type: string;
   amenities: unknown[] | null;
+  tags: string[];
   media_urls: string[];
   floor_plan_urls: string[];
   hero_media_url: string | null;
-  lat: number | null;
-  lng: number | null;
-  view_orientation: string | null;
+  agent: unknown | null;
+  next_open_house: unknown | null;
+  upcoming_open_houses: Array<{ starts_at: string; ends_at: string; capacity: number | null }>;
   handover_year: number | null;
   handover_quarter: number | null;
-  payment_plan: string | null;
-  upcoming_open_houses: Array<{ starts_at: string; ends_at: string; capacity: number | null }>;
-  agent_email: string | null;
-  agent_license_id: string | null;
-  trakheesi_permit: string | null;
+  payment_plan: boolean;
+  tenant: MarketplaceTenantSnippet;
+  // Fields shared with list item — derived or optional
+  is_verified?: boolean;
+  listing_tier?: string | null;
+  is_verified_listing?: boolean;
+  price_per_sqft?: number | null;
+  agent_name?: string | null;
+  agent_phone?: string | null;
+  agent_photo_url?: string | null;
+  agent_has_license?: boolean;
+  created_at?: string | null;
 }
 
 export interface MarketplaceAgencyItem {
@@ -81,6 +101,7 @@ export interface MarketplaceAgencyItem {
 
 export interface MarketplaceAgencyDetail extends MarketplaceAgencyItem {
   operating_countries: string[];
+  description: string | null;
 }
 
 export interface MarketplaceStats {
