@@ -182,20 +182,30 @@ async def fetch_listing_list(  # noqa: PLR0913
     items = []
     for listing, prop in rows:
         hero_url = hero_keys.get(listing.hero_media_id) if listing.hero_media_id else None
+        price = float(listing.price)
+        size = float(prop.size_sqft) if prop.size_sqft else None
         items.append({
             "id": listing.id,
             "title": listing.title,
             "short_description": listing.short_description,
-            "price": float(listing.price),
+            "price": price,
             "currency": listing.currency,
             "beds": prop.bedrooms,
             "baths": prop.bathrooms,
-            "area_sqft": float(prop.size_sqft) if prop.size_sqft else None,
+            "area_sqft": size,
             "address": prop.address_line,
+            "area": prop.area,
+            "city": prop.city,
             "property_type": prop.property_type.value,
             "primary_photo_url": hero_url or photo_map.get(prop.id),
             "purpose": listing.purpose.value,
             "tags": prop.tags or [],
+            "created_at": listing.created_at.isoformat() if listing.created_at else None,
+            "is_verified": bool(listing.is_verified),
+            "internal_reference": prop.internal_reference,
+            "price_per_sqft": round(price / size) if size and size > 0 else None,
+            "build_year": prop.build_year,
+            "listing_tier": listing.listing_tier.value if listing.listing_tier else None,
         })
     return {"items": items, "total": total, "page": page, "page_size": page_size}
 

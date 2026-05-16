@@ -87,8 +87,10 @@ export function ListingCard({ listing, slug }: ListingCardProps): React.ReactEle
           <h3 className="line-clamp-1 text-[18px] font-semibold text-white">
             {listing.title}
           </h3>
-          {listing.address && (
-            <p className="mt-0.5 line-clamp-1 text-xs text-white/75">{listing.address}</p>
+          {(listing.area || listing.city || listing.address) && (
+            <p className="mt-0.5 line-clamp-1 text-xs text-white/75">
+              {[listing.area, listing.city].filter(Boolean).join(", ") || listing.address}
+            </p>
           )}
         </div>
       </div>

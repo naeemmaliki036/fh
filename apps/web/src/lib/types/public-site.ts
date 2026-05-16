@@ -117,6 +117,8 @@ export interface PublicListingItem {
   baths: number | null;
   area_sqft: number | null;
   address: string | null;
+  area: string | null;
+  city: string | null;
   property_type: string;
   primary_photo_url: string | null;
   purpose: string;
@@ -125,8 +127,9 @@ export interface PublicListingItem {
   is_verified: boolean;
   price_per_sqft: number | null;
   price_drop_pct: number | null;
-  days_since_posted: number;
+  days_since_posted?: number;
   internal_reference: string | null;
+  build_year: number | null;
 }
 
 /** Alias for card usage — same shape */
