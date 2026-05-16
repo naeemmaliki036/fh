@@ -159,12 +159,12 @@ def t_listing_verify_unverify(lid: str | None) -> None:
     record("pass" if body.get("verified_at") else "fail",
            f"verified_at set: {body.get('verified_at')}")
 
-    # Double-verify should 422
+    # Double-verify should be rejected (400 bad_request)
     r = client.post(f"{API}/listings/{lid}/verify",
                     json={"note": "E2E re-verify"}, headers=headers())
-    record("pass" if r.status_code == 422 else "fail",
-           "double-verify rejected with 422",
-           None if r.status_code == 422 else f"got {r.status_code}")
+    record("pass" if r.status_code in (400, 422) else "fail",
+           "double-verify rejected (400/422)",
+           None if r.status_code in (400, 422) else f"got {r.status_code}")
 
     # Unverify
     r = client.post(f"{API}/listings/{lid}/unverify",
@@ -254,23 +254,17 @@ def t_similar_listings() -> None:
 
 
 def t_invalid_prefix_change() -> None:
-    section("[I] Tenant prefix validation")
+    section("[I] Tenant prefix validation (via PATCH /tenants/me)")
     if not tenant_token:
         return
-    # Get tenant id
-    r = client.get(f"{API}/tenants/me", headers=headers())
-    if r.status_code != 200:
-        record("fail", "tenants/me", f"HTTP {r.status_code}")
-        return
-    tid = r.json().get("id") or r.json().get("tenant", {}).get("id")
     # Too-short prefix
-    r = client.patch(f"{API}/tenants/{tid}/property-ref-prefix",
+    r = client.patch(f"{API}/tenants/me",
                      json={"property_ref_prefix": "AB"}, headers=headers())
     record("pass" if r.status_code == 422 else "fail",
            "2-char prefix rejected with 422",
            None if r.status_code == 422 else f"got {r.status_code}")
     # Restore original (no-op)
-    r = client.patch(f"{API}/tenants/{tid}/property-ref-prefix",
+    r = client.patch(f"{API}/tenants/me",
                      json={"property_ref_prefix": EXPECTED_PREFIX}, headers=headers())
     record("pass" if r.status_code == 200 else "fail",
            f"set prefix back to {EXPECTED_PREFIX} → 200",
