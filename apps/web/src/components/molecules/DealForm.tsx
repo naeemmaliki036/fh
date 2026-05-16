@@ -157,10 +157,10 @@ export function DealForm({ agents, isPending, onSubmit, onCancel }: DealFormProp
         <div className="space-y-1.5">
           <Label>Secondary Agent (optional)</Label>
           <Controller name="secondary_agent_id" control={control} render={({ field }) => (
-            <Select value={field.value ?? ""} onValueChange={field.onChange}>
+            <Select value={field.value ?? "__none__"} onValueChange={(v) => field.onChange(v === "__none__" ? null : v)}>
               <SelectTrigger><SelectValue placeholder="None" /></SelectTrigger>
               <SelectContent>
-                <SelectItem value="">None</SelectItem>
+                <SelectItem value="__none__">None</SelectItem>
                 {agents.map(a => <SelectItem key={a.id} value={a.id}>{a.full_name}</SelectItem>)}
               </SelectContent>
             </Select>

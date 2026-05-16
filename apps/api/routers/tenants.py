@@ -19,6 +19,7 @@ from apps.api.dependencies import (
 )
 from apps.api.models.enums import PlatformRole, TenantStatus
 from apps.api.schemas.tenant import (
+    AggregatorStatusRequest,
     PropertyRefPrefixRequest,
     PublicSiteFeatureRequest,
     TenantApproveRequest,
@@ -36,6 +37,7 @@ from apps.api.security.platform_roles import (
     OPS_AND_ABOVE,
     require_platform_role,
 )
+from apps.api.services.tenant_aggregator_service import TenantAggregatorService
 from apps.api.services.tenant_detail_service import TenantDetailService
 from apps.api.services.tenant_prefix_service import TenantPrefixService
 from apps.api.services.tenant_service import TenantService
@@ -53,6 +55,10 @@ def _detail_svc(db: DbSession) -> TenantDetailService:
 
 def _prefix_svc(db: DbSession) -> TenantPrefixService:
     return TenantPrefixService(db)
+
+
+def _aggregator_svc(db: DbSession) -> TenantAggregatorService:
+    return TenantAggregatorService(db)
 
 
 # Annotated shortcut types for RBAC deps
@@ -95,6 +101,7 @@ async def update_my_tenant(
         default_properties_view=updates.get("default_properties_view"),
         operating_countries=updates.get("operating_countries"),
         property_ref_prefix=updates.get("property_ref_prefix"),
+        banner_url=updates.get("banner_url"),
         ip_address=ctx.ip_address,
         user_agent=ctx.user_agent,
     )
@@ -248,6 +255,30 @@ async def update_property_ref_prefix(
         tenant_id,
         platform_user_dict,
         body.property_ref_prefix,
+        ip_address=ctx.ip_address,
+        user_agent=ctx.user_agent,
+    )
+
+
+@router.patch("/{tenant_id}/aggregator-status", response_model=TenantResponse)
+async def set_aggregator_status(
+    tenant_id: UUID,
+    body: AggregatorStatusRequest,
+    platform_user: _OpsAndAbove,
+    ctx: ReqCtx,
+    svc: TenantAggregatorService = Depends(_aggregator_svc),
+) -> TenantResponse:
+    """Enable or disable a tenant in the platform marketplace (ops admin and above).
+
+    enabled=false: sets aggregator_enabled=false, records reason + timestamp.
+    enabled=true:  clears disabled_at and reason.
+    No-op if already in the requested state (still returns 200).
+    """
+    return await svc.set_aggregator_status(  # type: ignore[return-value]
+        tenant_id,
+        UUID(platform_user["id"]),
+        enabled=body.enabled,
+        reason=body.reason,
         ip_address=ctx.ip_address,
         user_agent=ctx.user_agent,
     )

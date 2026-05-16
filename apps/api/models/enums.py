@@ -168,6 +168,10 @@ class AuditAction(str, enum.Enum):
     OPEN_HOUSE_UPDATED = "open_house_updated"
     OPEN_HOUSE_CANCELLED = "open_house_cancelled"
 
+    # Aggregator / marketplace opt-out (added in migration 0042)
+    TENANT_AGGREGATOR_DISABLED = "tenant_aggregator_disabled"
+    TENANT_AGGREGATOR_ENABLED = "tenant_aggregator_enabled"
+
     # Catch-all for ad-hoc events
     OTHER = "other"
 

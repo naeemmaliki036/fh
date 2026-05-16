@@ -206,10 +206,10 @@ export function CustomerForm({
             name="nationality"
             control={control}
             render={({ field }) => (
-              <Select value={field.value ?? ""} onValueChange={field.onChange}>
+              <Select value={field.value ?? "__none__"} onValueChange={(v) => field.onChange(v === "__none__" ? null : v)}>
                 <SelectTrigger><SelectValue placeholder="Select nationality" /></SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="">— None —</SelectItem>
+                  <SelectItem value="__none__">— None —</SelectItem>
                   {NATIONALITIES.map((n) => (
                     <SelectItem key={n.value} value={n.value}>{n.label}</SelectItem>
                   ))}
@@ -224,10 +224,10 @@ export function CustomerForm({
             name="language"
             control={control}
             render={({ field }) => (
-              <Select value={field.value ?? ""} onValueChange={field.onChange}>
+              <Select value={field.value ?? "__none__"} onValueChange={(v) => field.onChange(v === "__none__" ? null : v)}>
                 <SelectTrigger><SelectValue placeholder="Select language" /></SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="">— None —</SelectItem>
+                  <SelectItem value="__none__">— None —</SelectItem>
                   {LANGUAGES.map((l) => (
                     <SelectItem key={l.value} value={l.value}>{l.label}</SelectItem>
                   ))}
@@ -264,10 +264,10 @@ export function CustomerForm({
               name="assigned_agent_id"
               control={control}
               render={({ field }) => (
-                <Select value={field.value ?? ""} onValueChange={field.onChange}>
+                <Select value={field.value ?? "__none__"} onValueChange={(v) => field.onChange(v === "__none__" ? null : v)}>
                   <SelectTrigger><SelectValue placeholder="No agent" /></SelectTrigger>
                   <SelectContent>
-                    <SelectItem value="">No agent</SelectItem>
+                    <SelectItem value="__none__">No agent</SelectItem>
                     {agents.map((a) => (
                       <SelectItem key={a.id} value={a.id}>{a.full_name}</SelectItem>
                     ))}

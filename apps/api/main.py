@@ -46,7 +46,7 @@ from apps.api.routers import (
     users,
 )
 from apps.api.routers.public import document_requests as public_document_requests
-from apps.api.routers import public_site, tenant_public_site
+from apps.api.routers import marketplace, public_site, tenant_public_site
 
 logging.basicConfig(level=logging.INFO)
 
@@ -165,6 +165,7 @@ app.include_router(listing_interests.router, prefix="", tags=["listings"])
 app.include_router(private_documents.router, prefix="/private-documents", tags=["private-documents"])
 app.include_router(reports.router, prefix="/reports", tags=["reports"])
 app.include_router(open_houses.router, prefix="", tags=["open-houses"])
+app.include_router(marketplace.router, prefix="/marketplace", tags=["marketplace"])
 
 
 @app.get("/health", tags=["health"])

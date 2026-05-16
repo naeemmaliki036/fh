@@ -4,7 +4,7 @@ import re
 import uuid
 from datetime import datetime
 
-from pydantic import BaseModel, ConfigDict, Field, field_validator
+from pydantic import BaseModel, ConfigDict, Field, field_validator, model_validator
 
 from apps.api.models.enums import PropertiesViewMode, TenantStatus
 from apps.api.schemas.audit import AuditLogResponse
@@ -79,6 +79,10 @@ class TenantResponse(BaseModel):
     max_video_mb: int = 25
     # migration 0040 — property reference prefix
     property_ref_prefix: str | None = None
+    # migration 0042 — aggregator / marketplace
+    banner_url: str | None = None
+    aggregator_enabled: bool = True
+    aggregator_disabled_reason: str | None = None
     created_at: datetime
     updated_at: datetime
 
@@ -86,6 +90,9 @@ class TenantResponse(BaseModel):
 # ---------------------------------------------------------------------------
 # Tenant update (self-service)
 # ---------------------------------------------------------------------------
+
+
+_BANNER_URL_RE = re.compile(r"^https?://")
 
 
 class TenantUpdateRequest(BaseModel):
@@ -98,6 +105,8 @@ class TenantUpdateRequest(BaseModel):
     default_properties_view: PropertiesViewMode | None = None
     operating_countries: list[str] | None = None
     property_ref_prefix: str | None = None
+    # migration 0042 — tenant can set their own banner
+    banner_url: str | None = Field(default=None, max_length=512)
 
     @field_validator("operating_countries", mode="before")
     @classmethod
@@ -114,6 +123,15 @@ class TenantUpdateRequest(BaseModel):
         v = v.upper().strip()
         if not (len(v) == 3 and v.isalnum() and v.isascii()):
             raise ValueError("property_ref_prefix must be exactly 3 alphanumeric characters")
+        return v
+
+    @field_validator("banner_url")
+    @classmethod
+    def _validate_banner_url(cls, v: str | None) -> str | None:
+        if v is None or v == "":
+            return None
+        if not _BANNER_URL_RE.match(v):
+            raise ValueError("banner_url must use http:// or https://")
         return v
 
 
@@ -152,6 +170,13 @@ class PublicSiteFeatureRequest(BaseModel):
     """POST /tenants/{id}/public-site-feature — platform admin only."""
 
     enabled: bool
+
+
+class AggregatorStatusRequest(BaseModel):
+    """PATCH /tenants/{id}/aggregator-status — ops admin and above only."""
+
+    enabled: bool
+    reason: str | None = Field(default=None, max_length=1000)
 
 
 class PropertyRefPrefixRequest(BaseModel):

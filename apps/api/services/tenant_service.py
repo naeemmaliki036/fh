@@ -154,6 +154,7 @@ class TenantService(BaseService):
         timezone_: str | None = None, locale: str | None = None,
         default_properties_view=None, operating_countries: list[str] | None = None,
         property_ref_prefix: str | None = None,
+        banner_url: str | None = None,
         ip_address: str | None = None, user_agent: str | None = None,
     ) -> Tenant:
         role = current_user.get("role")
@@ -178,6 +179,7 @@ class TenantService(BaseService):
             "locale": tenant.locale, "default_properties_view": tenant.default_properties_view.value,
             "operating_countries": tenant.operating_countries,
             "property_ref_prefix": tenant.property_ref_prefix,
+            "banner_url": tenant.banner_url,
         }
         if name is not None: tenant.name = name
         if currency is not None: tenant.currency = currency
@@ -186,12 +188,14 @@ class TenantService(BaseService):
         if default_properties_view is not None: tenant.default_properties_view = default_properties_view
         if operating_countries is not None: tenant.operating_countries = operating_countries
         if property_ref_prefix is not None: tenant.property_ref_prefix = property_ref_prefix
+        if banner_url is not None: tenant.banner_url = banner_url
         await self.session.flush()
         after = {
             "name": tenant.name, "currency": tenant.currency, "timezone": tenant.timezone,
             "locale": tenant.locale, "default_properties_view": tenant.default_properties_view.value,
             "operating_countries": tenant.operating_countries,
             "property_ref_prefix": tenant.property_ref_prefix,
+            "banner_url": tenant.banner_url,
         }
         await self.session.execute(text(f"SET LOCAL app.tenant_id = '{tenant_id}'"))
         await self._audit.record(

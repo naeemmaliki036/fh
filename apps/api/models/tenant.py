@@ -12,7 +12,7 @@ import uuid
 from datetime import datetime
 
 from sqlalchemy import Boolean, Enum, ForeignKey, Integer, String, Text, text
-from sqlalchemy.dialects.postgresql import ARRAY, JSONB, UUID
+from sqlalchemy.dialects.postgresql import ARRAY, JSONB, TIMESTAMP, UUID
 from sqlalchemy.orm import Mapped, mapped_column
 
 from packages.common.db.base import Base, TimestampMixin, UUIDMixin
@@ -149,6 +149,28 @@ class Tenant(Base, UUIDMixin, TimestampMixin):
     # uniqueness enforced by a case-insensitive functional index in migration 0040.
     property_ref_prefix: Mapped[str] = mapped_column(
         String(3), nullable=False
+    )
+
+    # Aggregator / marketplace opt-out — admin-controlled.
+    # When aggregator_enabled=False the tenant is hidden from the platform-wide
+    # marketplace; aggregator_disabled_at and _reason record the why/when.
+    banner_url: Mapped[str | None] = mapped_column(
+        String(512),
+        nullable=True,
+    )
+    aggregator_enabled: Mapped[bool] = mapped_column(
+        Boolean,
+        nullable=False,
+        default=True,
+        server_default="true",
+    )
+    aggregator_disabled_at: Mapped[datetime | None] = mapped_column(
+        TIMESTAMP(timezone=True),
+        nullable=True,
+    )
+    aggregator_disabled_reason: Mapped[str | None] = mapped_column(
+        Text,
+        nullable=True,
     )
 
     # Suspension audit trail — populated when status transitions to SUSPENDED.

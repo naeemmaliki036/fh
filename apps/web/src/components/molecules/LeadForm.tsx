@@ -67,10 +67,10 @@ export function LeadForm({ agents, isPending, submitLabel, customer, onSubmit, o
         <div className="space-y-1.5">
           <Label>Assign Agent</Label>
           <Controller name="assigned_agent_id" control={control} render={({ field }) => (
-            <Select value={field.value ?? ""} onValueChange={field.onChange}>
+            <Select value={field.value ?? "__none__"} onValueChange={(v) => field.onChange(v === "__none__" ? null : v)}>
               <SelectTrigger><SelectValue placeholder="No agent" /></SelectTrigger>
               <SelectContent>
-                <SelectItem value="">No agent</SelectItem>
+                <SelectItem value="__none__">No agent</SelectItem>
                 {(agents ?? []).map(a => <SelectItem key={a.id} value={a.id}>{a.full_name}</SelectItem>)}
               </SelectContent>
             </Select>

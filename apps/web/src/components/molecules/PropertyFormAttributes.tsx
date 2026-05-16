@@ -37,10 +37,10 @@ export function PropertyFormAttributes({ control, register }: Props): React.Reac
           <div className="space-y-1">
             <Label>Furnishing</Label>
             <Controller name="furnishing_status" control={control} render={({ field }) => (
-              <Select value={field.value ?? ""} onValueChange={(v) => field.onChange(v || null)}>
+              <Select value={field.value ?? "__none__"} onValueChange={(v) => field.onChange(v === "__none__" ? null : v)}>
                 <SelectTrigger className="h-8 text-xs"><SelectValue placeholder="Select" /></SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="">—</SelectItem>
+                  <SelectItem value="__none__">—</SelectItem>
                   {FURNISHING_STATUSES.map((s) => <SelectItem key={s} value={s}>{labelify(s)}</SelectItem>)}
                 </SelectContent>
               </Select>
@@ -51,10 +51,10 @@ export function PropertyFormAttributes({ control, register }: Props): React.Reac
         <div className="space-y-1">
           <Label>Completion</Label>
           <Controller name="completion_status" control={control} render={({ field }) => (
-            <Select value={field.value ?? ""} onValueChange={(v) => field.onChange(v || null)}>
+            <Select value={field.value ?? "__none__"} onValueChange={(v) => field.onChange(v === "__none__" ? null : v)}>
               <SelectTrigger className="h-8 text-xs"><SelectValue placeholder="Select" /></SelectTrigger>
               <SelectContent>
-                <SelectItem value="">—</SelectItem>
+                <SelectItem value="__none__">—</SelectItem>
                 {COMPLETION_STATUSES.map((s) => <SelectItem key={s} value={s}>{labelify(s)}</SelectItem>)}
               </SelectContent>
             </Select>
@@ -64,10 +64,10 @@ export function PropertyFormAttributes({ control, register }: Props): React.Reac
         <div className="space-y-1">
           <Label>Ownership</Label>
           <Controller name="ownership_type" control={control} render={({ field }) => (
-            <Select value={field.value ?? ""} onValueChange={(v) => field.onChange(v || null)}>
+            <Select value={field.value ?? "__none__"} onValueChange={(v) => field.onChange(v === "__none__" ? null : v)}>
               <SelectTrigger className="h-8 text-xs"><SelectValue placeholder="Select" /></SelectTrigger>
               <SelectContent>
-                <SelectItem value="">—</SelectItem>
+                <SelectItem value="__none__">—</SelectItem>
                 {OWNERSHIP_TYPES.map((s) => <SelectItem key={s} value={s}>{labelify(s)}</SelectItem>)}
               </SelectContent>
             </Select>
@@ -91,10 +91,10 @@ export function PropertyFormAttributes({ control, register }: Props): React.Reac
           <div className="space-y-1">
             <Label>Floor level</Label>
             <Controller name="floor_level" control={control} render={({ field }) => (
-              <Select value={field.value ?? ""} onValueChange={(v) => field.onChange(v || null)}>
+              <Select value={field.value ?? "__none__"} onValueChange={(v) => field.onChange(v === "__none__" ? null : v)}>
                 <SelectTrigger className="h-8 text-xs"><SelectValue placeholder="Select" /></SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="">—</SelectItem>
+                  <SelectItem value="__none__">—</SelectItem>
                   {FLOOR_LEVELS.map((s) => <SelectItem key={s} value={s}>{labelify(s)}</SelectItem>)}
                 </SelectContent>
               </Select>
@@ -105,10 +105,10 @@ export function PropertyFormAttributes({ control, register }: Props): React.Reac
         <div className="space-y-1">
           <Label>View</Label>
           <Controller name="view_orientation" control={control} render={({ field }) => (
-            <Select value={field.value ?? ""} onValueChange={(v) => field.onChange(v || null)}>
+            <Select value={field.value ?? "__none__"} onValueChange={(v) => field.onChange(v === "__none__" ? null : v)}>
               <SelectTrigger className="h-8 text-xs"><SelectValue placeholder="Select" /></SelectTrigger>
               <SelectContent>
-                <SelectItem value="">—</SelectItem>
+                <SelectItem value="__none__">—</SelectItem>
                 {VIEW_ORIENTATIONS.map((s) => <SelectItem key={s} value={s}>{labelify(s)}</SelectItem>)}
               </SelectContent>
             </Select>
@@ -132,10 +132,10 @@ export function PropertyFormAttributes({ control, register }: Props): React.Reac
           <div className="space-y-1">
             <Label>Fit-out status</Label>
             <Controller name="fit_out_status" control={control} render={({ field }) => (
-              <Select value={field.value ?? ""} onValueChange={(v) => field.onChange(v || null)}>
+              <Select value={field.value ?? "__none__"} onValueChange={(v) => field.onChange(v === "__none__" ? null : v)}>
                 <SelectTrigger className="h-8 text-xs"><SelectValue placeholder="Select" /></SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="">—</SelectItem>
+                  <SelectItem value="__none__">—</SelectItem>
                   {FIT_OUT_STATUSES.map((s) => <SelectItem key={s} value={s}>{labelify(s)}</SelectItem>)}
                 </SelectContent>
               </Select>
