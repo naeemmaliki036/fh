@@ -41,11 +41,25 @@ def _parse_amenities(amenities: str | None) -> list[str] | None:
 
 @router.get("/stats", response_model=MarketplaceStatsResponse)
 async def marketplace_stats(
+    country: str | None = Query(default=None, max_length=2, description="ISO-3166 alpha-2"),
     svc: MarketplaceService = Depends(_svc),
 ) -> MarketplaceStatsResponse:
     """Cross-tenant counts: total listings, total agencies, by_type breakdown."""
-    data = await svc.get_stats()
+    data = await svc.get_stats(country=country)
     return MarketplaceStatsResponse(**data)
+
+
+# ---------------------------------------------------------------------------
+# GET /marketplace/countries
+# ---------------------------------------------------------------------------
+
+
+@router.get("/countries")
+async def marketplace_countries(
+    svc: MarketplaceService = Depends(_svc),
+) -> dict:
+    """Distinct ISO codes where at least one qualifying tenant operates."""
+    return await svc.list_countries()
 
 
 # ---------------------------------------------------------------------------
@@ -55,10 +69,11 @@ async def marketplace_stats(
 
 @router.get("/featured", response_model=MarketplaceListingListResponse)
 async def marketplace_featured(
+    country: str | None = Query(default=None, max_length=2),
     svc: MarketplaceService = Depends(_svc),
 ) -> MarketplaceListingListResponse:
     """Up to 12 featured listings for the marketplace homepage hero."""
-    data = await svc.get_featured()
+    data = await svc.get_featured(country=country)
     return MarketplaceListingListResponse(**data)
 
 
@@ -90,6 +105,7 @@ async def marketplace_listings(
     max_build_year: int | None = Query(default=None),
     has_floor_plan: bool | None = Query(default=None),
     q: str | None = Query(default=None, description="Free-text search in title/description"),
+    country: str | None = Query(default=None, max_length=2, description="ISO-3166 alpha-2"),
     svc: MarketplaceService = Depends(_svc),
 ) -> MarketplaceListingListResponse:
     """Paginated active listings across all qualifying tenants."""
@@ -120,6 +136,7 @@ async def marketplace_listings(
         max_build_year=max_build_year,
         has_floor_plan=has_floor_plan,
         q=q,
+        country=country,
     )
     return MarketplaceListingListResponse(**data)
 
@@ -148,10 +165,11 @@ async def marketplace_listing_detail(
 async def marketplace_agencies(
     page: int = Query(default=1, ge=1),
     page_size: int = Query(default=24, ge=1, le=100),
+    country: str | None = Query(default=None, max_length=2),
     svc: MarketplaceService = Depends(_svc),
 ) -> MarketplaceAgencyListResponse:
     """Paginated qualifying agencies, sorted by active listings count desc."""
-    data = await svc.list_agencies(page=page, page_size=page_size)
+    data = await svc.list_agencies(page=page, page_size=page_size, country=country)
     return MarketplaceAgencyListResponse(**data)
 
 

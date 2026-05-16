@@ -73,8 +73,14 @@ class MarketplaceService(BaseService):
     # Agencies
     # ------------------------------------------------------------------
 
-    async def list_agencies(self, *, page: int, page_size: int) -> dict:
-        """Paginated list of qualifying agencies, sorted by active listings count."""
+    async def list_agencies(
+        self, *, page: int, page_size: int, country: str | None = None
+    ) -> dict:
+        """Paginated list of qualifying agencies, sorted by active listings count.
+
+        country: ISO-3166 alpha-2; filters tenants whose operating_countries array
+        contains this code.
+        """
         listing_count_sq = (
             select(Listing.tenant_id, func.count(Listing.id).label("cnt"))
             .where(Listing.status == ListingStatus.ACTIVE)
@@ -98,6 +104,8 @@ class MarketplaceService(BaseService):
             .outerjoin(agent_count_sq, agent_count_sq.c.tenant_id == Tenant.id)
         )
         base = _marketplace_tenant_filter(base)
+        if country:
+            base = base.where(Tenant.operating_countries.any(country.upper()))
 
         total = (await self.session.execute(
             select(func.count()).select_from(base.subquery())
@@ -171,31 +179,37 @@ class MarketplaceService(BaseService):
     # Stats
     # ------------------------------------------------------------------
 
-    async def get_stats(self) -> dict:
-        """Cross-tenant stats: total listings, total agencies, by_type breakdown."""
+    async def get_stats(self, *, country: str | None = None) -> dict:
+        """Cross-tenant stats: total listings, total agencies, by_type breakdown.
+
+        When country is supplied, both totals are filtered: tenants with that ISO
+        code in operating_countries and properties whose country column matches.
+        """
+        c_norm = country.upper() if country else None
+
         # Total qualifying tenants
-        agency_stmt = _marketplace_tenant_filter(
-            select(func.count(Tenant.id))
-        )
+        agency_stmt = _marketplace_tenant_filter(select(func.count(Tenant.id)))
+        if c_norm:
+            agency_stmt = agency_stmt.where(Tenant.operating_countries.any(c_norm))
         total_agencies = (await self.session.execute(agency_stmt)).scalar_one()
 
         # Listing counts — must join Tenant to apply qualifying filter.
-        rows = (
-            await self.session.execute(
-                text(
-                    "SELECT p.property_type, COUNT(l.id) AS cnt "
-                    "FROM listings l "
-                    "JOIN properties p ON p.id = l.property_id "
-                    "JOIN tenants t ON t.id = l.tenant_id "
-                    "WHERE l.status = 'active' "
-                    "  AND t.status = 'active' "
-                    "  AND t.aggregator_enabled = true "
-                    "  AND t.public_site_enabled = true "
-                    "GROUP BY p.property_type "
-                    "ORDER BY cnt DESC"
-                )
-            )
-        ).all()
+        sql = (
+            "SELECT p.property_type, COUNT(l.id) AS cnt "
+            "FROM listings l "
+            "JOIN properties p ON p.id = l.property_id "
+            "JOIN tenants t ON t.id = l.tenant_id "
+            "WHERE l.status = 'active' "
+            "  AND t.status = 'active' "
+            "  AND t.aggregator_enabled = true "
+            "  AND t.public_site_enabled = true "
+        )
+        params: dict[str, str] = {}
+        if c_norm:
+            sql += "  AND p.country = :country "
+            params["country"] = c_norm
+        sql += "GROUP BY p.property_type ORDER BY cnt DESC"
+        rows = (await self.session.execute(text(sql), params)).all()
 
         total_listings = sum(int(r.cnt) for r in rows)
         by_type = [{"property_type": r.property_type, "count": int(r.cnt)} for r in rows]
@@ -206,14 +220,41 @@ class MarketplaceService(BaseService):
         }
 
     # ------------------------------------------------------------------
+    # Countries
+    # ------------------------------------------------------------------
+
+    async def list_countries(self) -> dict:
+        """Distinct ISO codes where at least one qualifying tenant operates.
+
+        Returns: { "countries": [{ "code": "AE", "tenant_count": 3 }, ...] }
+        Tenants without any active listing are still included (covers new agencies).
+        """
+        sql = (
+            "SELECT UNNEST(t.operating_countries) AS code, COUNT(*) AS tenant_count "
+            "FROM tenants t "
+            "WHERE t.status = 'active' "
+            "  AND t.aggregator_enabled = true "
+            "  AND t.public_site_enabled = true "
+            "GROUP BY code "
+            "ORDER BY tenant_count DESC, code ASC"
+        )
+        rows = (await self.session.execute(text(sql))).all()
+        return {
+            "countries": [
+                {"code": r.code, "tenant_count": int(r.tenant_count)} for r in rows
+            ]
+        }
+
+    # ------------------------------------------------------------------
     # Featured (homepage hero)
     # ------------------------------------------------------------------
 
-    async def get_featured(self) -> dict:
+    async def get_featured(self, *, country: str | None = None) -> dict:
         """Up to 12 featured listings: verified first, then premium tier, then newest."""
         return await fetch_marketplace_listings(
             self.session,
             page=1,
             page_size=12,
             sort="verified_first",
+            country=country,
         )

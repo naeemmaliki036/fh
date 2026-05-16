@@ -181,6 +181,7 @@ async def fetch_marketplace_listings(  # noqa: PLR0913
     has_floor_plan: bool | None = None,
     q: str | None = None,
     tenant_id: UUID | None = None,
+    country: str | None = None,
 ) -> dict:
     stmt = (
         select(Listing, Property, Tenant)
@@ -190,6 +191,8 @@ async def fetch_marketplace_listings(  # noqa: PLR0913
     )
     stmt = _marketplace_tenant_filter(stmt)
 
+    if country is not None:
+        stmt = stmt.where(Property.country == country.upper())
     if tenant_id is not None:
         stmt = stmt.where(Tenant.id == tenant_id)
     if purpose is not None:
