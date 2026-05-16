@@ -11,6 +11,7 @@ const PUBLIC_PATHS = [
   "/contact",
   "/p",
   "/demo",
+  "/marketplace",
 ];
 
 const PLATFORM_PATHS = [
