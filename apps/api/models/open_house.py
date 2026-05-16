@@ -15,7 +15,7 @@ from __future__ import annotations
 import uuid
 from datetime import datetime
 
-from sqlalchemy import CheckConstraint, Enum, ForeignKey, Integer, Text
+from sqlalchemy import CheckConstraint, DateTime, Enum, ForeignKey, Integer, Text
 from sqlalchemy.dialects.postgresql import UUID
 from sqlalchemy.orm import Mapped, mapped_column
 
@@ -51,12 +51,15 @@ class OpenHouse(Base, UUIDMixin, TimestampMixin, TenantMixin):
         index=True,
     )
 
+    # DB column is TIMESTAMPTZ — must declare timezone=True so SQLAlchemy
+    # binds tz-aware datetimes (otherwise asyncpg refuses with
+    # "can't subtract offset-naive and offset-aware datetimes").
     starts_at: Mapped[datetime] = mapped_column(
-        nullable=False,
+        DateTime(timezone=True), nullable=False,
     )
 
     ends_at: Mapped[datetime] = mapped_column(
-        nullable=False,
+        DateTime(timezone=True), nullable=False,
     )
 
     # NULL = unlimited capacity.
