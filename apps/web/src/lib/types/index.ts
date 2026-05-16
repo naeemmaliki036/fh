@@ -273,6 +273,13 @@ export type {
 } from "./open-house";
 
 export type {
+  MarketplaceCountry,
+  MarketplaceCountryListResponse,
+  MarketplaceCountryCreateRequest,
+  MarketplaceCountryUpdateRequest,
+} from "./marketplace-country";
+
+export type {
   PublicSiteStats,
   HeroConfig,
   ThemeConfig,

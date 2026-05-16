@@ -122,6 +122,10 @@ export const queryKeys = {
   reports: {
     closedDeals: (params?: Record<string, unknown>) => ["reports", "closed-deals", params] as const,
   },
+  marketplaceCountries: {
+    all: ["marketplace-countries"] as const,
+    list: ["marketplace-countries", "list"] as const,
+  },
   locations: {
     tree: ["locations", "tree"] as const,
     countries: ["locations", "countries"] as const,
