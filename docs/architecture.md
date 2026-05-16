@@ -168,3 +168,63 @@ If we ever want a single sign-on flow ("Sign in to PropertyPoint to save
 listings"), we would need to add a **buyer-account domain** to the API.
 This currently does not exist — it's the "buyer accounts" item in the
 deferred list at the bottom of `docs/`.
+
+## Why a single API, not three
+
+The same FastAPI process at `af-staging-api.up.railway.app` serves **all
+three frontends**. There is no microservice split — different routes are
+reachable by different frontends, controlled at the API layer (auth +
+scoping rules), not by deploying separate APIs.
+
+| Frontend | What it hits on the API |
+|---|---|
+| **portal** (`af-staging-portal`) | `/auth/*`, `/tenants/*`, `/properties/*`, `/listings/*`, `/deals/*`, `/agents/*`, `/customers/*`, `/leads/*` — **JWT required**, every query scoped to the user's `tenant_id`. Also hits `/public/sites/{slug}/*` for its own public tenant pages at `/p/{slug}`. |
+| **marketplace** (`af-staging-marketplace`) | `/marketplace/listings`, `/marketplace/agencies/*`, `/marketplace/stats`, `/marketplace/featured` — **no auth**, scoped to tenants where `aggregator_enabled = true AND status = 'active' AND public_site_enabled = true`. |
+| **aqarflow-website** (`af-staging`) | `/marketing/demo-request`, `/marketing/waitlist` — **no auth**. Today this is the same Next.js bundle as the portal, so it also has access to the JWT routes, but the public pages don't call them. |
+
+### Why this is a deliberate choice (not laziness)
+
+1. **One source of truth for data.** A listing created in the portal shows
+   up in the marketplace the same instant — no replication, no sync drift.
+2. **Buyer leads close the loop.** A lead submitted on
+   `marketplace/listings/{id}` posts to a public lead endpoint, lands in
+   the same DB, then the agent sees it in their portal inbox.
+3. **One auth + RBAC system to reason about.** The `MarketplaceService`
+   and `PublicSiteService` classes literally can't return rows from
+   non-eligible tenants because the SQL filters are in the service
+   constructor.
+
+### Where the boundaries live in the API codebase
+
+Separation is by **router + service**:
+
+```
+apps/api/routers/
+├── auth.py                ┐
+├── tenants.py             │  tenant-scoped, JWT-gated
+├── properties.py          │  → consumed by portal
+├── listings.py            │
+├── deals.py               │
+├── agents.py              ┘
+├── public_site.py         ←  per-tenant public site → portal's /p/{slug}
+├── marketplace.py         ←  cross-tenant aggregator → marketplace app
+├── marketing.py           ←  demo-request, waitlist → aqarflow-website
+└── ...
+```
+
+The router chooses the auth dependency (`CurrentUser` for JWT,
+`Depends(get_public_session)` for unauth) and which service class to
+instantiate. The service then decides what tenant_ids are visible.
+
+### Could we ever split them?
+
+Yes — if traffic on the marketplace grows much larger than the portal, we
+could:
+
+1. Spin a second FastAPI deployment that imports only the marketplace
+   router.
+2. Point the marketplace frontend's `NEXT_PUBLIC_API_BASE_URL` at it.
+3. Database stays single; read replicas can be added if needed.
+
+Nothing in the code prevents this — the routers are independent modules.
+We just haven't needed the split yet.
