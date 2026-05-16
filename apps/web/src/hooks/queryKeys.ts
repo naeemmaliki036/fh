@@ -49,6 +49,7 @@ export const queryKeys = {
     media: (id: string) => ["properties", id, "media"] as const,
     listings: (id: string) => ["properties", id, "listings"] as const,
     agents: (id: string) => ["properties", id, "agents"] as const,
+    amenityCatalog: ["properties", "amenity-catalog"] as const,
   },
   listings: {
     all: ["listings"] as const,

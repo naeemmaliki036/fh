@@ -11,6 +11,7 @@ from uuid import UUID
 from fastapi import APIRouter, Depends, Query, Request, status
 
 from apps.api.dependencies import DbSession
+from apps.api.models.enums import CompletionStatus, FurnishingStatus, ViewOrientation
 from apps.api.schemas.public_site import (
     PublicAgentsResponse,
     PublicLeadCreate,
@@ -81,13 +82,21 @@ async def list_public_listings(
     min_price: float | None = Query(default=None, ge=0),
     max_price: float | None = Query(default=None, ge=0),
     beds: int | None = Query(default=None, ge=0),
+    baths: int | None = Query(default=None, ge=0),
     property_type: str | None = Query(default=None),
+    amenities: str | None = Query(default=None, description="CSV of amenity keys; row must include ALL"),
+    furnishing_status: FurnishingStatus | None = Query(default=None),
+    completion_status: CompletionStatus | None = Query(default=None),
+    view_orientation: ViewOrientation | None = Query(default=None),
+    city: str | None = Query(default=None),
+    area: str | None = Query(default=None),
     svc: PublicSiteService = Depends(_svc),
 ) -> PublicListingListResponse:
     """Paginated active listings for a public site.
 
     404 if slug not found or site disabled.
     """
+    amenity_list = [a.strip() for a in amenities.split(",") if a.strip()] if amenities else None
     data = await svc.list_listings(
         slug,
         page=page,
@@ -95,7 +104,14 @@ async def list_public_listings(
         min_price=min_price,
         max_price=max_price,
         beds=beds,
+        baths=baths,
         property_type=property_type,
+        amenities=amenity_list,
+        furnishing_status=furnishing_status.value if furnishing_status else None,
+        completion_status=completion_status.value if completion_status else None,
+        view_orientation=view_orientation.value if view_orientation else None,
+        city=city,
+        area=area,
     )
     return PublicListingListResponse(**data)
 

@@ -6,7 +6,15 @@ from uuid import UUID
 from fastapi import APIRouter, Depends, Query
 
 from apps.api.dependencies import CurrentUser, DbSession, ReqCtx, TenantContext
-from apps.api.models.enums import ListingPurpose, ListingStatus, ListingTier
+from apps.api.models.enums import (
+    CompletionStatus,
+    FurnishingStatus,
+    ListingPurpose,
+    ListingStatus,
+    ListingTier,
+    PropertyType,
+    ViewOrientation,
+)
 from apps.api.models.listing import Listing
 from apps.api.schemas.listing import (
     ListingCreateRequest,
@@ -99,12 +107,23 @@ async def list_all_listings(
     valid_from_to: date | None = Query(None, description="Listings whose valid_from <= this date"),
     valid_until_from: date | None = Query(None, description="Listings whose valid_until >= this date"),
     q: str | None = Query(None),
+    # --- migration 0039 property-attribute filters ---
+    property_type: PropertyType | None = Query(None),
+    min_bedrooms: int | None = Query(None, ge=0),
+    max_bedrooms: int | None = Query(None, ge=0),
+    min_bathrooms: int | None = Query(None, ge=0),
+    max_bathrooms: int | None = Query(None, ge=0),
+    amenities: str | None = Query(None, description="CSV of amenity keys; row must include ALL"),
+    furnishing_status: FurnishingStatus | None = Query(None),
+    completion_status: CompletionStatus | None = Query(None),
+    view_orientation: ViewOrientation | None = Query(None),
     sort_by: str = Query("created_at", pattern="^(created_at|updated_at|price|title)$"),
     sort_dir: str = Query("desc", pattern="^(asc|desc)$"),
     skip: int = Query(0, ge=0),
     limit: int = Query(50, ge=1, le=200),
     svc: ListingService = Depends(_svc),
 ) -> ListingListResponse:
+    amenity_list = [a.strip() for a in amenities.split(",") if a.strip()] if amenities else None
     items, total = await svc.list_listings(
         tenant_id,
         status=status,
@@ -123,6 +142,15 @@ async def list_all_listings(
         valid_from_to=valid_from_to,
         valid_until_from=valid_until_from,
         q=q,
+        property_type=property_type,
+        min_bedrooms=min_bedrooms,
+        max_bedrooms=max_bedrooms,
+        min_bathrooms=min_bathrooms,
+        max_bathrooms=max_bathrooms,
+        amenities=amenity_list,
+        furnishing_status=furnishing_status.value if furnishing_status else None,
+        completion_status=completion_status.value if completion_status else None,
+        view_orientation=view_orientation.value if view_orientation else None,
         sort_by=sort_by,
         sort_dir=sort_dir,
         skip=skip,

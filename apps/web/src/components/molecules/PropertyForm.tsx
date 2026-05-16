@@ -11,6 +11,8 @@ import {
 import { TagsInput } from "@/components/molecules/TagsInput";
 import { Textarea } from "@/components/atoms/Textarea";
 import { SearchableSelect } from "@/components/molecules/SearchableSelect";
+import { PropertyFormAttributes } from "@/components/molecules/PropertyFormAttributes";
+import { PropertyFormAmenities } from "@/components/molecules/PropertyFormAmenities";
 import { CURRENCIES } from "@/lib/constants/regions";
 import { useMyTenant } from "@/hooks/queries/useTenants";
 import { useLocationData } from "@/hooks/useLocationData";
@@ -171,6 +173,21 @@ export function PropertyForm({ defaultValues, showStatus, isPending, submitLabel
       tags: defaultValues?.tags ?? [],
       description: defaultValues?.description ?? "",
       status: defaultValues?.status,
+      amenities: defaultValues?.amenities ?? [],
+      furnishing_status: defaultValues?.furnishing_status ?? null,
+      completion_status: defaultValues?.completion_status ?? null,
+      ownership_type: defaultValues?.ownership_type ?? null,
+      view_orientation: defaultValues?.view_orientation ?? null,
+      service_charge_aed_sqft: defaultValues?.service_charge_aed_sqft ?? "",
+      rera_permit_number: defaultValues?.rera_permit_number ?? "",
+      plot_area_sqft: defaultValues?.plot_area_sqft ?? null,
+      parking_spaces: defaultValues?.parking_spaces ?? null,
+      floor_level: defaultValues?.floor_level ?? null,
+      fit_out_status: defaultValues?.fit_out_status ?? null,
+      ceiling_height_m: defaultValues?.ceiling_height_m ?? "",
+      handover_year: defaultValues?.handover_year ?? null,
+      handover_quarter: defaultValues?.handover_quarter ?? null,
+      payment_plan: defaultValues?.payment_plan ?? null,
     },
   });
 
@@ -197,6 +214,10 @@ export function PropertyForm({ defaultValues, showStatus, isPending, submitLabel
       country: blank(v.country), internal_reference: blank(v.internal_reference),
       description: v.description?.trim() || null,
       tags: v.tags && v.tags.length > 0 ? v.tags : null,
+      amenities: v.amenities && v.amenities.length > 0 ? v.amenities : null,
+      service_charge_aed_sqft: blank(v.service_charge_aed_sqft),
+      rera_permit_number: blank(v.rera_permit_number),
+      ceiling_height_m: blank(v.ceiling_height_m),
     });
   };
 
@@ -207,7 +228,7 @@ export function PropertyForm({ defaultValues, showStatus, isPending, submitLabel
       <LocationSection register={register} control={control} setValue={setValue} operatingCountries={operatingCountries} cityOptions={cityOptions} areaOptions={areaOptions} selectedCountry={selectedCountry} selectedCity={selectedCity} />
       <Divider />
 
-      {/* ── Property details ── */}
+      {/* Property details */}
       <div className="space-y-1.5">
         <SectionHeader label="Property details" />
         <div className="grid grid-cols-2 md:grid-cols-3 gap-3">
@@ -222,7 +243,21 @@ export function PropertyForm({ defaultValues, showStatus, isPending, submitLabel
       </div>
       <Divider />
 
-      {/* ── Pricing ── */}
+      {/* Attributes */}
+      <div className="space-y-1.5">
+        <SectionHeader label="Attributes" />
+        <PropertyFormAttributes control={control} register={register} />
+      </div>
+      <Divider />
+
+      {/* Amenities */}
+      <div className="space-y-1.5">
+        <SectionHeader label="Amenities" />
+        <PropertyFormAmenities control={control} />
+      </div>
+      <Divider />
+
+      {/* Pricing */}
       <div className="space-y-1.5">
         <SectionHeader label="Pricing" />
         <div className="grid grid-cols-2 gap-3">
@@ -244,7 +279,7 @@ export function PropertyForm({ defaultValues, showStatus, isPending, submitLabel
       </div>
       <Divider />
 
-      {/* ── Description ── */}
+      {/* Description */}
       <div className="space-y-1.5">
         <SectionHeader label="Description" />
         <Textarea {...register("description")} rows={3} />

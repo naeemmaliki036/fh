@@ -29,11 +29,18 @@ const DEBOUNCE_MS = 400;
 function buildParams(c: string, ar: string, p: string, adv: AdvancedFilterValues): PublicListingsParams {
   return {
     page: 1,
-    city: c || null, area: ar || null, purpose: p || null,
+    city: c || null,
+    area: ar || null,
+    purpose: p || null,
     property_type: adv.propertyType || null,
     beds: adv.beds !== "" ? Number(adv.beds) : null,
+    baths: adv.baths !== "" ? Number(adv.baths) : null,
     min_price: adv.minPrice !== "" ? Number(adv.minPrice) : null,
     max_price: adv.maxPrice !== "" ? Number(adv.maxPrice) : null,
+    furnishing_status: adv.furnishing || null,
+    completion_status: adv.completion || null,
+    view_orientation: adv.views.length > 0 ? adv.views[0] : null,
+    amenities: adv.amenities.length > 0 ? adv.amenities.join(",") : null,
   };
 }
 
@@ -44,9 +51,32 @@ function buildSearchParams(c: string, ar: string, p: string, adv: AdvancedFilter
   if (p) sp.set("purpose", p);
   if (adv.propertyType) sp.set("property_type", adv.propertyType);
   if (adv.beds !== "") sp.set("beds", adv.beds);
+  if (adv.baths !== "") sp.set("baths", adv.baths);
   if (adv.minPrice !== "") sp.set("min_price", adv.minPrice);
   if (adv.maxPrice !== "") sp.set("max_price", adv.maxPrice);
+  if (adv.furnishing) sp.set("furnishing_status", adv.furnishing);
+  if (adv.completion) sp.set("completion_status", adv.completion);
+  if (adv.views.length > 0) sp.set("view_orientation", adv.views[0]);
+  if (adv.amenities.length > 0) sp.set("amenities", adv.amenities.join(","));
   return sp;
+}
+
+function emptyAdv(): AdvancedFilterValues {
+  return { propertyType: "", beds: "", baths: "", minPrice: "", maxPrice: "", furnishing: "", completion: "", views: [], amenities: [] };
+}
+
+function advFromSearchParams(sp: URLSearchParams): AdvancedFilterValues {
+  return {
+    propertyType: sp.get("property_type") ?? "",
+    beds: sp.get("beds") ?? "",
+    baths: sp.get("baths") ?? "",
+    minPrice: sp.get("min_price") ?? "",
+    maxPrice: sp.get("max_price") ?? "",
+    furnishing: sp.get("furnishing_status") ?? "",
+    completion: sp.get("completion_status") ?? "",
+    views: sp.get("view_orientation") ? [sp.get("view_orientation")!] : [],
+    amenities: sp.get("amenities") ? sp.get("amenities")!.split(",").filter(Boolean) : [],
+  };
 }
 
 // ---------------------------------------------------------------------------
@@ -55,7 +85,6 @@ function buildSearchParams(c: string, ar: string, p: string, adv: AdvancedFilter
 
 interface PublicListingsSearchBarProps {
   onFilter: (params: PublicListingsParams) => void;
-  /** ISO-3166-1 alpha-2 codes; first is used for city options */
   operatingCountries?: string[];
 }
 
@@ -78,38 +107,21 @@ export function PublicListingsSearchBar({
     ...(citiesByCountry[primaryCountry] ?? []),
   ];
 
-  // Core segment state
   const [city, setCity] = useState(searchParams.get("city") ?? "");
   const [area, setArea] = useState(searchParams.get("area") ?? "");
   const [purpose, setPurpose] = useState(searchParams.get("purpose") ?? "");
-
-  // Advanced filter state
-  const [adv, setAdv] = useState<AdvancedFilterValues>({
-    propertyType: searchParams.get("property_type") ?? "",
-    beds: searchParams.get("beds") ?? "",
-    minPrice: searchParams.get("min_price") ?? "",
-    maxPrice: searchParams.get("max_price") ?? "",
-  });
-
+  const [adv, setAdv] = useState<AdvancedFilterValues>(() => advFromSearchParams(searchParams));
   const [showAdvanced, setShowAdvanced] = useState(false);
   const advDebounce = useRef<ReturnType<typeof setTimeout> | null>(null);
 
-  // Area options — dropdown when mapped, free-text otherwise
-  const mappedAreas: SegmentOption[] | undefined = city
-    ? areasByCity[city]
-    : undefined;
+  const mappedAreas: SegmentOption[] | undefined = city ? areasByCity[city] : undefined;
   const hasAreaDropdown = mappedAreas !== undefined && mappedAreas.length > 0;
   const areaOptions: SegmentOption[] = hasAreaDropdown
     ? [{ value: "", label: "All areas" }, ...mappedAreas]
     : [];
 
-  // Reset area when city changes
-  const handleCityChange = (v: string): void => {
-    setCity(v);
-    setArea("");
-  };
+  const handleCityChange = (v: string): void => { setCity(v); setArea(""); };
 
-  // Push to URL and notify parent
   const apply = useCallback(
     (c: string, ar: string, p: string, a: AdvancedFilterValues): void => {
       const sp = buildSearchParams(c, ar, p, a);
@@ -119,7 +131,6 @@ export function PublicListingsSearchBar({
     [router, pathname, onFilter],
   );
 
-  // Debounced apply (for free-text area input)
   const scheduleApply = useCallback(
     (c: string, ar: string, p: string, a: AdvancedFilterValues): void => {
       if (advDebounce.current) clearTimeout(advDebounce.current);
@@ -128,18 +139,15 @@ export function PublicListingsSearchBar({
     [apply],
   );
 
-  // Seed from URL on mount
   useEffect(() => {
     const sp = searchParams;
     const hasAny = sp.get("city") || sp.get("area") || sp.get("purpose") ||
-      sp.get("property_type") || sp.get("beds") || sp.get("min_price") || sp.get("max_price");
+      sp.get("property_type") || sp.get("beds") || sp.get("baths") ||
+      sp.get("min_price") || sp.get("max_price") ||
+      sp.get("furnishing_status") || sp.get("completion_status") ||
+      sp.get("view_orientation") || sp.get("amenities");
     if (hasAny) {
-      onFilter(buildParams(sp.get("city") ?? "", sp.get("area") ?? "", sp.get("purpose") ?? "", {
-        propertyType: sp.get("property_type") ?? "",
-        beds: sp.get("beds") ?? "",
-        minPrice: sp.get("min_price") ?? "",
-        maxPrice: sp.get("max_price") ?? "",
-      }));
+      onFilter(buildParams(sp.get("city") ?? "", sp.get("area") ?? "", sp.get("purpose") ?? "", advFromSearchParams(sp)));
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
@@ -147,10 +155,7 @@ export function PublicListingsSearchBar({
   const handleAdvChange = (next: AdvancedFilterValues): void => {
     setAdv(next);
     if (advDebounce.current) clearTimeout(advDebounce.current);
-    advDebounce.current = setTimeout(
-      () => apply(city, area, purpose, next),
-      DEBOUNCE_MS,
-    );
+    advDebounce.current = setTimeout(() => apply(city, area, purpose, next), DEBOUNCE_MS);
   };
 
   const handleSearch = (): void => {
@@ -160,38 +165,28 @@ export function PublicListingsSearchBar({
 
   const hasFilters =
     city || area || purpose ||
-    adv.propertyType || adv.beds !== "" ||
-    adv.minPrice !== "" || adv.maxPrice !== "";
+    adv.propertyType || adv.beds !== "" || adv.baths !== "" ||
+    adv.minPrice !== "" || adv.maxPrice !== "" ||
+    adv.furnishing || adv.completion ||
+    adv.views.length > 0 || adv.amenities.length > 0;
 
   const clearAll = (): void => {
-    setCity("");
-    setArea("");
-    setPurpose("");
-    setAdv({ propertyType: "", beds: "", minPrice: "", maxPrice: "" });
+    setCity(""); setArea(""); setPurpose(""); setAdv(emptyAdv());
     router.replace(pathname, { scroll: false });
     onFilter({ page: 1 });
   };
 
   return (
     <div className="mb-6">
-      {/* Pill strip */}
       <div className="flex flex-col items-stretch gap-0 rounded-full border border-border bg-card shadow-card-md sm:flex-row sm:items-center sm:gap-0 sm:p-1.5">
-        {/* City segment */}
         <SearchSegment
           label="City"
           value={city}
           placeholder="All cities"
           options={cityOptions}
-          onChange={(v) => {
-            handleCityChange(v);
-            apply(v, "", purpose, adv);
-          }}
+          onChange={(v) => { handleCityChange(v); apply(v, "", purpose, adv); }}
         />
-
-        {/* Divider */}
         <div className="hidden h-8 w-px shrink-0 bg-border sm:block" />
-
-        {/* Area segment */}
         {hasAreaDropdown ? (
           <SearchSegment
             label="Area"
@@ -199,10 +194,7 @@ export function PublicListingsSearchBar({
             placeholder="All areas"
             options={areaOptions}
             disabled={!city}
-            onChange={(v) => {
-              setArea(v);
-              apply(city, v, purpose, adv);
-            }}
+            onChange={(v) => { setArea(v); apply(city, v, purpose, adv); }}
           />
         ) : (
           <SearchSegment
@@ -212,29 +204,17 @@ export function PublicListingsSearchBar({
             options={[]}
             disabled={!city}
             freeText
-            onChange={(v) => {
-              setArea(v);
-              scheduleApply(city, v, purpose, adv);
-            }}
+            onChange={(v) => { setArea(v); scheduleApply(city, v, purpose, adv); }}
           />
         )}
-
-        {/* Divider */}
         <div className="hidden h-8 w-px shrink-0 bg-border sm:block" />
-
-        {/* Purpose segment */}
         <SearchSegment
           label="Buy or Rent?"
           value={purpose}
           placeholder="All"
           options={PURPOSE_OPTIONS}
-          onChange={(v) => {
-            setPurpose(v);
-            apply(city, area, v, adv);
-          }}
+          onChange={(v) => { setPurpose(v); apply(city, area, v, adv); }}
         />
-
-        {/* Search button */}
         <div className="flex shrink-0 items-center gap-2 p-1.5 sm:p-0">
           <button
             type="button"
@@ -246,7 +226,6 @@ export function PublicListingsSearchBar({
         </div>
       </div>
 
-      {/* Below-bar meta row */}
       <div className="mt-2 flex items-center gap-4 px-1">
         <button
           type="button"
@@ -255,7 +234,6 @@ export function PublicListingsSearchBar({
         >
           {showAdvanced ? "Hide filters" : "More filters"}
         </button>
-
         {hasFilters && (
           <button
             type="button"
@@ -267,12 +245,8 @@ export function PublicListingsSearchBar({
         )}
       </div>
 
-      {/* Advanced filters panel */}
       {showAdvanced && (
-        <PublicListingsAdvancedFilters
-          values={adv}
-          onChange={handleAdvChange}
-        />
+        <PublicListingsAdvancedFilters values={adv} onChange={handleAdvChange} />
       )}
     </div>
   );

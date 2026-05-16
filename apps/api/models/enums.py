@@ -2,9 +2,20 @@
 
 All enums are str-based so they serialise cleanly to/from JSON and SQLAlchemy
 native_enum=True stores them as Postgres enum types (defined in migration).
+
+Property attribute enums (migration 0039) live in property_enums.py to stay
+within the 300-LOC limit; they are re-exported below for import-path stability.
 """
 
 import enum
+
+from .property_enums import (  # noqa: F401  re-export
+    CompletionStatus,
+    FitOutStatus,
+    FurnishingStatus,
+    OwnershipType,
+    ViewOrientation,
+)
 
 
 class TenantStatus(str, enum.Enum):

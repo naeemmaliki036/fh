@@ -111,4 +111,14 @@ export interface ListingListParams {
   sort_dir?: "asc" | "desc";
   skip?: number;
   limit?: number;
+  // New filter params
+  property_type?: string;
+  min_bedrooms?: number;
+  max_bedrooms?: number;
+  min_bathrooms?: number;
+  max_bathrooms?: number;
+  amenities?: string;
+  furnishing_status?: string;
+  completion_status?: string;
+  view_orientation?: string;
 }

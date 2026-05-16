@@ -6,7 +6,10 @@ All functions receive an AsyncSession and return plain dicts or None.
 
 from uuid import UUID
 
-from sqlalchemy import func, select, text
+import json
+
+from sqlalchemy import cast, func, select, text
+from sqlalchemy.dialects.postgresql import JSONB
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from apps.api.models.agent import Agent
@@ -75,7 +78,7 @@ async def get_primary_agent(
     }
 
 
-async def fetch_listing_list(
+async def fetch_listing_list(  # noqa: PLR0913
     session: AsyncSession,
     tenant: Tenant,
     *,
@@ -84,7 +87,14 @@ async def fetch_listing_list(
     min_price: float | None,
     max_price: float | None,
     beds: int | None,
+    baths: int | None = None,
     property_type: str | None,
+    amenities: list[str] | None = None,
+    furnishing_status: str | None = None,
+    completion_status: str | None = None,
+    view_orientation: str | None = None,
+    city: str | None = None,
+    area: str | None = None,
 ) -> dict:
     """Return paginated active listings for the tenant."""
     tid = tenant.id
@@ -102,8 +112,24 @@ async def fetch_listing_list(
         stmt = stmt.where(Listing.price <= max_price)
     if beds is not None:
         stmt = stmt.where(Property.bedrooms == beds)
+    if baths is not None:
+        stmt = stmt.where(Property.bathrooms == baths)
     if property_type is not None:
         stmt = stmt.where(Property.property_type == property_type)
+    if amenities:
+        stmt = stmt.where(
+            Property.amenities.op("@>")(cast(json.dumps(amenities), JSONB))
+        )
+    if furnishing_status:
+        stmt = stmt.where(Property.furnishing_status == furnishing_status)
+    if completion_status:
+        stmt = stmt.where(Property.completion_status == completion_status)
+    if view_orientation:
+        stmt = stmt.where(Property.view_orientation == view_orientation)
+    if city:
+        stmt = stmt.where(Property.city.ilike(f"%{city}%"))
+    if area:
+        stmt = stmt.where(Property.area.ilike(f"%{area}%"))
 
     count_q = select(func.count()).select_from(stmt.subquery())
     total = (await session.execute(count_q)).scalar_one()

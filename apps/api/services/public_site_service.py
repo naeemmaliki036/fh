@@ -99,14 +99,27 @@ class PublicSiteService(BaseService):
         min_price: float | None,
         max_price: float | None,
         beds: int | None,
+        baths: int | None = None,
         property_type: str | None,
+        amenities: list[str] | None = None,
+        furnishing_status: str | None = None,
+        completion_status: str | None = None,
+        view_orientation: str | None = None,
+        city: str | None = None,
+        area: str | None = None,
     ) -> dict:
         tenant = await self._resolve_tenant(slug)
         return await fetch_listing_list(
             self.session, tenant,
             page=page, page_size=page_size,
             min_price=min_price, max_price=max_price,
-            beds=beds, property_type=property_type,
+            beds=beds, baths=baths,
+            property_type=property_type,
+            amenities=amenities,
+            furnishing_status=furnishing_status,
+            completion_status=completion_status,
+            view_orientation=view_orientation,
+            city=city, area=area,
         )
 
     # ------------------------------------------------------------------

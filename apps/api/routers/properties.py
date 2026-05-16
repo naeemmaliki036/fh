@@ -6,7 +6,16 @@ from uuid import UUID
 from fastapi import APIRouter, Depends, Query
 
 from apps.api.dependencies import CurrentUser, DbSession, ReqCtx, TenantContext
-from apps.api.models.enums import PropertyStatus, PropertyType
+from apps.api.models.enums import (
+    CompletionStatus,
+    FitOutStatus,
+    FurnishingStatus,
+    OwnershipType,
+    PropertyStatus,
+    PropertyType,
+    ViewOrientation,
+)
+from apps.api.services.amenity_catalog import AMENITY_CATALOG, AmenityCategory
 from apps.api.schemas.property import (
     CommissionOverrideRequest,
     PropertyAgentAssignRequest,
@@ -23,6 +32,16 @@ from apps.api.services.property_service import PropertyService
 from apps.api.services.property_status_service import PropertyStatusService
 
 router = APIRouter()
+
+
+# ------------------------------------------------------------------
+# Amenity catalog — no auth, static reference data
+# ------------------------------------------------------------------
+
+@router.get("/amenity-catalog", response_model=list[AmenityCategory], tags=["properties"])
+async def get_amenity_catalog() -> list[AmenityCategory]:
+    """Return the full amenity catalog (static reference data, no auth required)."""
+    return AMENITY_CATALOG
 
 
 def _prop_svc(db: DbSession) -> PropertyService:
@@ -78,6 +97,20 @@ async def list_properties(
     created_to: date | None = Query(None),
     has_listing: bool | None = Query(None),
     q: str | None = Query(None),
+    # --- migration 0039 attribute filters ---
+    amenities: str | None = Query(None, description="CSV of amenity keys; row must include ALL"),
+    furnishing_status: FurnishingStatus | None = Query(None),
+    completion_status: CompletionStatus | None = Query(None),
+    ownership_type: OwnershipType | None = Query(None),
+    view_orientation: ViewOrientation | None = Query(None),
+    fit_out_status: FitOutStatus | None = Query(None),
+    min_service_charge_aed_sqft: float | None = Query(None, ge=0),
+    max_service_charge_aed_sqft: float | None = Query(None, ge=0),
+    min_plot_area_sqft: int | None = Query(None, ge=0),
+    max_plot_area_sqft: int | None = Query(None, ge=0),
+    min_parking_spaces: int | None = Query(None, ge=0),
+    has_payment_plan: bool | None = Query(None),
+    handover_year: int | None = Query(None),
     sort_by: str = Query("created_at", pattern="^(created_at|updated_at|price|title)$"),
     sort_dir: str = Query("desc", pattern="^(asc|desc)$"),
     skip: int = Query(0, ge=0),
@@ -85,6 +118,7 @@ async def list_properties(
     svc: PropertyService = Depends(_prop_svc),
 ) -> PropertyListResponse:
     tag_list = [t.strip() for t in tags.split(",") if t.strip()] if tags else None
+    amenity_list = [a.strip() for a in amenities.split(",") if a.strip()] if amenities else None
     items, total = await svc.list_properties(
         tenant_id,
         status=status,
@@ -107,6 +141,19 @@ async def list_properties(
         created_to=created_to,
         has_listing=has_listing,
         q=q,
+        amenities=amenity_list,
+        furnishing_status=furnishing_status.value if furnishing_status else None,
+        completion_status=completion_status.value if completion_status else None,
+        ownership_type=ownership_type.value if ownership_type else None,
+        view_orientation=view_orientation.value if view_orientation else None,
+        fit_out_status=fit_out_status.value if fit_out_status else None,
+        min_service_charge_aed_sqft=min_service_charge_aed_sqft,
+        max_service_charge_aed_sqft=max_service_charge_aed_sqft,
+        min_plot_area_sqft=min_plot_area_sqft,
+        max_plot_area_sqft=max_plot_area_sqft,
+        min_parking_spaces=min_parking_spaces,
+        has_payment_plan=has_payment_plan,
+        handover_year=handover_year,
         sort_by=sort_by,
         sort_dir=sort_dir,
         skip=skip,

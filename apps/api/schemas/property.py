@@ -6,7 +6,16 @@ from decimal import Decimal
 
 from pydantic import BaseModel, ConfigDict, field_validator
 
-from apps.api.models.enums import CommissionType, PropertyStatus, PropertyType
+from apps.api.models.enums import (
+    CommissionType,
+    CompletionStatus,
+    FitOutStatus,
+    FurnishingStatus,
+    OwnershipType,
+    PropertyStatus,
+    PropertyType,
+    ViewOrientation,
+)
 
 
 def _validate_tags(v: list[str] | None) -> list[str] | None:
@@ -19,7 +28,6 @@ def _validate_tags(v: list[str] | None) -> list[str] | None:
             raise ValueError("Tag must not be empty after stripping whitespace")
         if len(t) > 30:
             raise ValueError(f"Tag '{t}' exceeds 30 character limit")
-    # dedupe: preserve first occurrence, case-insensitive
     seen: set[str] = set()
     deduped: list[str] = []
     for t in stripped:
@@ -30,6 +38,17 @@ def _validate_tags(v: list[str] | None) -> list[str] | None:
     if len(deduped) > 5:
         raise ValueError("Maximum 5 tags allowed")
     return deduped
+
+
+def _validate_amenity_keys(v: list[str] | None) -> list[str] | None:
+    """Reject unknown amenity keys with a 422 listing the offenders."""
+    if v is None:
+        return v
+    from apps.api.services.amenity_catalog import VALID_AMENITY_KEYS
+    unknown = [k for k in v if k not in VALID_AMENITY_KEYS]
+    if unknown:
+        raise ValueError(f"Unknown amenity keys: {unknown}")
+    return v
 
 
 class PropertyAgentResponse(BaseModel):
@@ -75,11 +94,38 @@ class PropertyCreateRequest(BaseModel):
     internal_reference: str | None = None
     agent_ids: list[uuid.UUID] | None = None
     tags: list[str] | None = None
+    # --- migration 0039 attributes ---
+    furnishing_status: FurnishingStatus | None = None
+    completion_status: CompletionStatus | None = None
+    ownership_type: OwnershipType | None = None
+    view_orientation: ViewOrientation | None = None
+    service_charge_aed_sqft: Decimal | None = None
+    rera_permit_number: str | None = None
+    plot_area_sqft: int | None = None
+    parking_spaces: int | None = None
+    floor_level: str | None = None
+    fit_out_status: FitOutStatus | None = None
+    ceiling_height_m: Decimal | None = None
+    handover_year: int | None = None
+    handover_quarter: int | None = None
+    payment_plan: bool | None = None
 
     @field_validator("tags", mode="before")
     @classmethod
     def validate_tags(cls, v: list[str] | None) -> list[str] | None:
         return _validate_tags(v)
+
+    @field_validator("amenities", mode="before")
+    @classmethod
+    def validate_amenities(cls, v: list[str] | None) -> list[str] | None:
+        return _validate_amenity_keys(v)
+
+    @field_validator("handover_quarter", mode="before")
+    @classmethod
+    def validate_handover_quarter(cls, v: int | None) -> int | None:
+        if v is not None and not (1 <= v <= 4):
+            raise ValueError("handover_quarter must be 1–4")
+        return v
 
 
 class PropertyUpdateRequest(BaseModel):
@@ -100,12 +146,39 @@ class PropertyUpdateRequest(BaseModel):
     amenities: list[str] | None = None
     internal_reference: str | None = None
     tags: list[str] | None = None
+    # --- migration 0039 attributes ---
+    furnishing_status: FurnishingStatus | None = None
+    completion_status: CompletionStatus | None = None
+    ownership_type: OwnershipType | None = None
+    view_orientation: ViewOrientation | None = None
+    service_charge_aed_sqft: Decimal | None = None
+    rera_permit_number: str | None = None
+    plot_area_sqft: int | None = None
+    parking_spaces: int | None = None
+    floor_level: str | None = None
+    fit_out_status: FitOutStatus | None = None
+    ceiling_height_m: Decimal | None = None
+    handover_year: int | None = None
+    handover_quarter: int | None = None
+    payment_plan: bool | None = None
     # status intentionally omitted — use PATCH /{id}/status (audited)
 
     @field_validator("tags", mode="before")
     @classmethod
     def validate_tags(cls, v: list[str] | None) -> list[str] | None:
         return _validate_tags(v)
+
+    @field_validator("amenities", mode="before")
+    @classmethod
+    def validate_amenities(cls, v: list[str] | None) -> list[str] | None:
+        return _validate_amenity_keys(v)
+
+    @field_validator("handover_quarter", mode="before")
+    @classmethod
+    def validate_handover_quarter(cls, v: int | None) -> int | None:
+        if v is not None and not (1 <= v <= 4):
+            raise ValueError("handover_quarter must be 1–4")
+        return v
 
 
 class PropertyResponse(BaseModel):
@@ -137,6 +210,21 @@ class PropertyResponse(BaseModel):
     thumbnail_kind: str | None = None  # "image" | "video"
     first_active_listing_id: uuid.UUID | None = None
     first_active_listing_title: str | None = None
+    # --- migration 0039 attributes ---
+    furnishing_status: FurnishingStatus | None = None
+    completion_status: CompletionStatus | None = None
+    ownership_type: OwnershipType | None = None
+    view_orientation: ViewOrientation | None = None
+    service_charge_aed_sqft: Decimal | None = None
+    rera_permit_number: str | None = None
+    plot_area_sqft: int | None = None
+    parking_spaces: int | None = None
+    floor_level: str | None = None
+    fit_out_status: FitOutStatus | None = None
+    ceiling_height_m: Decimal | None = None
+    handover_year: int | None = None
+    handover_quarter: int | None = None
+    payment_plan: bool = False
     created_at: datetime
     updated_at: datetime
 

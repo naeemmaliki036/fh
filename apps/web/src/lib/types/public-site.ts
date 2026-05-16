@@ -215,9 +215,14 @@ export interface PublicListingsParams {
   min_price?: number | null;
   max_price?: number | null;
   beds?: number | null;
+  baths?: number | null;
   min_bedrooms?: number | null;
   max_bedrooms?: number | null;
   property_type?: string | null;
   city?: string | null;
   area?: string | null;
+  amenities?: string | null;
+  furnishing_status?: string | null;
+  completion_status?: string | null;
+  view_orientation?: string | null;
 }

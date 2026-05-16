@@ -14,6 +14,7 @@ from apps.api.models.property_agent import PropertyAgent
 from apps.api.services._media_thumbs import batch_first_active_listing, batch_first_media
 from apps.api.services.audit_service import AuditService
 from apps.api.services.base import BaseService
+from apps.api.services.property_filters import apply_property_attribute_filters
 from packages.common.utils.error_handlers import bad_request, forbidden, not_found
 
 _MANAGER_ROLES = {
@@ -58,7 +59,7 @@ class PropertyService(BaseService):
     # Read
     # ------------------------------------------------------------------
 
-    async def list_properties(
+    async def list_properties(  # noqa: PLR0913
         self,
         tenant_id: UUID,
         *,
@@ -82,6 +83,20 @@ class PropertyService(BaseService):
         created_to: date | None = None,
         has_listing: bool | None = None,
         q: str | None = None,
+        # --- migration 0039 attribute filters ---
+        amenities: list[str] | None = None,
+        furnishing_status: str | None = None,
+        completion_status: str | None = None,
+        ownership_type: str | None = None,
+        view_orientation: str | None = None,
+        fit_out_status: str | None = None,
+        min_service_charge_aed_sqft: float | None = None,
+        max_service_charge_aed_sqft: float | None = None,
+        min_plot_area_sqft: int | None = None,
+        max_plot_area_sqft: int | None = None,
+        min_parking_spaces: int | None = None,
+        has_payment_plan: bool | None = None,
+        handover_year: int | None = None,
         sort_by: str = "created_at",
         sort_dir: str = "desc",
         skip: int = 0,
@@ -150,6 +165,23 @@ class PropertyService(BaseService):
                 Property.description.ilike(pattern),
                 Property.internal_reference.ilike(pattern),
             ))
+
+        stmt = apply_property_attribute_filters(
+            stmt,
+            amenities=amenities,
+            furnishing_status=furnishing_status,
+            completion_status=completion_status,
+            ownership_type=ownership_type,
+            view_orientation=view_orientation,
+            fit_out_status=fit_out_status,
+            min_service_charge_aed_sqft=min_service_charge_aed_sqft,
+            max_service_charge_aed_sqft=max_service_charge_aed_sqft,
+            min_plot_area_sqft=min_plot_area_sqft,
+            max_plot_area_sqft=max_plot_area_sqft,
+            min_parking_spaces=min_parking_spaces,
+            has_payment_plan=has_payment_plan,
+            handover_year=handover_year,
+        )
 
         # Sorting
         _sort_cols = {
@@ -253,6 +285,11 @@ class PropertyService(BaseService):
             "size_sqft", "price", "currency", "address_line", "city", "area",
             "country", "latitude", "longitude", "amenities", "internal_reference",
             "tags",
+            # migration 0039 attributes
+            "furnishing_status", "completion_status", "ownership_type", "view_orientation",
+            "service_charge_aed_sqft", "rera_permit_number", "plot_area_sqft", "parking_spaces",
+            "floor_level", "fit_out_status", "ceiling_height_m", "handover_year",
+            "handover_quarter", "payment_plan",
             # "status" excluded — must go through change_status() for audit trail
         }
         if "country" in updates and updates["country"]:

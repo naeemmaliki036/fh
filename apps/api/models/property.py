@@ -15,13 +15,20 @@ for that migration.
 
 import uuid
 
-from sqlalchemy import Enum, ForeignKey, Numeric, SmallInteger, String, Text, text
+from sqlalchemy import Boolean, Enum, ForeignKey, Integer, Numeric, SmallInteger, String, Text, text
 from sqlalchemy.dialects.postgresql import ARRAY, JSONB, UUID
 from sqlalchemy.orm import Mapped, mapped_column
 
 from packages.common.db.base import Base, TenantMixin, TimestampMixin, UUIDMixin
 
 from .enums import PropertyStatus, PropertyType
+from .property_enums import (
+    CompletionStatus,
+    FitOutStatus,
+    FurnishingStatus,
+    OwnershipType,
+    ViewOrientation,
+)
 
 _ev = lambda x: [e.value for e in x]  # noqa: E731
 
@@ -68,6 +75,62 @@ class Property(Base, UUIDMixin, TimestampMixin, TenantMixin):
     # Array of feature strings — grows without migrations.
     amenities: Mapped[list | None] = mapped_column(
         JSONB, nullable=True, server_default="'[]'::jsonb"
+    )
+
+    # ------------------------------------------------------------------
+    # Structured attributes (migration 0039) — all nullable so existing
+    # rows survive without backfill.
+    # ------------------------------------------------------------------
+    furnishing_status: Mapped[FurnishingStatus | None] = mapped_column(
+        Enum(FurnishingStatus, name="furnishing_status", create_type=False,
+             values_callable=_ev),
+        nullable=True,
+    )
+    completion_status: Mapped[CompletionStatus | None] = mapped_column(
+        Enum(CompletionStatus, name="completion_status", create_type=False,
+             values_callable=_ev),
+        nullable=True,
+    )
+    ownership_type: Mapped[OwnershipType | None] = mapped_column(
+        Enum(OwnershipType, name="ownership_type", create_type=False,
+             values_callable=_ev),
+        nullable=True,
+    )
+    view_orientation: Mapped[ViewOrientation | None] = mapped_column(
+        Enum(ViewOrientation, name="view_orientation", create_type=False,
+             values_callable=_ev),
+        nullable=True,
+    )
+    service_charge_aed_sqft: Mapped[float | None] = mapped_column(
+        Numeric(8, 2), nullable=True
+    )
+    rera_permit_number: Mapped[str | None] = mapped_column(
+        String(64), nullable=True
+    )
+    # Whole sqft only — no decimals on area (user rule).
+    plot_area_sqft: Mapped[int | None] = mapped_column(Integer, nullable=True)
+    parking_spaces: Mapped[int | None] = mapped_column(Integer, nullable=True)
+    # 'low' / 'mid' / 'high' or a numeric string.
+    floor_level: Mapped[str | None] = mapped_column(String(16), nullable=True)
+    # Commercial only.
+    fit_out_status: Mapped[FitOutStatus | None] = mapped_column(
+        Enum(FitOutStatus, name="fit_out_status", create_type=False,
+             values_callable=_ev),
+        nullable=True,
+    )
+    # Warehouse clear-ceiling height in metres.
+    ceiling_height_m: Mapped[float | None] = mapped_column(
+        Numeric(4, 2), nullable=True
+    )
+    # Off-plan delivery window.
+    handover_year: Mapped[int | None] = mapped_column(Integer, nullable=True)
+    # 1–4; DB CHECK constraint enforced in migration.
+    handover_quarter: Mapped[int | None] = mapped_column(
+        SmallInteger, nullable=True
+    )
+    # Off-plan instalment plan available.
+    payment_plan: Mapped[bool] = mapped_column(
+        Boolean, nullable=False, default=False, server_default=text("false")
     )
 
     status: Mapped[PropertyStatus] = mapped_column(

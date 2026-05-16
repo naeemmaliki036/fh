@@ -38,6 +38,13 @@ from .enums import (
     TenantStatus,
     UserStatus,
 )
+from .property_enums import (
+    CompletionStatus,
+    FitOutStatus,
+    FurnishingStatus,
+    OwnershipType,
+    ViewOrientation,
+)
 from .lead import Lead
 from .location import Area, City, Country
 from .off_market_reason import OffMarketReason
@@ -83,6 +90,12 @@ __all__ = [
     "DocumentRequestStatus",
     "DealType",
     "DealStage",
+    # Property attribute enums (migration 0039)
+    "FurnishingStatus",
+    "CompletionStatus",
+    "OwnershipType",
+    "ViewOrientation",
+    "FitOutStatus",
     # Models
     "Tenant",
     "PlatformUser",

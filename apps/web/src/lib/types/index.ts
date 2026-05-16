@@ -98,6 +98,12 @@ export { CustomerConflictError } from "./customer";
 export type {
   PropertyType,
   PropertyStatus,
+  FurnishingStatus,
+  CompletionStatus,
+  OwnershipType,
+  ViewOrientation,
+  FloorLevel,
+  FitOutStatus,
   PropertyAgentAssignment,
   PropertyAgentDetail,
   PropertyAgentCommissionOverrideRequest,
@@ -110,6 +116,8 @@ export type {
   PropertyAgentPatchRequest,
   PropertyStatusChangeRequest,
 } from "./property";
+
+export type { Amenity, AmenityCategory, AmenityCatalog } from "./amenity";
 
 export type {
   ListingPurpose,

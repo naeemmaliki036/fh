@@ -90,7 +90,7 @@ class ListingService(BaseService):
         items = list((await self.session.execute(stmt)).scalars().all())
         return items, len(items)
 
-    async def list_listings(
+    async def list_listings(  # noqa: PLR0913
         self,
         tenant_id: UUID,
         *,
@@ -110,6 +110,16 @@ class ListingService(BaseService):
         valid_from_to: date | None = None,
         valid_until_from: date | None = None,
         q: str | None = None,
+        # --- migration 0039 property-attribute filters ---
+        property_type=None,
+        min_bedrooms: int | None = None,
+        max_bedrooms: int | None = None,
+        min_bathrooms: int | None = None,
+        max_bathrooms: int | None = None,
+        amenities: list[str] | None = None,
+        furnishing_status: str | None = None,
+        completion_status: str | None = None,
+        view_orientation: str | None = None,
         sort_by: str = "created_at",
         sort_dir: str = "desc",
         skip: int = 0,
@@ -128,6 +138,13 @@ class ListingService(BaseService):
             created_from=created_from, created_to=created_to,
             valid_from_to=valid_from_to, valid_until_from=valid_until_from,
             q=q,
+            property_type=property_type,
+            min_bedrooms=min_bedrooms, max_bedrooms=max_bedrooms,
+            min_bathrooms=min_bathrooms, max_bathrooms=max_bathrooms,
+            amenities=amenities,
+            furnishing_status=furnishing_status,
+            completion_status=completion_status,
+            view_orientation=view_orientation,
         )
 
         _col_map = {

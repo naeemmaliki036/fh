@@ -6,9 +6,13 @@ and appends WHERE/JOIN clauses based on the provided filter kwargs.
 
 from __future__ import annotations
 
+import json
 from uuid import UUID
 
-from apps.api.models.enums import ListingPurpose, ListingStatus, ListingTier
+from sqlalchemy import cast
+from sqlalchemy.dialects.postgresql import JSONB
+
+from apps.api.models.enums import ListingPurpose, ListingStatus, ListingTier, PropertyType
 from apps.api.models.listing import Listing
 from apps.api.models.property import Property
 from apps.api.models.property_agent import PropertyAgent
@@ -33,6 +37,16 @@ def apply_listing_filters(  # noqa: PLR0913
     valid_from_to,
     valid_until_from,
     q: str | None,
+    # --- migration 0039 property-attribute filters ---
+    property_type: PropertyType | None = None,
+    min_bedrooms: int | None = None,
+    max_bedrooms: int | None = None,
+    min_bathrooms: int | None = None,
+    max_bathrooms: int | None = None,
+    amenities: list[str] | None = None,
+    furnishing_status: str | None = None,
+    completion_status: str | None = None,
+    view_orientation: str | None = None,
 ):
     """Append optional filter clauses to a Listing SELECT statement.
 
@@ -64,15 +78,45 @@ def apply_listing_filters(  # noqa: PLR0913
     if currency:
         stmt = stmt.where(Listing.currency == currency.upper())
 
-    if country or city or area:
-        if not property_joined:
-            stmt = stmt.join(Property, Listing.property_id == Property.id)
-        if country:
-            stmt = stmt.where(Property.country.ilike(f"%{country}%"))
-        if city:
-            stmt = stmt.where(Property.city.ilike(f"%{city}%"))
-        if area:
-            stmt = stmt.where(Property.area.ilike(f"%{area}%"))
+    # Determine if we need the Property join for any filter below.
+    needs_property = bool(
+        country or city or area or property_type or
+        min_bedrooms is not None or max_bedrooms is not None or
+        min_bathrooms is not None or max_bathrooms is not None or
+        amenities or furnishing_status or completion_status or view_orientation
+    )
+    if needs_property and not property_joined:
+        stmt = stmt.join(Property, Listing.property_id == Property.id)
+        property_joined = True  # noqa: F841 — used above
+
+    if country:
+        stmt = stmt.where(Property.country.ilike(f"%{country}%"))
+    if city:
+        stmt = stmt.where(Property.city.ilike(f"%{city}%"))
+    if area:
+        stmt = stmt.where(Property.area.ilike(f"%{area}%"))
+
+    # --- migration 0039 property-attribute filters ---
+    if property_type:
+        stmt = stmt.where(Property.property_type == property_type)
+    if min_bedrooms is not None:
+        stmt = stmt.where(Property.bedrooms >= min_bedrooms)
+    if max_bedrooms is not None:
+        stmt = stmt.where(Property.bedrooms <= max_bedrooms)
+    if min_bathrooms is not None:
+        stmt = stmt.where(Property.bathrooms >= min_bathrooms)
+    if max_bathrooms is not None:
+        stmt = stmt.where(Property.bathrooms <= max_bathrooms)
+    if amenities:
+        stmt = stmt.where(
+            Property.amenities.op("@>")(cast(json.dumps(amenities), JSONB))
+        )
+    if furnishing_status:
+        stmt = stmt.where(Property.furnishing_status == furnishing_status)
+    if completion_status:
+        stmt = stmt.where(Property.completion_status == completion_status)
+    if view_orientation:
+        stmt = stmt.where(Property.view_orientation == view_orientation)
 
     if created_from:
         stmt = stmt.where(Listing.created_at >= created_from)

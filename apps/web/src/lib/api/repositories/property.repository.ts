@@ -12,6 +12,7 @@ import type {
   PropertyAgentDetail,
   PropertyAgentCommissionOverrideRequest,
 } from "@/lib/types/property";
+import type { AmenityCatalog } from "@/lib/types/amenity";
 import type { Media, MediaListResponse, MediaKind } from "@/lib/types/media";
 
 export class PropertyRepository extends BaseRepository<
@@ -23,6 +24,11 @@ export class PropertyRepository extends BaseRepository<
 
   async listProperties(params?: PropertyListParams): Promise<PropertyListResponse> {
     const res = await this.client.get<PropertyListResponse>(this.basePath, { params });
+    return res.data;
+  }
+
+  async getAmenityCatalog(): Promise<AmenityCatalog> {
+    const res = await this.client.get<AmenityCatalog>(`${this.basePath}/amenity-catalog`);
     return res.data;
   }
 
