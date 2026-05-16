@@ -151,6 +151,7 @@ class ListingReviewService(BaseService):
             note=note,
         )
 
+        await self.session.refresh(listing)
         return listing
 
     # ------------------------------------------------------------------
@@ -212,6 +213,7 @@ class ListingReviewService(BaseService):
             tenant_id=tenant_id,
         )
 
+        await self.session.refresh(listing)
         return listing
 
     # ------------------------------------------------------------------
@@ -243,6 +245,7 @@ class ListingReviewService(BaseService):
             after={"from": ListingStatus.APPROVED.value, "to": ListingStatus.ACTIVE.value},
         )
 
+        await self.session.refresh(listing)
         return listing
 
     # ------------------------------------------------------------------

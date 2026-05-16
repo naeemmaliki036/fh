@@ -41,8 +41,10 @@ def _hero_url(listing) -> str | None:
 
 
 def _to_resp(listing) -> ListingResponse:
-    return ListingResponse.model_validate({
-        **listing.__dict__,
+    # Validate against the ORM instance (from_attributes=True via model config) —
+    # using listing.__dict__ misses attrs expired after session.flush().
+    base = ListingResponse.model_validate(listing)
+    return base.model_copy(update={
         "hero_media_url": _hero_url(listing),
         "thumbnail_url": None,
         "thumbnail_kind": None,
@@ -66,25 +68,14 @@ async def submit_for_review(
     svc: ListingReviewService = Depends(_svc),
 ) -> ListingResponse:
     """Transition draft/changes_requested → pending_review."""
-    import logging, traceback
-    _dbg = logging.getLogger("fh.submit_for_review")
-    try:
-        listing = await svc.submit_for_review(
-            listing_id,
-            tenant_id,
-            current_user,
-            reviewer_id=body.reviewer_id,
-            note=body.note,
-        )
-        try:
-            return _to_resp(listing)
-        except Exception as e_resp:
-            _dbg.exception("submit_for_review _to_resp failed: %s", e_resp)
-            raise
-    except Exception as e:
-        _dbg.exception("submit_for_review failed at service: %s", e)
-        from fastapi import HTTPException
-        raise HTTPException(status_code=500, detail=f"submit_for_review error: {type(e).__name__}: {str(e)[:300]}")
+    listing = await svc.submit_for_review(
+        listing_id,
+        tenant_id,
+        current_user,
+        reviewer_id=body.reviewer_id,
+        note=body.note,
+    )
+    return _to_resp(listing)
 
 
 # ------------------------------------------------------------------
