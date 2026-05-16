@@ -2,7 +2,8 @@
 
 import { useState, useRef, useEffect, Suspense } from "react";
 import Link from "next/link";
-import { Menu, X, Building2, ChevronRight } from "lucide-react";
+import Image from "next/image";
+import { Menu, X, ChevronRight } from "lucide-react";
 import {
   PORTAL_BRAND_NAME,
   AQARFLOW_PORTAL_URL,
@@ -65,11 +66,15 @@ export function MarketplaceHeader(): React.ReactElement {
   return (
     <header className="sticky top-0 z-30 bg-white border-b border-slate-100 shadow-sm">
       <div className="mx-auto flex w-[min(100%-32px,1280px)] items-center justify-between gap-4 py-3">
-        <Link href="/" className="flex items-center gap-2 shrink-0">
-          <Building2 className="h-6 w-6 text-teal-600" />
-          <span className="text-lg font-black tracking-tight text-slate-900">
-            {PORTAL_BRAND_NAME}
-          </span>
+        <Link href="/" className="flex items-center shrink-0" aria-label={PORTAL_BRAND_NAME}>
+          <Image
+            src="/propertypoint-logo@2x.png"
+            alt={PORTAL_BRAND_NAME}
+            width={913}
+            height={200}
+            priority
+            className="h-9 w-auto"
+          />
         </Link>
 
         <nav className="hidden md:flex items-center gap-8 text-sm font-semibold text-slate-600">
