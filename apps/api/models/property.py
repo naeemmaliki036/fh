@@ -157,3 +157,11 @@ class Property(Base, UUIDMixin, TimestampMixin, TenantMixin):
         ForeignKey("users.id", ondelete="SET NULL"),
         nullable=True,
     )
+
+    # Consumer-posted properties (migration 0044). NULL for agency properties.
+    consumer_account_id: Mapped[uuid.UUID | None] = mapped_column(
+        UUID(as_uuid=True),
+        ForeignKey("consumer_accounts.id", ondelete="SET NULL"),
+        nullable=True,
+        index=True,
+    )

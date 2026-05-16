@@ -177,6 +177,15 @@ class AuditAction(str, enum.Enum):
     MARKETPLACE_COUNTRY_UPDATED = "marketplace_country_updated"
     MARKETPLACE_COUNTRY_DELETED = "marketplace_country_deleted"
 
+    # Consumer accounts (added in migration 0044)
+    CONSUMER_ACCOUNT_CREATED = "consumer_account_created"
+    CONSUMER_ACCOUNT_UPDATED = "consumer_account_updated"
+    CONSUMER_ACCOUNT_SUSPENDED = "consumer_account_suspended"
+    CONSUMER_LISTING_PUBLISHED = "consumer_listing_published"
+    CONSUMER_LISTING_EXPIRED = "consumer_listing_expired"
+    CONSUMER_FAVORITE_ADDED = "consumer_favorite_added"
+    CONSUMER_LISTING_LEAD_SUBMITTED = "consumer_listing_lead_submitted"
+
     # Catch-all for ad-hoc events
     OTHER = "other"
 

@@ -1,6 +1,10 @@
 """SQLAlchemy models — imported here for Alembic autogenerate detection."""
 
 from .agent import Agent
+from .consumer_account import ConsumerAccount, ConsumerAccountStatus
+from .consumer_favorite import ConsumerFavorite
+from .consumer_listing_lead import ConsumerListingLead
+from .consumer_otp import ConsumerOtp
 from .audit_log import AuditLog
 from .customer import Customer
 from .customer_listing_interest import CustomerListingInterest
@@ -130,4 +134,10 @@ __all__ = [
     "City",
     "Area",
     "MarketplaceCountry",
+    # Consumer accounts (migration 0044)
+    "ConsumerAccountStatus",
+    "ConsumerAccount",
+    "ConsumerOtp",
+    "ConsumerFavorite",
+    "ConsumerListingLead",
 ]

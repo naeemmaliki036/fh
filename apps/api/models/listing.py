@@ -163,3 +163,20 @@ class Listing(Base, UUIDMixin, TimestampMixin, TenantMixin):
         foreign_keys=[verified_by_user_id],
         lazy="select",
     )
+
+    # ------------------------------------------------------------------
+    # Consumer listing columns (migration 0044)
+    # ------------------------------------------------------------------
+
+    # NULL for agency listings; set for consumer-posted listings.
+    consumer_account_id: Mapped[uuid.UUID | None] = mapped_column(
+        UUID(as_uuid=True),
+        ForeignKey("consumer_accounts.id", ondelete="SET NULL"),
+        nullable=True,
+        index=True,
+    )
+
+    # Consumer listings auto-expire 60 days after publish; NULL for agency listings.
+    expires_at: Mapped[datetime | None] = mapped_column(
+        DateTime(timezone=True), nullable=True, index=True
+    )
