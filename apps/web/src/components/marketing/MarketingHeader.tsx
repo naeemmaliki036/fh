@@ -2,6 +2,7 @@
 
 import React, { useState, useEffect } from "react";
 import Link from "next/link";
+import Image from "next/image";
 import { Menu, X } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils/cn";
@@ -15,13 +16,15 @@ const NAV_LINKS = [
 
 function AqarFlowLogo(): React.ReactElement {
   return (
-    <Link href="/" className="flex items-center gap-2 group">
-      <div className="w-8 h-8 rounded-lg bg-[#0f766e] flex items-center justify-center">
-        <span className="text-white font-bold text-sm leading-none">A</span>
-      </div>
-      <span className="font-bold text-lg tracking-tight text-[#0a0a0a] group-hover:text-[#0f766e] transition-colors">
-        AqarFlow
-      </span>
+    <Link href="/" className="flex items-center group" aria-label="AqarFlow">
+      <Image
+        src="/aqarflow-logo@2x.png"
+        alt="AqarFlow"
+        width={769}
+        height={200}
+        priority
+        className="h-8 w-auto"
+      />
     </Link>
   );
 }

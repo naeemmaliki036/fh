@@ -63,8 +63,8 @@ export default function MarketplaceHomePage(): React.ReactElement {
         {stats && (
           <section className="bg-teal-600 py-3.5 px-4">
             <p className="text-center text-sm font-bold text-white">
-              {PORTAL_BRAND_NAME}: {stats.total_listings.toLocaleString()} listings across{" "}
-              {stats.total_agencies} agencies in {locationLabel}
+              {PORTAL_BRAND_NAME}: {stats.total_listings.toLocaleString()}{" "}
+              {stats.total_listings === 1 ? "listing" : "listings"} in {locationLabel}
             </p>
           </section>
         )}
@@ -113,13 +113,13 @@ export default function MarketplaceHomePage(): React.ReactElement {
             <section>
               <div className="flex items-center justify-between mb-6">
                 <h2 className="text-xl font-black text-slate-900">
-                  Trusted agencies
+                  Browse by partner
                 </h2>
                 <Link
                   href="/agencies"
                   className="flex items-center gap-1 text-sm font-semibold text-teal-600 hover:text-teal-700"
                 >
-                  All agencies <ArrowRight className="h-4 w-4" />
+                  All partners <ArrowRight className="h-4 w-4" />
                 </Link>
               </div>
               <div className="grid grid-cols-3 sm:grid-cols-4 md:grid-cols-6 gap-4">
@@ -195,7 +195,7 @@ function HeroSection({
             <span className="text-teal-600">{locationLabel}</span>
           </h1>
           <p className="mt-4 text-lg text-slate-500">
-            Browse verified listings from {brandName}&apos;s trusted agencies{" "}
+            Browse verified listings on {brandName}{" "}
             {locationLabel !== "worldwide" ? `in ${locationLabel}` : "worldwide"}
           </p>
         </div>
