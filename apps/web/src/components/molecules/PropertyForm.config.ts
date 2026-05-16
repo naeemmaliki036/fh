@@ -23,7 +23,7 @@ export const propertyFormSchema = z.object({
   size_sqft: z.string().optional().nullable()
     .refine((v) => !v || /^\d+(\.\d+)?$/.test(v), "Must be a number"),
   price: z.string().optional().nullable()
-    .refine((v) => !v || /^\d+(\.\d+)?$/.test(v), "Must be a number"),
+    .refine((v) => !v || /^\d+$/.test(v), "Must be a whole number (no decimals)"),
   currency: z.string().optional().nullable(),
   internal_reference: z.string().optional().nullable(),
   address_line: z.string().optional().nullable(),

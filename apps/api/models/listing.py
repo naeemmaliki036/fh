@@ -52,7 +52,7 @@ class Listing(Base, UUIDMixin, TimestampMixin, TenantMixin):
     title: Mapped[str] = mapped_column(String(255), nullable=False)
     description: Mapped[str | None] = mapped_column(Text, nullable=True)
 
-    price: Mapped[float] = mapped_column(Numeric(14, 2), nullable=False)
+    price: Mapped[float] = mapped_column(Numeric(14, 0), nullable=False)
     currency: Mapped[str] = mapped_column(String(8), nullable=False)
 
     # NULL when purpose = sale; required for rent_short / rent_long.

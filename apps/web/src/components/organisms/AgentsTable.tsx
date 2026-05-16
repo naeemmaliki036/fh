@@ -2,7 +2,7 @@
 
 import { useState } from "react";
 import Link from "next/link";
-import { Users, Plus } from "lucide-react";
+import { Users, Plus, Info } from "lucide-react";
 import { useAgents } from "@/hooks/queries/useAgents";
 import { useChangeAgentStatus } from "@/hooks/mutations/useAgentMutations";
 import { StatusBadge } from "@/components/atoms/StatusBadge";
@@ -114,7 +114,18 @@ export function AgentsTable(): React.ReactElement {
                 <th className="px-3 py-3 text-left font-medium">Agent</th>
                 <th className="px-3 py-3 text-left font-medium">License</th>
                 <th className="px-3 py-3 text-left font-medium">Expiry</th>
-                <th className="px-3 py-3 text-left font-medium">Commission</th>
+                <th className="px-3 py-3 text-left font-medium">
+                  <span
+                    className="inline-flex cursor-help items-center gap-1"
+                    title={
+                      "This is the agent's share of the company's earned commission on a deal — not a percentage of the deal value.\n\n" +
+                      "Example: a sale where the company charges 2% on a 1,000,000 deal earns 20,000. If the agent's share is 60%, the agent gets 12,000 and the company keeps 8,000."
+                    }
+                  >
+                    Commission
+                    <Info className="h-3.5 w-3.5 text-muted-foreground" aria-label="Commission help" />
+                  </span>
+                </th>
                 <th className="px-3 py-3 text-left font-medium">Status</th>
                 <th className="px-3 py-3 text-left font-medium">Actions</th>
               </tr>

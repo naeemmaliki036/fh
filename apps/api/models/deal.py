@@ -85,8 +85,8 @@ class Deal(Base, UUIDMixin, TimestampMixin, TenantMixin):
         server_default=DealStage.INITIATED.value,
     )
 
-    # Transaction value — sale price or annual rent amount.
-    transaction_value: Mapped[float] = mapped_column(Numeric(14, 2), nullable=False)
+    # Transaction value — sale price or annual rent amount. Whole-number money.
+    transaction_value: Mapped[float] = mapped_column(Numeric(14, 0), nullable=False)
     transaction_currency: Mapped[str] = mapped_column(String(8), nullable=False)
 
     expected_close_at: Mapped[date | None] = mapped_column(Date, nullable=True)
@@ -107,8 +107,8 @@ class Deal(Base, UUIDMixin, TimestampMixin, TenantMixin):
         nullable=False,
     )
 
-    # Percentage (e.g. 2.5000) or fixed amount in transaction_currency.
-    commission_value: Mapped[float] = mapped_column(Numeric(14, 4), nullable=False)
+    # Percentage (e.g. 2.50) or fixed amount in transaction_currency.
+    commission_value: Mapped[float] = mapped_column(Numeric(14, 2), nullable=False)
 
     # True when value differs from agent default OR after a POST override.
     commission_overridden: Mapped[bool] = mapped_column(
@@ -128,9 +128,9 @@ class Deal(Base, UUIDMixin, TimestampMixin, TenantMixin):
         server_default=CommissionPayoutStatus.PENDING.value,
     )
 
-    # Running total paid; updated as payments are recorded.
+    # Running total paid; updated as payments are recorded. Whole-number money.
     commission_paid_amount: Mapped[float] = mapped_column(
-        Numeric(14, 2), nullable=False, default=0, server_default="0"
+        Numeric(14, 0), nullable=False, default=0, server_default="0"
     )
 
     commission_paid_at: Mapped[datetime | None] = mapped_column(

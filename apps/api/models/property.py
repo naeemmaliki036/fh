@@ -51,7 +51,7 @@ class Property(Base, UUIDMixin, TimestampMixin, TenantMixin):
     )
 
     # Base asking price — listing price may differ.
-    price: Mapped[float | None] = mapped_column(Numeric(14, 2), nullable=True)
+    price: Mapped[float | None] = mapped_column(Numeric(14, 0), nullable=True)
     # Currency defaults to tenant.currency at service layer; not a column default.
     currency: Mapped[str | None] = mapped_column(String(8), nullable=True)
 

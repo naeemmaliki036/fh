@@ -227,8 +227,8 @@ export function PropertyForm({ defaultValues, showStatus, isPending, submitLabel
         <SectionHeader label="Pricing" />
         <div className="grid grid-cols-2 gap-3">
           <div className="space-y-1">
-            <Label>Price <span className="text-xs text-muted-foreground">(optional)</span></Label>
-            <Input {...register("price")} />
+            <Label>Price <span className="text-xs text-muted-foreground">(whole number)</span></Label>
+            <Input type="number" min="0" step="1" inputMode="numeric" {...register("price")} />
             {errors.price && <p className="text-xs text-destructive">{errors.price.message}</p>}
           </div>
           <div className="space-y-1">

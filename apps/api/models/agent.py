@@ -59,9 +59,10 @@ class Agent(Base, UUIDMixin, TimestampMixin, TenantMixin):
         server_default=CommissionType.PERCENTAGE.value,
     )
 
-    # Stored as Numeric(12,4): e.g. 2.5000 = 2.5% or 5000.0000 AED fixed.
+    # Stored as Numeric(12,2): e.g. 60.00 = agent's 60% share of company commission,
+    # or 5000.00 AED fixed.
     default_commission_value: Mapped[float] = mapped_column(
-        Numeric(12, 4),
+        Numeric(12, 2),
         nullable=False,
         default=0,
         server_default="0",

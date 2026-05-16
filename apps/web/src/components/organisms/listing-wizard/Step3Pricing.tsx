@@ -41,9 +41,13 @@ export function Step3Pricing({ control, register, errors, disabled }: Step3Prici
 
       <div className="grid grid-cols-2 gap-4">
         <div className="space-y-1.5">
-          <Label htmlFor="wizard-price">Price</Label>
+          <Label htmlFor="wizard-price">Price <span className="text-xs text-muted-foreground">(whole number)</span></Label>
           <Input
             id="wizard-price"
+            type="number"
+            min="0"
+            step="1"
+            inputMode="numeric"
             {...register("price")}
             disabled={disabled}
             placeholder="e.g. 1500000"

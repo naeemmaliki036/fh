@@ -14,6 +14,7 @@ export const wizardSchema = z
     price: z
       .string()
       .min(1, "Price required")
+      .regex(/^\d+$/, "Whole number only (no decimals)")
       .refine((s) => Number(s) > 0, "Must be a positive number"),
     currency: z.string().min(1),
     listing_tier: z.enum(TIERS).default("standard"),

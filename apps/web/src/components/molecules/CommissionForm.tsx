@@ -12,7 +12,7 @@ import type { DealCommissionOverrideRequest } from "@/lib/types/deal";
 const schema = z
   .object({
     commission_type: z.enum(["percentage", "fixed"]),
-    commission_value: z.string().min(1, "Value required"),
+    commission_value: z.string().min(1, "Value required").regex(/^\d+(\.\d{1,2})?$/, "Max 2 decimal places"),
     override_reason: z.string().min(5, "Reason must be at least 5 characters"),
   })
   .superRefine((v, ctx) => {

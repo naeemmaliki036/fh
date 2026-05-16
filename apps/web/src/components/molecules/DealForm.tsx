@@ -17,9 +17,10 @@ import type { DealCreateRequest, DealType } from "@/lib/types/deal";
 
 const DEAL_TYPES: DealType[] = ["sale", "rent_short", "rent_long"];
 
-const _numericString = z
+const _wholeNumberString = z
   .string()
   .min(1, "Value required")
+  .regex(/^\d+$/, "Whole number only (no decimals)")
   .refine((s) => Number(s) > 0, "Must be a positive number");
 
 const schema = z
@@ -30,13 +31,16 @@ const schema = z
     secondary_agent_id: z.string().optional(),
     primary_commission_pct: z.string().optional(),
     secondary_commission_pct: z.string().optional(),
-    transaction_value: _numericString,
+    transaction_value: _wholeNumberString,
     transaction_currency: z.string().min(3).max(3),
     expected_close_at: z.string().optional(),
     notes: z.string().optional(),
     commission_override: z.boolean().default(false),
     commission_type: z.enum(["percentage", "fixed"]).optional(),
-    commission_value: z.string().optional(),
+    commission_value: z.string().optional().refine(
+      (s) => !s || /^\d+(\.\d{1,2})?$/.test(s),
+      "Max 2 decimal places",
+    ),
     commission_override_reason: z.string().optional(),
   })
   .superRefine((v, ctx) => {
@@ -184,8 +188,8 @@ export function DealForm({ agents, isPending, onSubmit, onCancel }: DealFormProp
           <Input type="date" {...register("expected_close_at")} />
         </div>
         <div className="space-y-1.5">
-          <Label>Transaction Value *</Label>
-          <Input {...register("transaction_value")} type="number" min="0" step="0.01" placeholder="0" />
+          <Label>Transaction Value * <span className="text-xs text-muted-foreground">(whole number)</span></Label>
+          <Input {...register("transaction_value")} type="number" min="0" step="1" inputMode="numeric" placeholder="0" />
           {errors.transaction_value && <p className="text-xs text-destructive">{errors.transaction_value.message}</p>}
         </div>
         <div className="space-y-1.5">

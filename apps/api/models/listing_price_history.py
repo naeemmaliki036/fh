@@ -32,8 +32,8 @@ class ListingPriceHistory(Base, UUIDMixin):
         index=True,
     )
 
-    old_price: Mapped[float] = mapped_column(Numeric(14, 2), nullable=False)
-    new_price: Mapped[float] = mapped_column(Numeric(14, 2), nullable=False)
+    old_price: Mapped[float] = mapped_column(Numeric(14, 0), nullable=False)
+    new_price: Mapped[float] = mapped_column(Numeric(14, 0), nullable=False)
 
     # ISO 4217 currency code — CHAR(3) matches migration DDL.
     currency: Mapped[str] = mapped_column(CHAR(3), nullable=False)
