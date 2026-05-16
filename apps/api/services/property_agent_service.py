@@ -96,6 +96,7 @@ class PropertyAgentService(BaseService):
         )
         self.session.add(pa)
         await self.session.flush()
+        await self.session.refresh(pa)
         return pa
 
     # ------------------------------------------------------------------
@@ -119,6 +120,7 @@ class PropertyAgentService(BaseService):
 
         pa.is_primary = is_primary
         await self.session.flush()
+        await self.session.refresh(pa)
         return pa
 
     # ------------------------------------------------------------------
@@ -195,6 +197,7 @@ class PropertyAgentService(BaseService):
                 "agent_id": str(agent_id),
             },
         )
+        await self.session.refresh(pa)
         return pa
 
     async def clear_commission_override(
@@ -231,4 +234,5 @@ class PropertyAgentService(BaseService):
             before=before,
             after={"agent_id": str(agent_id)},
         )
+        await self.session.refresh(pa)
         return pa

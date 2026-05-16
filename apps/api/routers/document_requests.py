@@ -28,8 +28,7 @@ def _svc(db: DbSession) -> DocumentRequestService:
 def _to_resp(data: dict) -> DocumentRequestResponse:
     dr = data["request"]
     items = data["items"]
-    return DocumentRequestResponse.model_validate({
-        **dr.__dict__,
+    return DocumentRequestResponse.model_validate(dr).model_copy(update={
         "items": items,
         "items_count": len(items),
         "uploaded_count": data["uploaded_count"],
@@ -55,8 +54,7 @@ async def create_document_request(
         items_data=[it.model_dump() for it in body.items],
         expires_in_days=body.expires_in_days,
     )
-    return DocumentRequestCreateResponse.model_validate({
-        **dr.__dict__,
+    return DocumentRequestCreateResponse.model_validate(dr).model_copy(update={
         "items": items,
         "items_count": len(items),
         "uploaded_count": 0,

@@ -58,13 +58,14 @@ def _to_resp(
     enrichments: dict | None = None,
 ) -> ListingResponse:
     thumb = (thumbnails or {}).get(str(listing.id), {})
-    return ListingResponse.model_validate({
-        **listing.__dict__,
+    update: dict = {
         "hero_media_url": _hero_url(listing),
         "thumbnail_url": thumb.get("thumbnail_url"),
         "thumbnail_kind": thumb.get("thumbnail_kind"),
-        **(enrichments or {}),
-    })
+    }
+    if enrichments:
+        update.update(enrichments)
+    return ListingResponse.model_validate(listing).model_copy(update=update)
 
 
 # ------------------------------------------------------------------

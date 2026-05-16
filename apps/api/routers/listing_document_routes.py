@@ -19,7 +19,7 @@ def _svc(db: DbSession) -> ListingDocumentService:
 
 
 def _to_resp(doc, url: str) -> ListingDocumentResponse:
-    return ListingDocumentResponse.model_validate({**doc.__dict__, "url": url})
+    return ListingDocumentResponse.model_validate(doc).model_copy(update={"url": url})
 
 
 @router.post(

@@ -43,7 +43,7 @@ def _to_response(agent, public_base_url: str | None = None) -> AgentResponse:
         if agent.photo_key and public_base_url
         else None
     )
-    return AgentResponse.model_validate({**agent.__dict__, "photo_url": photo_url})
+    return AgentResponse.model_validate(agent).model_copy(update={"photo_url": photo_url})
 
 
 # ------------------------------------------------------------------

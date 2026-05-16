@@ -38,8 +38,7 @@ def _hero_url(listing: Listing) -> str | None:
 
 
 def _to_resp(listing: Listing) -> ListingResponse:
-    return ListingResponse.model_validate({
-        **listing.__dict__,
+    return ListingResponse.model_validate(listing).model_copy(update={
         "hero_media_url": _hero_url(listing),
     })
 

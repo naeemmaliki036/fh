@@ -58,8 +58,7 @@ def _status_svc(db: DbSession) -> PropertyStatusService:
 
 def _to_response(data: dict) -> PropertyResponse:
     prop = data["property"]
-    return PropertyResponse.model_validate({
-        **prop.__dict__,
+    return PropertyResponse.model_validate(prop).model_copy(update={
         "assigned_agents": data["assigned_agents"],
         "media_count": data["media_count"],
         "listing_count": data["listing_count"],

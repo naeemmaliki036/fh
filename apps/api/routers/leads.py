@@ -36,8 +36,7 @@ def _act_svc(db: DbSession) -> LeadActivityService:
 
 def _lead_resp(data: dict) -> LeadResponse:
     lead = data["lead"]
-    return LeadResponse.model_validate({
-        **lead.__dict__,
+    return LeadResponse.model_validate(lead).model_copy(update={
         "customer": data.get("customer"),
         "interest_property": data.get("interest_property"),
         "interest_listing": data.get("interest_listing"),
@@ -46,9 +45,9 @@ def _lead_resp(data: dict) -> LeadResponse:
 
 def _act_resp(row: dict) -> LeadActivityResponse:
     a = row["activity"]
-    return LeadActivityResponse.model_validate(
-        {**a.__dict__, "actor_full_name": row.get("actor_full_name")}
-    )
+    return LeadActivityResponse.model_validate(a).model_copy(update={
+        "actor_full_name": row.get("actor_full_name"),
+    })
 
 
 # ------------------------------------------------------------------
@@ -180,7 +179,7 @@ async def create_activity(
         lead_id, tenant_id, current_user,
         body.kind, body.description, body.activity_metadata,
     )
-    return LeadActivityResponse.model_validate({**activity.__dict__, "actor_full_name": None})
+    return LeadActivityResponse.model_validate(activity).model_copy(update={"actor_full_name": None})
 
 
 @router.delete("/{lead_id}/activities/{activity_id}", status_code=204)

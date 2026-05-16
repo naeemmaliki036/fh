@@ -50,8 +50,7 @@ def _to_response(data: dict) -> DealResponse:
     customer = data.get("customer")
     agent = data.get("primary_agent")
     prop = data.get("interest_property")
-    return DealResponse.model_validate({
-        **deal.__dict__,
+    return DealResponse.model_validate(deal).model_copy(update={
         "commission_amount": commission_amount,
         "customer": CustomerSummary.model_validate(customer) if customer else None,
         "primary_agent": AgentSummary.model_validate(agent) if agent else None,
@@ -60,7 +59,7 @@ def _to_response(data: dict) -> DealResponse:
 
 
 def _deal_from_deal(deal, commission_amount: Decimal) -> DealResponse:
-    return DealResponse.model_validate({**deal.__dict__, "commission_amount": commission_amount})
+    return DealResponse.model_validate(deal).model_copy(update={"commission_amount": commission_amount})
 
 
 # ------------------------------------------------------------------

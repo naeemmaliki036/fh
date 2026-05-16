@@ -170,6 +170,7 @@ class DocumentRequestService(BaseService):
             entity_type="document_request", entity_id=dr.id,
             after={"event": "canceled"},
         )
+        await self.session.refresh(dr)
         return dr
 
     async def regenerate_code(
@@ -191,6 +192,7 @@ class DocumentRequestService(BaseService):
             entity_type="document_request", entity_id=dr.id,
             after={"event": "code_regenerated"},
         )
+        await self.session.refresh(dr)
         return dr, code
 
     # ------------------------------------------------------------------

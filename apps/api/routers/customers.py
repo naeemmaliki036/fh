@@ -112,8 +112,7 @@ async def get_customer(
     """Return customer detail with documents, deal history and listing interests."""
     data = await svc.get_customer_detail(customer_id, tenant_id)
     customer = data["customer"]
-    return CustomerDetailResponse.model_validate({
-        **customer.__dict__,
+    return CustomerDetailResponse.model_validate(customer).model_copy(update={
         "documents": data["documents"],
         "deal_history": data["deal_history"],
         "interested_listings": data["interested_listings"],

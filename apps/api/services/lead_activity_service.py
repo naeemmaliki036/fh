@@ -47,6 +47,7 @@ class LeadActivityService(BaseService):
         )
         self.session.add(activity)
         await self.session.flush()
+        await self.session.refresh(activity)
         return activity
 
     # ------------------------------------------------------------------
