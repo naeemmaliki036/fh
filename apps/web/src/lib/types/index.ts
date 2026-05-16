@@ -28,6 +28,7 @@ export type {
   TenantLifecycleRequest,
   TenantSendMessageRequest,
   PropertyRefPrefixRequest,
+  AggregatorStatusRequest,
 } from "./tenant";
 
 export type {
@@ -270,6 +271,18 @@ export type {
   OpenHouseListResponse,
   OpenHouseListParams,
 } from "./open-house";
+
+export type {
+  MarketplaceListingItem,
+  MarketplaceListingDetail,
+  MarketplaceTenantSnippet,
+  MarketplaceAgencyItem,
+  MarketplaceAgencyDetail,
+  MarketplaceStats,
+  MarketplaceListingsParams,
+  MarketplaceListingsResponse,
+  MarketplaceAgenciesResponse,
+} from "./marketplace";
 
 export type {
   PublicSiteStats,

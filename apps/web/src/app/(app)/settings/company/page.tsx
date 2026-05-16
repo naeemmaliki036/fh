@@ -15,6 +15,7 @@ import {
 } from "@/components/ui/select";
 import { CURRENCIES } from "@/lib/constants/regions";
 import { PropertyRefPrefixCard, OperatingCountriesField } from "./CompanySettingsHelpers";
+import { BannerUploader } from "./BannerUploader";
 
 const OWNER_ROLES = new Set(["company_owner", "company_admin"]);
 const TIMEZONES = [
@@ -148,6 +149,20 @@ export default function CompanyPage(): React.ReactElement {
                 </div>
               ))}
             </dl>
+          </CardContent>
+        </Card>
+      )}
+
+      {tenant && (
+        <Card className="max-w-2xl">
+          <CardHeader>
+            <CardTitle>Banner Image</CardTitle>
+            <CardDescription>
+              Shown on your marketplace agency profile. 16:9 ratio recommended.
+            </CardDescription>
+          </CardHeader>
+          <CardContent>
+            <BannerUploader currentUrl={tenant.banner_url} canEdit={canEdit} />
           </CardContent>
         </Card>
       )}

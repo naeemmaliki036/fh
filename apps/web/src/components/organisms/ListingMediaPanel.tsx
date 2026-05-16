@@ -1,7 +1,7 @@
 "use client";
 
 import { useRef, useState, type ReactElement } from "react";
-import { Star, Trash2, Film, Image as ImageIcon, LayoutTemplate } from "lucide-react";
+import { Star, Trash2, Film, Image as ImageIcon, LayoutTemplate, Check, Pencil } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import {
@@ -27,8 +27,6 @@ const KINDS: { value: MediaKind; label: string }[] = [
   { value: "video", label: "Video" },
   { value: "floorplan", label: "Floorplan" },
 ];
-const KIND_VALUES = KINDS.map((k) => k.value) as [MediaKind, ...MediaKind[]];
-
 interface ListingMediaPanelProps {
   listingId: string;
   propertyId: string;
@@ -51,6 +49,8 @@ export function ListingMediaPanel({
   const [fileErr, setFileErr] = useState<string | null>(null);
   const [selectedKind, setSelectedKind] = useState<MediaKind>("image");
   const [deleteTarget, setDeleteTarget] = useState<Media | null>(null);
+  const [editingAltId, setEditingAltId] = useState<string | null>(null);
+  const [altDraft, setAltDraft] = useState<string>("");
 
   const { data: media = [], isLoading } = usePropertyMedia(propertyId);
   const { mutate: upload, isPending: uploading } = useUploadMedia(propertyId);
@@ -154,13 +154,6 @@ export function ListingMediaPanel({
                 isHero && "ring-2 ring-primary",
               )}
             >
-              {/* Hero crown */}
-              {isHero && (
-                <div className="absolute top-1.5 left-1.5 z-10">
-                  <Star className="h-4 w-4 text-yellow-500 fill-yellow-400" />
-                </div>
-              )}
-
               {/* Type badge */}
               <div className="absolute top-1.5 right-1.5 z-10">
                 <Badge variant="secondary" className="text-xs gap-1 py-0 px-1.5">
@@ -192,44 +185,41 @@ export function ListingMediaPanel({
                 }
               </div>
 
-              {/* Floor plan badge */}
-              {m.is_floor_plan && (
-                <div className="absolute bottom-1.5 left-1.5 z-10">
-                  <span className="inline-flex items-center gap-0.5 rounded bg-blue-100 px-1 py-0.5 text-[10px] font-semibold text-blue-700">
-                    <LayoutTemplate className="h-2.5 w-2.5" />Floor plan
-                  </span>
-                </div>
-              )}
-
               {/* Actions */}
               <div className="p-2 flex items-center justify-between gap-1">
+                {/* Hero button */}
                 <button
                   type="button"
                   className={cn(
                     "flex items-center gap-1 text-xs rounded px-1.5 py-0.5 transition-colors",
                     isHero
-                      ? "text-yellow-600 font-medium"
-                      : "text-muted-foreground hover:text-primary",
+                      ? "text-amber-600 font-bold"
+                      : "text-muted-foreground hover:text-amber-600",
                   )}
                   disabled={isHero || settingHero}
                   onClick={() => setHero({ media_id: m.id })}
-                  title={isHero ? "Current hero" : "Set as hero"}
+                  title={isHero ? "Current hero image" : "Set as hero image"}
                 >
-                  <Star className={cn("h-3 w-3", isHero && "fill-current")} />
-                  {isHero ? "Hero" : "Set hero"}
+                  <Star className={cn("h-3 w-3", isHero && "fill-current text-amber-500")} />
+                  Hero
                 </button>
 
+                {/* Floor plan button — no badge below, single control */}
                 <button
                   type="button"
                   className={cn(
-                    "flex items-center gap-1 text-xs rounded px-1.5 py-0.5 transition-colors",
-                    m.is_floor_plan ? "text-blue-600 font-medium" : "text-muted-foreground hover:text-blue-500",
+                    "flex items-center gap-1 text-xs rounded px-1.5 py-0.5 border transition-colors",
+                    m.is_floor_plan
+                      ? "border-blue-500 bg-blue-500 text-white font-bold"
+                      : "border-border text-muted-foreground hover:border-blue-400 hover:text-blue-500",
                   )}
                   onClick={() => updateMedia({ id: m.id, is_floor_plan: !m.is_floor_plan })}
                   title={m.is_floor_plan ? "Remove floor plan tag" : "Mark as floor plan"}
                 >
-                  <LayoutTemplate className="h-3 w-3" />
-                  {m.is_floor_plan ? "Floor plan" : "Tag"}
+                  {m.is_floor_plan
+                    ? <><Check className="h-3 w-3" /> Floor plan</>
+                    : <><LayoutTemplate className="h-3 w-3" /> Floor plan</>
+                  }
                 </button>
 
                 <Button
@@ -244,9 +234,43 @@ export function ListingMediaPanel({
                 </Button>
               </div>
 
-              <p className="px-2 pb-1.5 text-xs text-muted-foreground truncate">
-                {formatBytes(m.size_bytes)}
-              </p>
+              {/* Alt text inline edit */}
+              <div className="group/alt px-2 pb-1.5 flex items-center gap-1">
+                {editingAltId === m.id ? (
+                  <input
+                    autoFocus
+                    value={altDraft}
+                    onChange={(e) => setAltDraft(e.target.value)}
+                    onBlur={() => {
+                      updateMedia({ id: m.id, alt_text: altDraft || undefined });
+                      setEditingAltId(null);
+                    }}
+                    onKeyDown={(e) => {
+                      if (e.key === "Enter") {
+                        updateMedia({ id: m.id, alt_text: altDraft || undefined });
+                        setEditingAltId(null);
+                      }
+                      if (e.key === "Escape") setEditingAltId(null);
+                    }}
+                    className="flex-1 text-xs border-b border-primary bg-transparent outline-none text-foreground"
+                    placeholder="Alt text..."
+                  />
+                ) : (
+                  <>
+                    <p className="flex-1 text-xs text-muted-foreground truncate">
+                      {m.alt_text ?? formatBytes(m.size_bytes)}
+                    </p>
+                    <button
+                      type="button"
+                      onClick={() => { setEditingAltId(m.id); setAltDraft(m.alt_text ?? ""); }}
+                      className="opacity-0 group-hover/alt:opacity-100 transition-opacity"
+                      aria-label="Edit alt text"
+                    >
+                      <Pencil className="h-2.5 w-2.5 text-muted-foreground hover:text-foreground" />
+                    </button>
+                  </>
+                )}
+              </div>
             </div>
           );
         })}

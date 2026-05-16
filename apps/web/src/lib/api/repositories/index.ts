@@ -27,3 +27,4 @@ export { privateDocumentRepository } from "./private-document.repository";
 export { listingInterestedCustomersRepository } from "./listing-interested-customers.repository";
 export { reportsRepository } from "./reports.repository";
 export { openHouseRepository } from "./open-house.repository";
+export { MarketplaceRepository, marketplaceRepository } from "./marketplace.repository";

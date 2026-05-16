@@ -14,6 +14,10 @@ export interface Tenant {
   contact_email: string;
   contact_phone: string;
   property_ref_prefix: string;
+  banner_url: string | null;
+  aggregator_enabled: boolean;
+  aggregator_disabled_at: string | null;
+  aggregator_disabled_reason: string | null;
   /** Platform master switch — only platform admins can toggle. */
   public_site_feature_enabled: boolean;
   /** Tenant's own on/off toggle. */
@@ -47,6 +51,7 @@ export interface TenantUpdateRequest {
   locale?: string;
   default_properties_view?: PropertiesViewMode;
   operating_countries?: string[];
+  banner_url?: string | null;
 }
 
 export interface TenantListResponse {
@@ -108,3 +113,9 @@ export interface TenantSendMessageRequest {
 export interface PropertyRefPrefixRequest {
   property_ref_prefix: string;
 }
+
+export interface AggregatorStatusRequest {
+  enabled: boolean;
+  reason?: string;
+}
+

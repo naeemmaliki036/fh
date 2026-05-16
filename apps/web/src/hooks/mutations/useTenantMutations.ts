@@ -3,7 +3,7 @@
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { toast } from "sonner";
 import { tenantRepository } from "@/lib/api/repositories";
-import type { Tenant, TenantUpdateRequest } from "@/lib/types";
+import type { Tenant, TenantUpdateRequest, AggregatorStatusRequest } from "@/lib/types";
 import { queryKeys } from "../queryKeys";
 
 export function useApproveTenant() {
@@ -47,6 +47,25 @@ export function useUpdateMyTenant() {
     onSuccess: (data) => {
       queryClient.setQueryData(queryKeys.tenants.my, data);
       toast.success("Company settings saved");
+    },
+    onError: (error: Error) => {
+      toast.error(error.message);
+    },
+  });
+}
+
+export function useSetAggregatorStatus() {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: ({ id, data }: { id: string; data: AggregatorStatusRequest }): Promise<Tenant> =>
+      tenantRepository.setAggregatorStatus(id, data),
+    onSuccess: (updated) => {
+      queryClient.invalidateQueries({ queryKey: queryKeys.tenants.all });
+      queryClient.setQueryData(queryKeys.tenants.adminDetail(updated.id), (prev: unknown) =>
+        prev ? { ...(prev as object), ...updated } : updated,
+      );
+      toast.success("Aggregator status updated");
     },
     onError: (error: Error) => {
       toast.error(error.message);

@@ -20,6 +20,7 @@ import {
   useSetPublicSiteFeature,
   useSetTenantMediaLimits,
 } from "@/hooks/mutations/useTenantLifecycleMutations";
+import { useSetAggregatorStatus } from "@/hooks/mutations/useTenantMutations";
 import { ToggleSwitch } from "@/components/ui/toggle-switch";
 
 // Floors must match server-side MEDIA_LIMITS_FLOOR
@@ -37,7 +38,9 @@ interface TenantSettingsTabProps {
 export function TenantSettingsTab({ tenant }: TenantSettingsTabProps): ReactElement {
   const active = new Set(tenant.operating_countries);
   const [editOpen, setEditOpen] = useState(false);
+  const [disableReason, setDisableReason] = useState("");
   const { mutate: setFeature, isPending: featurePending } = useSetPublicSiteFeature();
+  const { mutate: setAggregator, isPending: aggregatorPending } = useSetAggregatorStatus();
 
   return (
     <div className="space-y-4">
@@ -71,6 +74,57 @@ export function TenantSettingsTab({ tenant }: TenantSettingsTabProps): ReactElem
           </div>
         </CardContent>
       </Card>
+      {/* Aggregator / marketplace inclusion */}
+      <Card>
+        <CardHeader>
+          <CardTitle className="text-base">Marketplace Inclusion</CardTitle>
+          <CardDescription>
+            Controls whether this agency appears in the public marketplace.
+            When disabled, their listings are excluded from all marketplace endpoints.
+          </CardDescription>
+        </CardHeader>
+        <CardContent className="space-y-3">
+          <div className="flex items-center justify-between gap-4">
+            <div>
+              <p className="text-sm font-medium">
+                {tenant.aggregator_enabled ? "Included in marketplace" : "Excluded from marketplace"}
+              </p>
+              {tenant.aggregator_disabled_at && !tenant.aggregator_enabled && (
+                <p className="text-xs text-muted-foreground mt-0.5">
+                  Disabled {new Date(tenant.aggregator_disabled_at).toLocaleDateString()}
+                  {tenant.aggregator_disabled_reason && ` — ${tenant.aggregator_disabled_reason}`}
+                </p>
+              )}
+            </div>
+            <ToggleSwitch
+              checked={tenant.aggregator_enabled ?? true}
+              onCheckedChange={(v) => {
+                if (!v && !disableReason.trim()) return;
+                setAggregator({
+                  id: tenant.id,
+                  data: { enabled: v, reason: v ? undefined : disableReason.trim() },
+                });
+              }}
+              disabled={aggregatorPending}
+            />
+          </div>
+          {(!tenant.aggregator_enabled || aggregatorPending) && (
+            <div>
+              <label className="text-xs font-medium text-muted-foreground">
+                Reason (required when disabling)
+              </label>
+              <textarea
+                rows={2}
+                value={disableReason}
+                onChange={(e) => setDisableReason(e.target.value)}
+                placeholder="Policy violation, duplicate, etc."
+                className="mt-1 w-full rounded-md border border-input bg-transparent px-3 py-2 text-sm resize-none focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring"
+              />
+            </div>
+          )}
+        </CardContent>
+      </Card>
+
       <Card>
         <CardHeader>
           <CardTitle className="text-base">Operating Countries</CardTitle>

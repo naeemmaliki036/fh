@@ -1,7 +1,7 @@
 import type { AxiosInstance } from "axios";
 import { platformApiClient, tenantApiClient } from "../client";
 import { BaseRepository } from "./base.repository";
-import type { Tenant, TenantListResponse, TenantUpdateRequest, PropertyRefPrefixRequest } from "@/lib/types";
+import type { Tenant, TenantListResponse, TenantUpdateRequest, PropertyRefPrefixRequest, AggregatorStatusRequest } from "@/lib/types";
 
 export class TenantRepository extends BaseRepository<Tenant, never, TenantUpdateRequest> {
   protected readonly basePath = "/tenants";
@@ -49,6 +49,14 @@ export class TenantRepository extends BaseRepository<Tenant, never, TenantUpdate
 
   async updatePropertyRefPrefix(_tenantId: string, data: PropertyRefPrefixRequest): Promise<Tenant> {
     const res = await this.client.patch<Tenant>(`${this.basePath}/me`, data);
+    return res.data;
+  }
+
+  async setAggregatorStatus(id: string, data: AggregatorStatusRequest): Promise<Tenant> {
+    const res = await this.platformClient.patch<Tenant>(
+      `${this.basePath}/${id}/aggregator-status`,
+      data,
+    );
     return res.data;
   }
 }

@@ -123,7 +123,7 @@ export function ListingWizard({ mode, initial, initialStep }: ListingWizardProps
 
   return (
     <div className="flex gap-8">
-      <WizardSidebar currentStep={currentStep} completedSteps={completedSteps} />
+      <WizardSidebar currentStep={currentStep} completedSteps={completedSteps} onStepClick={goTo} />
 
       <div className="flex-1 min-w-0 space-y-6">
         {initial && <WizardStatusBanner listing={initial} />}
