@@ -82,8 +82,10 @@ export async function getFeatured(
   c: AxiosInstance,
   country?: string,
 ): Promise<MarketplaceListingItem[]> {
-  const res = await c.get<MarketplaceListingItem[]>(`${BASE}/featured`, {
+  // Backend returns the paginated wrapper { items, total, page, page_size }.
+  // The exposed contract is an array, so unwrap to .items here.
+  const res = await c.get<MarketplaceListingsResponse>(`${BASE}/featured`, {
     params: country ? { country } : undefined,
   });
-  return res.data;
+  return res.data.items;
 }
