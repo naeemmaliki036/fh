@@ -238,13 +238,20 @@ class ConsumerAuthService(BaseService):
     async def update_consumer(
         self, consumer: ConsumerAccount, updates: dict
     ) -> dict:
+        # The `consumer` passed in came from a different session (the auth
+        # dependency opens its own). Re-fetch it on the current session so
+        # SQLAlchemy actually tracks the mutation.
+        tracked = await self.session.get(ConsumerAccount, consumer.id)
+        if tracked is None:
+            from packages.common.utils.error_handlers import not_found
+            raise not_found("Consumer account")
         if "full_name" in updates and updates["full_name"] is not None:
-            consumer.full_name = updates["full_name"]
+            tracked.full_name = updates["full_name"]
         if "phone" in updates and updates["phone"] is not None:
-            consumer.phone = updates["phone"]
+            tracked.phone = updates["phone"]
         await self.session.flush()
-        await self.session.refresh(consumer)
-        return await self._build_response(consumer)
+        await self.session.refresh(tracked)
+        return await self._build_response(tracked)
 
     async def _build_response(self, consumer: ConsumerAccount) -> dict:
         from apps.api.models.consumer_favorite import ConsumerFavorite

@@ -350,7 +350,10 @@ def upgrade() -> None:
             'en',
             'card',
             ARRAY['AE','SA','QA','BH','KW']::text[],
-            false,
+            -- public_site_enabled: TRUE so consumer listings clear the
+            -- marketplace tenant gate. We don't actually serve a /p/{slug}
+            -- page for this tenant; the flag is just the gate.
+            true,
             false,
             true,
             'PPD'
