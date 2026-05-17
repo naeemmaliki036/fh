@@ -2,7 +2,7 @@
 
 import { useState } from "react";
 import { useRouter } from "next/navigation";
-import { Search, Flame } from "lucide-react";
+import { Search, Flame, Sparkles } from "lucide-react";
 import type { MarketplaceStats, MarketplaceCountryItem } from "@fh/portal-types";
 
 // ---------------------------------------------------------------------------
@@ -248,6 +248,17 @@ function SearchPanel({
           Search
         </button>
       </form>
+
+      {/* AI search teaser — UI placeholder only, no implementation yet */}
+      <div className="flex items-center justify-center gap-2 pt-1 text-[11px] text-white/70">
+        <Sparkles className="h-3.5 w-3.5 text-amber-300" />
+        <span>
+          AI search <span className="italic">— &ldquo;find me a 2BR near a school under 1.5M&rdquo;</span>
+        </span>
+        <span className="rounded-full bg-amber-400/20 px-2 py-0.5 text-[10px] font-bold uppercase tracking-wider text-amber-200 ring-1 ring-amber-300/40">
+          Coming soon
+        </span>
+      </div>
     </div>
   );
 }
