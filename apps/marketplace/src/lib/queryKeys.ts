@@ -12,4 +12,9 @@ export const queryKeys = {
     stats: (country?: string) => ["marketplace", "stats", country] as const,
     featured: (country?: string) => ["marketplace", "featured", country] as const,
   },
+  consumer: {
+    me: ["consumer", "me"] as const,
+    myListings: (page?: number) => ["consumer", "my-listings", page] as const,
+    myFavorites: (page?: number) => ["consumer", "my-favorites", page] as const,
+  },
 } as const;

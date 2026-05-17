@@ -3,13 +3,15 @@
 import { useState, useRef, useEffect, Suspense } from "react";
 import Link from "next/link";
 import Image from "next/image";
-import { Menu, X, ChevronRight } from "lucide-react";
+import { useRouter } from "next/navigation";
+import { Menu, X, ChevronRight, ChevronDown, Home, Heart, User, LogOut } from "lucide-react";
 import {
   PORTAL_BRAND_NAME,
   AQARFLOW_PORTAL_URL,
   AQARFLOW_BRAND_NAME,
 } from "@/lib/portal-brand";
 import { CountrySelector } from "@/components/CountrySelector";
+import { useConsumer } from "@/lib/consumer-context";
 
 function AgencyDropdown(): React.ReactElement {
   const [open, setOpen] = useState(false);
@@ -17,9 +19,7 @@ function AgencyDropdown(): React.ReactElement {
 
   useEffect(() => {
     function onOutside(e: MouseEvent): void {
-      if (ref.current && !ref.current.contains(e.target as Node)) {
-        setOpen(false);
-      }
+      if (ref.current && !ref.current.contains(e.target as Node)) setOpen(false);
     }
     if (open) document.addEventListener("mousedown", onOutside);
     return () => document.removeEventListener("mousedown", onOutside);
@@ -33,7 +33,6 @@ function AgencyDropdown(): React.ReactElement {
       >
         For agencies
       </button>
-
       {open && (
         <div className="absolute right-0 top-full mt-2 w-72 rounded-2xl border border-slate-100 bg-white shadow-xl p-4 z-50">
           <p className="text-[10px] font-bold uppercase tracking-wider text-teal-600 mb-1">
@@ -60,8 +59,98 @@ function AgencyDropdown(): React.ReactElement {
   );
 }
 
+function AvatarDropdown(): React.ReactElement {
+  const [open, setOpen] = useState(false);
+  const ref = useRef<HTMLDivElement>(null);
+  const router = useRouter();
+  const { consumer, signOut } = useConsumer();
+
+  useEffect(() => {
+    function onOutside(e: MouseEvent): void {
+      if (ref.current && !ref.current.contains(e.target as Node)) setOpen(false);
+    }
+    if (open) document.addEventListener("mousedown", onOutside);
+    return () => document.removeEventListener("mousedown", onOutside);
+  }, [open]);
+
+  const initials = (consumer?.full_name ?? consumer?.email ?? "?")
+    .split(/\s+/)
+    .slice(0, 2)
+    .map((w) => w[0]?.toUpperCase() ?? "")
+    .join("");
+
+  function handleSignOut(): void {
+    signOut();
+    setOpen(false);
+    router.replace("/");
+  }
+
+  return (
+    <div ref={ref} className="relative">
+      <button
+        onClick={() => setOpen((v) => !v)}
+        className="flex items-center gap-1.5 rounded-full border border-slate-200 px-2 py-1 hover:border-teal-300 transition"
+        aria-label="Account menu"
+      >
+        <span className="h-7 w-7 rounded-full bg-teal-100 flex items-center justify-center text-xs font-black text-teal-700">
+          {initials || "?"}
+        </span>
+        <ChevronDown className="h-3.5 w-3.5 text-slate-400" />
+      </button>
+
+      {open && (
+        <div className="absolute right-0 top-full mt-2 w-48 rounded-2xl border border-slate-100 bg-white shadow-xl py-2 z-50">
+          <Link
+            href="/me/listings"
+            onClick={() => setOpen(false)}
+            className="flex items-center gap-2.5 px-4 py-2 text-sm text-slate-700 hover:bg-slate-50 transition"
+          >
+            <Home className="h-4 w-4 text-slate-400" /> My listings
+          </Link>
+          <Link
+            href="/me/favorites"
+            onClick={() => setOpen(false)}
+            className="flex items-center gap-2.5 px-4 py-2 text-sm text-slate-700 hover:bg-slate-50 transition"
+          >
+            <Heart className="h-4 w-4 text-slate-400" /> Favorites
+          </Link>
+          <Link
+            href="/me/profile"
+            onClick={() => setOpen(false)}
+            className="flex items-center gap-2.5 px-4 py-2 text-sm text-slate-700 hover:bg-slate-50 transition"
+          >
+            <User className="h-4 w-4 text-slate-400" /> Profile
+          </Link>
+          <div className="border-t border-slate-100 my-1" />
+          <button
+            onClick={handleSignOut}
+            className="flex items-center gap-2.5 px-4 py-2 text-sm text-red-500 hover:bg-red-50 transition w-full text-left"
+          >
+            <LogOut className="h-4 w-4" /> Sign out
+          </button>
+        </div>
+      )}
+    </div>
+  );
+}
+
+function PostPropertyButton(): React.ReactElement {
+  const { token } = useConsumer();
+  const href = token ? "/me/listings/new" : "/login?next=/me/listings/new";
+  return (
+    <Link
+      href={href}
+      className="rounded-full bg-teal-600 px-5 py-2 text-sm font-bold text-white hover:bg-teal-700 transition shrink-0"
+    >
+      Post a property
+    </Link>
+  );
+}
+
 export function MarketplaceHeader(): React.ReactElement {
   const [menuOpen, setMenuOpen] = useState(false);
+  const { token, isHydrated } = useConsumer();
+  const isSignedIn = isHydrated && !!token;
 
   return (
     <header className="sticky top-0 z-30 bg-white border-b border-slate-100 shadow-sm">
@@ -78,28 +167,29 @@ export function MarketplaceHeader(): React.ReactElement {
         </Link>
 
         <nav className="hidden md:flex items-center gap-8 text-sm font-semibold text-slate-600">
-          <Link href="/listings?purpose=sale" className="hover:text-teal-600 transition">
-            Buy
-          </Link>
-          <Link href="/listings?purpose=rent_long" className="hover:text-teal-600 transition">
-            Rent
-          </Link>
-          <Link href="/agencies" className="hover:text-teal-600 transition">
-            Agencies
-          </Link>
+          <Link href="/listings?purpose=sale" className="hover:text-teal-600 transition">Buy</Link>
+          <Link href="/listings?purpose=rent_long" className="hover:text-teal-600 transition">Rent</Link>
+          <Link href="/agencies" className="hover:text-teal-600 transition">Agencies</Link>
         </nav>
 
         <div className="hidden md:flex items-center gap-3 shrink-0">
-          <Suspense>
-            <CountrySelector />
-          </Suspense>
-          <AgencyDropdown />
-          <Link
-            href="/listings"
-            className="rounded-full bg-teal-600 px-5 py-2 text-sm font-bold text-white hover:bg-teal-700 transition"
-          >
-            Browse
-          </Link>
+          <PostPropertyButton />
+          {isSignedIn ? (
+            <AvatarDropdown />
+          ) : (
+            <>
+              <Suspense>
+                <CountrySelector />
+              </Suspense>
+              <AgencyDropdown />
+              <Link
+                href="/login"
+                className="text-sm font-semibold text-slate-500 hover:text-teal-600 transition"
+              >
+                Sign in
+              </Link>
+            </>
+          )}
         </div>
 
         <button
@@ -114,27 +204,32 @@ export function MarketplaceHeader(): React.ReactElement {
       {menuOpen && (
         <div className="md:hidden border-t border-slate-100 bg-white px-5 pb-6 pt-4 space-y-4">
           <nav className="flex flex-col gap-4 text-base font-semibold text-slate-700">
-            <Link href="/listings?purpose=sale" onClick={() => setMenuOpen(false)}>
-              Buy
-            </Link>
-            <Link href="/listings?purpose=rent_long" onClick={() => setMenuOpen(false)}>
-              Rent
-            </Link>
-            <Link href="/agencies" onClick={() => setMenuOpen(false)}>
-              Agencies
-            </Link>
-            <a
-              href={AQARFLOW_PORTAL_URL}
-              target="_blank"
-              rel="noopener noreferrer"
-              className="text-teal-600"
-            >
-              For agencies — {AQARFLOW_BRAND_NAME}
-            </a>
+            <Link href="/listings?purpose=sale" onClick={() => setMenuOpen(false)}>Buy</Link>
+            <Link href="/listings?purpose=rent_long" onClick={() => setMenuOpen(false)}>Rent</Link>
+            <Link href="/agencies" onClick={() => setMenuOpen(false)}>Agencies</Link>
+            {isSignedIn ? (
+              <>
+                <Link href="/me/listings" onClick={() => setMenuOpen(false)}>My listings</Link>
+                <Link href="/me/favorites" onClick={() => setMenuOpen(false)}>Favorites</Link>
+                <Link href="/me/profile" onClick={() => setMenuOpen(false)}>Profile</Link>
+              </>
+            ) : (
+              <>
+                <a href={AQARFLOW_PORTAL_URL} target="_blank" rel="noopener noreferrer" className="text-teal-600">
+                  For agencies — {AQARFLOW_BRAND_NAME}
+                </a>
+                <Link href="/login" onClick={() => setMenuOpen(false)}>Sign in</Link>
+              </>
+            )}
           </nav>
-          <Suspense>
-            <CountrySelector />
-          </Suspense>
+          <div className="pt-2">
+            <PostPropertyButton />
+          </div>
+          {!isSignedIn && (
+            <Suspense>
+              <CountrySelector />
+            </Suspense>
+          )}
         </div>
       )}
     </header>

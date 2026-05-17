@@ -14,10 +14,12 @@ import {
   Building2,
   ShieldCheck,
   Clock,
+  Home,
 } from "lucide-react";
 import { useMarketplaceListing } from "@/hooks/queries/useMarketplaceListing";
 import { useCountry } from "@/lib/country-context";
 import { MarketplaceLeadForm } from "@/components/MarketplaceLeadForm";
+import { ConsumerInquiryForm } from "@/components/ConsumerInquiryForm";
 import { MarketplaceHeader } from "@/components/MarketplaceHeader";
 import { MarketplaceFooter } from "@/components/MarketplaceFooter";
 import { SimilarListings } from "@/components/SimilarListings";
@@ -26,6 +28,7 @@ import { ListingDetailsTable } from "./ListingDetailsTable";
 import { ListingAgentCard } from "./ListingAgentCard";
 import { ListingLocationSection } from "./ListingLocationSection";
 import { PORTAL_BRAND_NAME } from "@/lib/portal-brand";
+import type { MarketplaceListingDetail } from "@fh/portal-types";
 
 interface PageProps {
   params: Promise<{ handle: string }>;
@@ -93,6 +96,12 @@ export default function ListingDetailPage({ params }: PageProps): React.ReactEle
   const isSale = listing.purpose === "sale";
   const postedDays = daysAgo(listing.created_at);
   const amenities = listing.amenities ?? [];
+  const isConsumerListing =
+    (listing as MarketplaceListingDetail & { is_consumer_listing?: boolean })
+      .is_consumer_listing === true;
+  const ownerDisplayName =
+    (listing as MarketplaceListingDetail & { owner_display_name?: string })
+      .owner_display_name ?? "Owner";
 
   return (
     <div className="min-h-screen bg-white flex flex-col">
@@ -122,6 +131,11 @@ export default function ListingDetailPage({ params }: PageProps): React.ReactEle
                   <span className="rounded-full bg-teal-50 text-teal-700 text-xs font-bold px-2.5 py-0.5 capitalize">
                     {listing.property_type.replace(/_/g, " ")}
                   </span>
+                  {isConsumerListing && (
+                    <span className="inline-flex items-center gap-1 rounded-full bg-slate-100 text-slate-700 text-xs font-bold px-2.5 py-0.5">
+                      <Home className="h-3 w-3" /> Listed by {ownerDisplayName}
+                    </span>
+                  )}
                 </div>
                 <h1 className="text-2xl md:text-3xl font-black text-slate-900 leading-tight">
                   {listing.title}
@@ -288,13 +302,17 @@ export default function ListingDetailPage({ params }: PageProps): React.ReactEle
             {/* Right sidebar */}
             <aside className="space-y-4">
               <div className="rounded-2xl border border-slate-100 bg-white shadow-sm p-5">
-                <MarketplaceLeadForm
-                  tenantSlug={listing.tenant.slug}
-                  listingId={String(listing.id)}
-                />
+                {isConsumerListing ? (
+                  <ConsumerInquiryForm listingId={String(listing.id)} />
+                ) : (
+                  <MarketplaceLeadForm
+                    tenantSlug={listing.tenant.slug}
+                    listingId={String(listing.id)}
+                  />
+                )}
               </div>
 
-              <ListingAgentCard listing={listing} />
+              {!isConsumerListing && <ListingAgentCard listing={listing} />}
 
               {/* Mortgage calculator (sale only) */}
               {isSale && (
@@ -306,8 +324,8 @@ export default function ListingDetailPage({ params }: PageProps): React.ReactEle
             </aside>
           </div>
 
-          {/* Agency footer strip */}
-          <div className="rounded-2xl border border-slate-100 bg-white p-5 flex items-center justify-between gap-4 flex-wrap">
+          {/* Agency footer strip — hidden for consumer listings */}
+          {!isConsumerListing && <div className="rounded-2xl border border-slate-100 bg-white p-5 flex items-center justify-between gap-4 flex-wrap">
             <div className="flex items-center gap-4">
               {listing.tenant.logo_url && (
                 <img
@@ -329,7 +347,7 @@ export default function ListingDetailPage({ params }: PageProps): React.ReactEle
             >
               More from this agency <ArrowRight className="h-4 w-4" />
             </Link>
-          </div>
+          </div>}
 
           {/* Similar listings */}
           <SimilarListings

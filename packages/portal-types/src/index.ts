@@ -11,3 +11,22 @@ export type {
   MarketplaceListingsResponse,
   MarketplaceAgenciesResponse,
 } from "./marketplace";
+
+export type {
+  ConsumerResponse,
+  ConsumerAuthResponse,
+  RequestOtpResponse,
+  RequestOtpRequest,
+  VerifyOtpRequest,
+  ConsumerUpdateRequest,
+  ConsumerListingStatus,
+  ConsumerListingPurpose,
+  ConsumerListingItem,
+  ConsumerListingCreateRequest,
+  ConsumerListingUpdateRequest,
+  ConsumerListingMarkStatusRequest,
+  ConsumerListingsResponse,
+  FavoriteToggleResponse,
+  ConsumerListingLeadRequest,
+  ConsumerListingLeadResponse,
+} from "./consumer";

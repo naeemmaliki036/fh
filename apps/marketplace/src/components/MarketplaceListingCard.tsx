@@ -3,6 +3,7 @@
 import Link from "next/link";
 import { MapPin } from "lucide-react";
 import { cn } from "@/lib/cn";
+import { FavoriteButton } from "@/components/FavoriteButton";
 import type { MarketplaceListingItem } from "@fh/portal-types";
 
 interface MarketplaceListingCardProps {
@@ -25,6 +26,12 @@ function daysAgoLabel(createdAt: string | null): string {
   if (n < 7) return `${n} days ago`;
   if (n < 30) return `${Math.floor(n / 7)}w ago`;
   return `${Math.floor(n / 30)}mo ago`;
+}
+
+// Type assertion helper — the backend may include is_consumer_listing on items
+function isConsumerListing(listing: MarketplaceListingItem): boolean {
+  return (listing as MarketplaceListingItem & { is_consumer_listing?: boolean })
+    .is_consumer_listing === true;
 }
 
 export function MarketplaceListingCard({
@@ -54,6 +61,7 @@ export function MarketplaceListingCard({
 
   const isPremium = listing_tier === "premium" || listing_tier === "featured";
   const locationStr = [area, city].filter(Boolean).join(", ") || "Location TBC";
+  const isOwner = isConsumerListing(listing);
 
   return (
     <Link
@@ -77,8 +85,13 @@ export function MarketplaceListingCard({
           </div>
         )}
 
-        {/* Badges */}
+        {/* Badges — top left */}
         <div className="absolute top-2.5 left-2.5 flex flex-col gap-1.5">
+          {isOwner && (
+            <span className="inline-flex items-center rounded-full bg-slate-100 px-2 py-0.5 text-[10px] font-bold text-slate-700 shadow">
+              Owner
+            </span>
+          )}
           {is_verified && (
             <span className="inline-flex items-center gap-1 rounded-full bg-amber-500 px-2 py-0.5 text-[10px] font-bold text-white shadow">
               Verified
@@ -91,8 +104,13 @@ export function MarketplaceListingCard({
           )}
         </div>
 
-        {/* Agency logo overlay */}
-        {tenant.logo_url && (
+        {/* Favorite button — top right */}
+        <div className="absolute top-2.5 right-2.5">
+          <FavoriteButton listingId={id} />
+        </div>
+
+        {/* Agency logo overlay — only for non-consumer listings */}
+        {!isOwner && tenant.logo_url && (
           <div className="absolute bottom-2 right-2">
             <img
               src={tenant.logo_url}
@@ -139,7 +157,9 @@ export function MarketplaceListingCard({
         {/* Footer */}
         <div className="flex items-center justify-between gap-2 pt-2 border-t border-slate-100 mt-1">
           <div className="min-w-0">
-            {agent_name ? (
+            {isOwner ? (
+              <p className="text-xs font-semibold text-slate-600 truncate">Listed by Owner</p>
+            ) : agent_name ? (
               <p className="text-xs font-semibold text-slate-700 truncate">
                 {agent_name}
                 {agent_has_license && (

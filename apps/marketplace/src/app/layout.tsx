@@ -2,7 +2,10 @@ import type { Metadata, Viewport } from "next";
 import "@/styles/globals.css";
 import { QueryProvider } from "@/components/providers/QueryProvider";
 import { CountryProvider } from "@/lib/country-context";
+import { ConsumerProvider } from "@/lib/consumer-context";
 import { CountryGateModal } from "@/components/CountryGateModal";
+import { FavoritesHydrator } from "@/components/FavoritesHydrator";
+import { Toaster } from "sonner";
 import { PORTAL_BRAND_NAME, PORTAL_BRAND_TAGLINE } from "@/lib/portal-brand";
 
 export const metadata: Metadata = {
@@ -20,9 +23,6 @@ export const metadata: Metadata = {
   },
 };
 
-// Sets the iOS / Android browser chrome colour AND the overscroll bounce
-// background. Without this, refresh / pull-to-refresh can flash a yellow
-// strip from the browser default fallback.
 export const viewport: Viewport = {
   themeColor: "#ffffff",
   colorScheme: "light",
@@ -37,10 +37,14 @@ export default function RootLayout({
     <html lang="en" className="bg-white">
       <body className="antialiased bg-white">
         <QueryProvider>
-          <CountryProvider>
-            <CountryGateModal />
-            {children}
-          </CountryProvider>
+          <ConsumerProvider>
+            <CountryProvider>
+              <FavoritesHydrator />
+              <CountryGateModal />
+              {children}
+              <Toaster richColors position="top-right" />
+            </CountryProvider>
+          </ConsumerProvider>
         </QueryProvider>
       </body>
     </html>

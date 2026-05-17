@@ -9,3 +9,6 @@ export function createMarketplaceClient(baseUrl: string): AxiosInstance {
 }
 
 export type { AxiosInstance };
+
+export * from "./marketplace";
+export * from "./consumer";
