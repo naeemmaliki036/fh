@@ -2,17 +2,19 @@
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { Bell, Building2, Globe, Inbox, LogOut, Mail, MapPin, Users } from "lucide-react";
+import { Bell, Building2, Globe, Inbox, LogOut, Mail, MapPin, Store, Users } from "lucide-react";
 import { cn } from "@/lib/utils/cn";
 import { usePlatformLogout } from "@/hooks/mutations/useAuthMutations";
 import { Button } from "@/components/ui/button";
 import { useAuth } from "@/contexts/AuthContext";
+import { useConsumerListingsPendingCount } from "@/hooks/queries/useAdminConsumerListings";
 
 interface NavItem {
   href: string;
   label: string;
   icon: React.ComponentType<{ className?: string }>;
   superAdminOnly?: boolean;
+  badgeKey?: "pendingConsumerListings";
 }
 
 const NAV_ITEMS: NavItem[] = [
@@ -20,6 +22,7 @@ const NAV_ITEMS: NavItem[] = [
   { href: "/users", label: "Platform Users", icon: Users, superAdminOnly: true },
   { href: "/locations", label: "Locations", icon: MapPin, superAdminOnly: true },
   { href: "/marketplace-countries", label: "Marketplace Countries", icon: Globe, superAdminOnly: true },
+  { href: "/consumer-listings", label: "Consumer Listings", icon: Store, badgeKey: "pendingConsumerListings" },
   { href: "/email-templates", label: "Email Templates", icon: Mail },
   { href: "/email-outbox", label: "Email Outbox", icon: Inbox },
   { href: "/notifications", label: "Notifications", icon: Bell },
@@ -34,6 +37,8 @@ export function PlatformSidebar(): React.ReactElement {
   const { mutate: logout, isPending } = usePlatformLogout();
   const { currentPlatformUser } = useAuth();
   const isSuperAdmin = currentPlatformUser?.role === "super_admin";
+  const { data: pendingData } = useConsumerListingsPendingCount();
+  const pendingCount = pendingData?.total ?? 0;
 
   const visibleItems = NAV_ITEMS.filter((item) => !item.superAdminOnly || isSuperAdmin);
 
@@ -48,6 +53,7 @@ export function PlatformSidebar(): React.ReactElement {
         {visibleItems.map((item) => {
           const Icon = item.icon;
           const isActive = pathname.startsWith(item.href);
+          const showBadge = item.badgeKey === "pendingConsumerListings" && pendingCount > 0;
           return (
             <Link
               key={item.href}
@@ -60,7 +66,12 @@ export function PlatformSidebar(): React.ReactElement {
               )}
             >
               <Icon className="h-4 w-4 flex-shrink-0" />
-              {item.label}
+              <span className="flex-1">{item.label}</span>
+              {showBadge && (
+                <span className="ml-auto flex h-5 min-w-5 items-center justify-center rounded-full bg-amber-500 px-1 text-[10px] font-bold text-white">
+                  {pendingCount > 99 ? "99+" : pendingCount}
+                </span>
+              )}
             </Link>
           );
         })}

@@ -192,6 +192,12 @@ class AuditAction(str, enum.Enum):
     PRICE_RULE_DELETED = "price_rule_deleted"
     PRICE_VALIDATION_FAILED = "price_validation_failed"
 
+    # Consumer listing moderation workflow (added in migration 0048)
+    CONSUMER_LISTING_SUBMITTED_FOR_REVIEW = "consumer_listing_submitted_for_review"
+    CONSUMER_LISTING_APPROVED = "consumer_listing_approved"
+    CONSUMER_LISTING_CHANGES_REQUESTED = "consumer_listing_changes_requested"
+    CONSUMER_LISTING_RESUBMITTED = "consumer_listing_resubmitted"
+
     # Catch-all for ad-hoc events
     OTHER = "other"
 

@@ -50,10 +50,11 @@ from apps.api.routers import (
 from apps.api.routers.public import document_requests as public_document_requests
 from apps.api.routers import marketplace, public_site, tenant_public_site
 from apps.api.routers import (
+    admin_consumer_listings,
     consumer_auth,
-    consumer_listings,
     consumer_favorites,
     consumer_listing_leads,
+    consumer_listings,
 )
 
 logging.basicConfig(level=logging.INFO)
@@ -192,6 +193,11 @@ app.include_router(
     consumer_listing_leads.router,
     prefix="/public",
     tags=["consumer-listing-leads"],
+)
+app.include_router(
+    admin_consumer_listings.router,
+    prefix="/platform-admin/consumer-listings",
+    tags=["admin-consumer-listings"],
 )
 
 

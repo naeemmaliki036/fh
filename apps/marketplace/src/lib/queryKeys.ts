@@ -18,5 +18,6 @@ export const queryKeys = {
     me: ["consumer", "me"] as const,
     myListings: (page?: number) => ["consumer", "my-listings", page] as const,
     myFavorites: (page?: number) => ["consumer", "my-favorites", page] as const,
+    listingMedia: (id: string) => ["consumer", "listing-media", id] as const,
   },
 } as const;

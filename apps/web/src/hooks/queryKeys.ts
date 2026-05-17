@@ -126,6 +126,12 @@ export const queryKeys = {
     all: ["marketplace-countries"] as const,
     list: ["marketplace-countries", "list"] as const,
   },
+  consumerListings: {
+    queue: (params?: Record<string, unknown>) =>
+      ["consumer-listings", "queue", params] as const,
+    detail: (id: string) => ["consumer-listings", "detail", id] as const,
+    pendingCount: ["consumer-listings", "pending-count"] as const,
+  },
   locations: {
     tree: ["locations", "tree"] as const,
     countries: ["locations", "countries"] as const,

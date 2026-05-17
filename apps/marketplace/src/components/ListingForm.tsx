@@ -66,8 +66,8 @@ export function ListingForm({
 
   function validate(): boolean {
     const e: FormErrors = {};
-    if (!form.title.trim()) e.title = "Title required";
-    if (form.price <= 0) e.price = "Price must be greater than 0";
+    if (!form.title?.trim()) e.title = "Title required";
+    if ((form.price ?? 0) <= 0) e.price = "Price must be greater than 0";
     if (!form.country.trim()) e.country = "Country required";
     if (!form.city.trim()) e.city = "City required";
     setErrors(e);

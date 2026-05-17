@@ -28,3 +28,4 @@ export { listingInterestedCustomersRepository } from "./listing-interested-custo
 export { reportsRepository } from "./reports.repository";
 export { openHouseRepository } from "./open-house.repository";
 export { marketplaceCountryRepository } from "./marketplace-country.repository";
+export { adminConsumerListingsRepository } from "./admin-consumer-listings.repository";

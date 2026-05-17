@@ -180,3 +180,13 @@ class Listing(Base, UUIDMixin, TimestampMixin, TenantMixin):
     expires_at: Mapped[datetime | None] = mapped_column(
         DateTime(timezone=True), nullable=True, index=True
     )
+
+    # ------------------------------------------------------------------
+    # Consumer listing moderation columns (migration 0048)
+    # ------------------------------------------------------------------
+
+    # Set when the consumer submits a draft for platform review.
+    # Distinct from submitted_for_review_at (agency review workflow, 0028).
+    submitted_at: Mapped[datetime | None] = mapped_column(
+        DateTime(timezone=True), nullable=True
+    )

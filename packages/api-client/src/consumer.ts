@@ -11,6 +11,7 @@ import type {
   ConsumerListingUpdateRequest,
   ConsumerListingMarkStatusRequest,
   ConsumerListingsResponse,
+  ConsumerMediaResponse,
   FavoriteToggleResponse,
   ConsumerListingLeadRequest,
   ConsumerListingLeadResponse,
@@ -100,6 +101,40 @@ export async function markListingStatus(
     body,
   );
   return res.data;
+}
+
+export async function submitListing(
+  c: AxiosInstance,
+  id: string,
+): Promise<ConsumerListingItem> {
+  const res = await c.post<ConsumerListingItem>(`${BASE}/me/listings/${id}/submit`);
+  return res.data;
+}
+
+export async function getListingMedia(
+  c: AxiosInstance,
+  id: string,
+): Promise<ConsumerMediaResponse> {
+  const res = await c.get<ConsumerMediaResponse>(`${BASE}/me/listings/${id}/media`);
+  return res.data;
+}
+
+export async function deleteListingMedia(
+  c: AxiosInstance,
+  listingId: string,
+  mediaId: string,
+): Promise<void> {
+  await c.delete(`${BASE}/me/listings/${listingId}/media/${mediaId}`);
+}
+
+export async function reorderListingMedia(
+  c: AxiosInstance,
+  listingId: string,
+  orderedIds: string[],
+): Promise<void> {
+  await c.post(`${BASE}/me/listings/${listingId}/media/reorder`, {
+    ordered_ids: orderedIds,
+  });
 }
 
 // ---- Favorites ----

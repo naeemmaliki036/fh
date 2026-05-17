@@ -280,6 +280,17 @@ export type {
 } from "./marketplace-country";
 
 export type {
+  ConsumerListingStatus,
+  ConsumerListingMediaItem,
+  AdminConsumerListingQueueItem,
+  AdminConsumerListingQueueResponse,
+  AdminConsumerListingDetail,
+  ModerationActionResponse,
+  RequestChangesBody,
+  AdminConsumerListingQueueParams,
+} from "./consumer-listing";
+
+export type {
   PublicSiteStats,
   HeroConfig,
   ThemeConfig,
