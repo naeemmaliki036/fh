@@ -1,7 +1,7 @@
 "use client";
 
 import { PhoneInput } from "@/components/molecules/PhoneInput";
-import { useLocationData } from "@/hooks/useLocationData";
+import { LocationPicker } from "@/components/molecules/LocationPicker";
 import { cn } from "@/lib/utils/cn";
 import type { WizardState, WizardPropertyType, WizardBedrooms } from "./wizard-types";
 
@@ -80,36 +80,20 @@ export function StepRentFrequency({ state, onChange }: StepProps): React.ReactEl
 }
 
 export function StepLocation({ state, onChange }: StepProps): React.ReactElement {
-  const { citiesByCountry, areasByCity } = useLocationData();
-  const allCities = Object.values(citiesByCountry).flat();
-  const citySlug = allCities.find((c) => c.label === state.city)?.value ?? "";
-  const areaOptions = citySlug ? (areasByCity[citySlug] ?? []) : [];
-
   return (
     <div className="space-y-4">
       <h2 className="text-xl font-black text-slate-900">Where is the property?</h2>
-      <div className="space-y-3">
-        {allCities.length > 0 ? (
-          <select
-            value={state.city}
-            onChange={(e) => onChange({ city: e.target.value, area: "" })}
-            className={inputCls}
-          >
-            <option value="">Select city</option>
-            {allCities.map((c) => <option key={c.value} value={c.label}>{c.label}</option>)}
-          </select>
-        ) : (
-          <input value={state.city} onChange={(e) => onChange({ city: e.target.value })} placeholder="City" className={inputCls} />
-        )}
-        {areaOptions.length > 0 ? (
-          <select value={state.area} onChange={(e) => onChange({ area: e.target.value })} className={inputCls}>
-            <option value="">Select area (optional)</option>
-            {areaOptions.map((a) => <option key={a.value} value={a.label}>{a.label}</option>)}
-          </select>
-        ) : (
-          <input value={state.area} onChange={(e) => onChange({ area: e.target.value })} placeholder="Area / community (optional)" className={inputCls} />
-        )}
-      </div>
+      <LocationPicker
+        country={state.country || null}
+        city={state.city || null}
+        area={state.area || null}
+        onChange={({ country: co, city: ci, area: a }) => {
+          onChange({ country: co ?? "", city: ci ?? "", area: a ?? "" });
+        }}
+        showArea={true}
+        required={false}
+        layout="stacked"
+      />
     </div>
   );
 }

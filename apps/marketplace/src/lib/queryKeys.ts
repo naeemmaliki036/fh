@@ -14,6 +14,11 @@ export const queryKeys = {
     agents: (params?: Record<string, unknown>) =>
       ["marketplace", "agents", params] as const,
   },
+  locations: {
+    countries: ["locations", "countries"] as const,
+    cities: (countryId: string) => ["locations", "cities", countryId] as const,
+    areas: (cityId: string) => ["locations", "areas", cityId] as const,
+  },
   consumer: {
     me: ["consumer", "me"] as const,
     myListings: (page?: number) => ["consumer", "my-listings", page] as const,

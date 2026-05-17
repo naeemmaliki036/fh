@@ -1,3 +1,34 @@
+// Location catalog types — mirrors apps/api/routers/locations.py public endpoints
+export interface LocationCountry {
+  id: string;
+  code: string;
+  name: string;
+  currency: string | null;
+  flag_emoji: string | null;
+  active: boolean;
+  ordering: number;
+  city_count: number;
+  area_count: number;
+}
+
+export interface LocationCity {
+  id: string;
+  country_id: string;
+  slug: string;
+  label: string;
+  active: boolean;
+  ordering: number;
+}
+
+export interface LocationArea {
+  id: string;
+  city_id: string;
+  slug: string;
+  label: string;
+  active: boolean;
+  ordering: number;
+}
+
 // Marketplace types — mirrors apps/api/schemas/marketplace.py
 
 export interface MarketplaceCountryItem {

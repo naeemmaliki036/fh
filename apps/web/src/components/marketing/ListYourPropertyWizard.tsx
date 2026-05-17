@@ -9,6 +9,7 @@ import type { WizardState, WizardStepId } from "./wizard/wizard-types";
 const INITIAL_STATE: WizardState = {
   intent: null,
   rentFrequency: null,
+  country: "",
   city: "",
   area: "",
   category: "residential",

@@ -1,8 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import { useLocationData } from "@/hooks/useLocationData";
-import { SearchableSelect } from "@/components/molecules/SearchableSelect";
+import { LocationPicker } from "@/components/molecules/LocationPicker";
 import { useCreatePublicLead } from "@/hooks/mutations/public-site/useCreatePublicLead";
 import { PhoneInput } from "@/components/molecules/PhoneInput";
 import { isValidPhone } from "@/lib/utils/phone";
@@ -92,7 +91,6 @@ export function ListYourPropertyForm({
     message: "",
   });
   const [errors, setErrors] = useState<FormErrors>({});
-  const { citiesByCountry, areasByCity } = useLocationData();
 
   const { mutate, isPending } = useCreatePublicLead({
     slug,
@@ -115,10 +113,6 @@ export function ListYourPropertyForm({
       }
     };
 
-  const activeCountry = multiCountry ? form.country : implicitCountry;
-  const cityOptions = activeCountry ? (citiesByCountry[activeCountry] ?? []) : [];
-  const cityValue = cityOptions.find((c) => c.label === form.city)?.value ?? "";
-  const areaOptions = cityValue ? (areasByCity[cityValue] ?? []) : [];
   const currency = operatingCountries.map((c) => CURRENCY_BY_COUNTRY[c]).find(Boolean) ?? "USD";
 
   function validate(): boolean {
@@ -189,8 +183,8 @@ export function ListYourPropertyForm({
         </div>
       </div>
 
-      {/* Row 3: Type + City + Area (+ Country if multi) */}
-      <div className={`grid grid-cols-1 gap-3 ${multiCountry ? "sm:grid-cols-4" : "sm:grid-cols-3"}`}>
+      {/* Row 3: Type + Location */}
+      <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
         <div>
           <label className={labelCls}>Property type *</label>
           <select value={form.propertyType} onChange={set("propertyType")} className={fieldCls}>
@@ -201,48 +195,24 @@ export function ListYourPropertyForm({
           </select>
           {errors.propertyType && <p className={errCls}>{errors.propertyType}</p>}
         </div>
-        {multiCountry && (
-          <div>
-            <label className={labelCls}>Country</label>
-            <select value={form.country} onChange={set("country")} className={fieldCls}>
-              <option value="">Select</option>
-              {operatingCountries.map((c) => (
-                <option key={c} value={c}>{COUNTRY_LABELS[c] ?? c}</option>
-              ))}
-            </select>
-          </div>
-        )}
-        <div>
-          <label className={labelCls}>City</label>
-          {cityOptions.length > 0 ? (
-            <select
-              value={form.city}
-              onChange={set("city")}
-              disabled={multiCountry && !form.country}
-              className={fieldCls}
-            >
-              <option value="">Select city</option>
-              {cityOptions.map((c) => (
-                <option key={c.value} value={c.label}>{c.label}</option>
-              ))}
-            </select>
-          ) : (
-            <input value={form.city} onChange={set("city")} placeholder="City" className={fieldCls} />
-          )}
-        </div>
-        <div>
-          <label className={labelCls}>Area</label>
-          <SearchableSelect
-            value={form.area || null}
-            onChange={(v) => setForm((prev) => ({ ...prev, area: v }))}
-            options={areaOptions}
-            placeholder="Area / community"
-            disabled={!form.city}
-            allowFreeText
-            className={fieldCls}
-          />
-        </div>
+        <div className="sm:col-span-1" />
       </div>
+      <LocationPicker
+        country={multiCountry ? (form.country || null) : (implicitCountry || null)}
+        city={form.city || null}
+        area={form.area || null}
+        onChange={({ country: c, city: ci, area: a }) => {
+          setForm((prev) => ({
+            ...prev,
+            country: c ?? (multiCountry ? "" : implicitCountry),
+            city: ci ?? "",
+            area: a ?? "",
+          }));
+        }}
+        showArea={true}
+        required={false}
+        layout="grid"
+      />
 
       {/* Row 4: Bedrooms (if residential) + Price */}
       <div className={`grid grid-cols-1 gap-3 ${hideBeds ? "" : "sm:grid-cols-2"}`}>

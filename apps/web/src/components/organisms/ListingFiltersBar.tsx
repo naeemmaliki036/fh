@@ -11,6 +11,7 @@ import {
 } from "@/components/ui/select";
 import { useAgents } from "@/hooks/queries/useAgents";
 import { useAmenityCatalog } from "@/hooks/queries/useAmenityCatalog";
+import { LocationPicker } from "@/components/molecules/LocationPicker";
 import type { ListingStatus, ListingPurpose, ListingTier } from "@/lib/types/listing";
 
 const STATUSES: ListingStatus[] = [
@@ -153,8 +154,20 @@ export function ListingFiltersBar(): ReactElement {
 
             <Input placeholder="Min price" defaultValue={get("min_price")} onBlur={(e) => apply({ min_price: e.target.value })} className="h-8 text-xs" />
             <Input placeholder="Max price" defaultValue={get("max_price")} onBlur={(e) => apply({ max_price: e.target.value })} className="h-8 text-xs" />
-            <Input placeholder="Country (AE/SA)" defaultValue={get("country")} onBlur={(e) => apply({ country: e.target.value })} className="h-8 text-xs" />
-            <Input placeholder="City" defaultValue={get("city")} onBlur={(e) => apply({ city: e.target.value })} className="h-8 text-xs" />
+            <div className="col-span-2 sm:col-span-3 lg:col-span-4">
+              <LocationPicker
+                country={get("country") || null}
+                city={get("city") || null}
+                area={null}
+                onChange={({ country: c, city: ci }) => apply({
+                  country: c ?? "",
+                  city: ci ?? "",
+                })}
+                required={false}
+                showArea={false}
+                layout="grid"
+              />
+            </div>
           </div>
 
           {/* Advanced toggle */}

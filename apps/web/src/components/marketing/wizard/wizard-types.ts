@@ -22,6 +22,7 @@ export type WizardStepId =
 export interface WizardState {
   intent: WizardIntent | null;
   rentFrequency: WizardRentFrequency | null;
+  country: string;
   city: string;
   area: string;
   category: WizardCategory;

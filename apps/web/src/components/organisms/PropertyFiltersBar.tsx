@@ -10,19 +10,14 @@ import {
   Select, SelectContent, SelectItem, SelectTrigger, SelectValue,
 } from "@/components/ui/select";
 import { useAgents } from "@/hooks/queries/useAgents";
-import { useLocationData } from "@/hooks/useLocationData";
 import { useAmenityCatalog } from "@/hooks/queries/useAmenityCatalog";
-import { SearchableSelect } from "@/components/molecules/SearchableSelect";
+import { LocationPicker } from "@/components/molecules/LocationPicker";
 import type { PropertyStatus, PropertyType } from "@/lib/types/property";
 
 const STATUSES: PropertyStatus[] = ["draft", "available", "reserved", "sold", "rented", "off_market"];
 const TYPES: PropertyType[] = [
   "apartment", "villa", "townhouse", "penthouse",
   "office", "retail", "warehouse", "plot", "building", "other",
-];
-const COUNTRIES = [
-  { value: "AE", label: "UAE" },
-  { value: "SA", label: "Saudi Arabia" },
 ];
 const FURNISHING = ["furnished", "semi_furnished", "unfurnished"];
 const COMPLETION = ["ready", "off_plan"];
@@ -36,7 +31,7 @@ function labelFor(key: string, value: string): string {
   const MAP: Record<string, Record<string, string>> = {
     status: Object.fromEntries(STATUSES.map((s) => [s, s.replace("_", " ")])),
     property_type: Object.fromEntries(TYPES.map((t) => [t, t.charAt(0).toUpperCase() + t.slice(1)])),
-    country: { AE: "UAE", SA: "Saudi Arabia" },
+    country: {},
     has_listing: { true: "Has listing", false: "No listing" },
     has_payment_plan: { true: "Payment plan" }, listing_verified: { true: "Verified only" }, has_floor_plan: { true: "Floor plan" },
   };
@@ -63,15 +58,9 @@ export function PropertyFiltersBar(): ReactElement {
   const [showAdvanced, setShowAdvanced] = useState(false);
   const { data: agentsData } = useAgents();
   const agents = agentsData?.items ?? [];
-  const { citiesByCountry, areasByCity } = useLocationData();
   const { data: catalog } = useAmenityCatalog();
 
   const get = (key: string): string => searchParams.get(key) ?? "";
-
-  const country = get("country");
-  const city = get("city");
-  const cityOptions = country ? (citiesByCountry[country] ?? []) : [];
-  const areaOptions = city ? (areasByCity[city] ?? []) : [];
 
   const apply = useCallback((overrides: Record<string, string>): void => {
     const params = new URLSearchParams(searchParams.toString());
@@ -143,33 +132,21 @@ export function PropertyFiltersBar(): ReactElement {
               </SelectContent>
             </Select>
 
-            <Select value={get("country")} onValueChange={(v) => apply({ country: v === "_all" ? "" : v, city: "", area: "" })}>
-              <SelectTrigger className="h-8 text-xs"><SelectValue placeholder="Country" /></SelectTrigger>
-              <SelectContent>
-                <SelectItem value="_all">All countries</SelectItem>
-                {COUNTRIES.map((c) => <SelectItem key={c.value} value={c.value}>{c.label}</SelectItem>)}
-              </SelectContent>
-            </Select>
-
-            <Select value={get("city")} onValueChange={(v) => apply({ city: v === "_all" ? "" : v, area: "" })} disabled={!country}>
-              <SelectTrigger className="h-8 text-xs"><SelectValue placeholder="City" /></SelectTrigger>
-              <SelectContent>
-                <SelectItem value="_all">All cities</SelectItem>
-                {cityOptions.map((c) => <SelectItem key={c.value} value={c.value}>{c.label}</SelectItem>)}
-              </SelectContent>
-            </Select>
-
-            {(areaOptions.length > 0 || city) && (
-              <SearchableSelect
-                value={get("area") || null}
-                onChange={(v) => apply({ area: v })}
-                options={areaOptions}
-                placeholder="Area"
-                disabled={!city}
-                allowFreeText
-                className="h-8 text-xs"
+            <div className="col-span-2 sm:col-span-3 lg:col-span-4">
+              <LocationPicker
+                country={get("country") || null}
+                city={get("city") || null}
+                area={get("area") || null}
+                onChange={({ country: c, city: ci, area: a }) => apply({
+                  country: c ?? "",
+                  city: ci ?? "",
+                  area: a ?? "",
+                })}
+                required={false}
+                showArea={true}
+                layout="grid"
               />
-            )}
+            </div>
 
             <Select value={get("assigned_agent_id")} onValueChange={(v) => apply({ assigned_agent_id: v === "_all" ? "" : v })}>
               <SelectTrigger className="h-8 text-xs"><SelectValue placeholder="Agent" /></SelectTrigger>

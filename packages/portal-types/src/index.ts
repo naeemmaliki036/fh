@@ -1,4 +1,7 @@
 export type {
+  LocationCountry,
+  LocationCity,
+  LocationArea,
   MarketplaceTenantSnippet,
   MarketplaceCountryItem,
   MarketplaceListingItem,

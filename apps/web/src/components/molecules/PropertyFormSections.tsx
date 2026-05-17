@@ -6,7 +6,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { TagsInput } from "@/components/molecules/TagsInput";
-import { SearchableSelect } from "@/components/molecules/SearchableSelect";
+import { LocationPicker } from "@/components/molecules/LocationPicker";
 import { CURRENCIES } from "@/lib/constants/regions";
 import { TYPES, STATUSES, type PropertyFormValues } from "@/components/molecules/PropertyForm.config";
 
@@ -87,41 +87,47 @@ interface LocationProps {
   register: UseFormRegister<PropertyFormValues>;
   control: Control<PropertyFormValues>;
   setValue: UseFormSetValue<PropertyFormValues>;
-  operatingCountries: string[];
-  cityOptions: { value: string; label: string }[];
-  areaOptions: { value: string; label: string }[];
-  selectedCountry: string | null | undefined;
-  selectedCity: string | null | undefined;
 }
-export function LocationSection({ register, control, setValue, operatingCountries, cityOptions, areaOptions, selectedCountry, selectedCity }: LocationProps): React.ReactElement {
+export function LocationSection({ register, control, setValue }: LocationProps): React.ReactElement {
   return (
     <div className="space-y-1.5">
       <SectionHeader label="Location" />
-      <div className="grid grid-cols-2 md:grid-cols-3 gap-3">
-        <div className="space-y-1">
-          <Label>Country</Label>
-          <Controller name="country" control={control} render={({ field }) => (
-            <Select value={field.value ?? ""} onValueChange={(v) => { field.onChange(v); setValue("city",""); setValue("area",""); }}>
-              <SelectTrigger><SelectValue placeholder="Country" /></SelectTrigger>
-              <SelectContent>{(operatingCountries.length > 0 ? operatingCountries : ["AE","SA"]).map((c) => <SelectItem key={c} value={c}>{c}</SelectItem>)}</SelectContent>
-            </Select>
-          )} />
-        </div>
-        <div className="space-y-1">
-          <Label>City</Label>
-          <Controller name="city" control={control} render={({ field }) => (
-            <Select value={field.value ?? ""} onValueChange={(v) => { field.onChange(v); setValue("area",""); }} disabled={!selectedCountry || cityOptions.length === 0}>
-              <SelectTrigger><SelectValue placeholder="City" /></SelectTrigger>
-              <SelectContent>{cityOptions.map((c) => <SelectItem key={c.value} value={c.value}>{c.label}</SelectItem>)}</SelectContent>
-            </Select>
-          )} />
-        </div>
-        <div className="space-y-1">
-          <Label>Area <span className="text-xs text-muted-foreground">(optional)</span></Label>
-          <Controller name="area" control={control} render={({ field }) => (
-            <SearchableSelect value={field.value ?? ""} onChange={field.onChange} options={areaOptions} placeholder="Area" disabled={!selectedCity} allowFreeText />
-          )} />
-        </div>
+      <Controller
+        name="country"
+        control={control}
+        render={({ field: countryField }) => (
+          <Controller
+            name="city"
+            control={control}
+            render={({ field: cityField }) => (
+              <Controller
+                name="area"
+                control={control}
+                render={({ field: areaField }) => (
+                  <LocationPicker
+                    country={countryField.value ?? null}
+                    city={cityField.value ?? null}
+                    area={areaField.value ?? null}
+                    onChange={({ country: c, city: ci, area: a }) => {
+                      countryField.onChange(c ?? "");
+                      cityField.onChange(ci ?? "");
+                      areaField.onChange(a ?? "");
+                      if (c !== countryField.value) {
+                        setValue("city", "");
+                        setValue("area", "");
+                      } else if (ci !== cityField.value) {
+                        setValue("area", "");
+                      }
+                    }}
+                    layout="grid"
+                  />
+                )}
+              />
+            )}
+          />
+        )}
+      />
+      <div className="grid grid-cols-2 md:grid-cols-3 gap-3 pt-1">
         <div className="space-y-1 col-span-2 md:col-span-3">
           <Label>Address <span className="text-xs text-muted-foreground">(optional)</span></Label>
           <Input {...register("address_line")} />

@@ -7,7 +7,6 @@ import { Textarea } from "@/components/atoms/Textarea";
 import { PropertyFormAttributes } from "@/components/molecules/PropertyFormAttributes";
 import { PropertyFormAmenities } from "@/components/molecules/PropertyFormAmenities";
 import { useMyTenant } from "@/hooks/queries/useTenants";
-import { useLocationData } from "@/hooks/useLocationData";
 import {
   propertyFormSchema, blank,
   PLOT_TYPES, COMMERCIAL_TYPES, BUILDING_TYPES,
@@ -73,12 +72,7 @@ export function PropertyForm({ defaultValues, showStatus, isPending, submitLabel
     },
   });
 
-  const { citiesByCountry, areasByCity } = useLocationData();
-  const selectedCountry = watch("country");
-  const selectedCity = watch("city");
   const selectedType = watch("property_type");
-  const cityOptions = selectedCountry ? (citiesByCountry[selectedCountry] ?? []) : [];
-  const areaOptions = selectedCity ? (areasByCity[selectedCity] ?? []) : [];
 
   const isPlot = PLOT_TYPES.includes(selectedType);
   const isCommercial = COMMERCIAL_TYPES.includes(selectedType);
@@ -107,7 +101,7 @@ export function PropertyForm({ defaultValues, showStatus, isPending, submitLabel
     <form onSubmit={handleSubmit(handleFormSubmit)} className="space-y-4">
       <BasicInfoSection register={register} control={control} showStatus={showStatus} titleError={errors.title?.message} refError={errors.internal_reference?.message} currentRef={defaultValues?.internal_reference} />
       <Divider />
-      <LocationSection register={register} control={control} setValue={setValue} operatingCountries={operatingCountries} cityOptions={cityOptions} areaOptions={areaOptions} selectedCountry={selectedCountry} selectedCity={selectedCity} />
+      <LocationSection register={register} control={control} setValue={setValue} />
       <Divider />
       <PropertyDetailsSection register={register} showBedrooms={showBedrooms} showBathrooms={showBathrooms} isPlot={isPlot} sizeError={errors.size_sqft?.message} buildYearError={errors.build_year?.message} />
       <Divider />
