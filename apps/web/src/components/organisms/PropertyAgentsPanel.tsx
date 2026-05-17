@@ -1,7 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import { Star, Trash2, Pencil, X } from "lucide-react";
+import { Star, Trash2, Pencil, X, Info, UserPlus } from "lucide-react";
 import { useAgents } from "@/hooks/queries/useAgents";
 import { usePropertyAgents } from "@/hooks/queries/useProperties";
 import {
@@ -70,46 +70,72 @@ export function PropertyAgentsPanel({
   }
 
   return (
-    <div className="space-y-4">
+    <div className="space-y-5">
+      {/* Explainer */}
+      <div className="flex gap-2 rounded-xl border border-primary/20 bg-primary/5 px-4 py-3 text-xs text-foreground">
+        <Info className="h-4 w-4 text-primary shrink-0 mt-0.5" />
+        <div className="space-y-0.5">
+          <p className="font-semibold">What does assigning an agent do?</p>
+          <p className="text-muted-foreground">
+            Agents listed here are the ones responsible for showing, marketing, and
+            closing deals on this property. The <strong>primary</strong> agent is the
+            lead; others can collaborate. Each agent earns their default commission
+            share unless you override it for this specific property.
+          </p>
+        </div>
+      </div>
+
       {/* Add agent row */}
-      <div className="flex gap-2 items-center">
+      <div className="flex flex-wrap gap-2 items-center rounded-xl border bg-card p-3">
         <Select value={selectedAgentId} onValueChange={setSelectedAgentId}>
-          <SelectTrigger className="w-56">
+          <SelectTrigger className="w-64">
             <SelectValue placeholder="Pick an agent to add" />
           </SelectTrigger>
           <SelectContent>
-            {available.map((a) => (
-              <SelectItem key={a.id} value={a.id}>{a.full_name}</SelectItem>
-            ))}
+            {available.length === 0 ? (
+              <div className="px-2 py-1.5 text-xs text-muted-foreground">
+                No more agents to add
+              </div>
+            ) : (
+              available.map((a) => (
+                <SelectItem key={a.id} value={a.id}>{a.full_name}</SelectItem>
+              ))
+            )}
           </SelectContent>
         </Select>
         <Button onClick={handleAdd} disabled={!selectedAgentId || assigning} size="sm">
-          + Add Agent
+          <UserPlus className="h-3.5 w-3.5 mr-1.5" />
+          Add agent
         </Button>
       </div>
 
       {propertyAgents.length === 0 && (
-        <p className="text-sm text-muted-foreground">No agents assigned yet.</p>
+        <p className="text-sm text-muted-foreground italic px-1">No agents assigned yet — add one above to get started.</p>
       )}
 
       <div className="space-y-2">
         {propertyAgents.map((a) => {
           const overridePill = formatOverride(a.commission_override_type, a.commission_override_value);
+          const displayName = a.agent_full_name || "Unnamed agent";
           return (
             <div
               key={a.agent_id}
               className={cn(
-                "rounded-xl border px-4 py-3 space-y-2",
-                a.is_primary && "border-primary/50 bg-primary/5",
+                "rounded-xl border px-4 py-3 space-y-2 transition",
+                a.is_primary
+                  ? "border-primary bg-primary/10"
+                  : "border-slate-200 hover:border-slate-300 bg-card",
               )}
             >
               {/* Name + primary badge */}
               <div className="flex items-center justify-between gap-2 flex-wrap">
                 <div className="flex items-center gap-2">
-                  {a.is_primary && <Star className="h-3.5 w-3.5 fill-primary text-primary" />}
-                  <span className="text-sm font-medium">{a.agent_full_name}</span>
+                  {a.is_primary && <Star className="h-4 w-4 fill-primary text-primary" />}
+                  <span className="text-sm font-semibold">{displayName}</span>
                   {a.is_primary && (
-                    <span className="text-xs text-muted-foreground">(primary)</span>
+                    <span className="inline-flex items-center rounded-full bg-primary px-2 py-0.5 text-[10px] font-bold uppercase tracking-wider text-primary-foreground">
+                      Primary
+                    </span>
                   )}
                 </div>
                 <div className="flex gap-2">

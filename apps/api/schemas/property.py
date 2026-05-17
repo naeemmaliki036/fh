@@ -55,6 +55,7 @@ class PropertyAgentResponse(BaseModel):
     model_config = ConfigDict(from_attributes=True)
     property_id: uuid.UUID
     agent_id: uuid.UUID
+    agent_full_name: str = ""
     is_primary: bool
     assigned_at: datetime
     commission_override_type: CommissionType | None = None

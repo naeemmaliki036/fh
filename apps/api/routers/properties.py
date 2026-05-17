@@ -246,7 +246,10 @@ async def list_property_agents(
     svc: PropertyAgentService = Depends(_agent_svc),
 ) -> list[PropertyAgentResponse]:
     assignments = await svc.list_assignments(property_id, tenant_id)
-    return [PropertyAgentResponse.model_validate(pa) for pa in assignments]
+    return [
+        PropertyAgentResponse.model_validate(pa).model_copy(update={"agent_full_name": name})
+        for pa, name in assignments
+    ]
 
 
 @router.post("/{property_id}/agents", response_model=PropertyAgentResponse, status_code=201)

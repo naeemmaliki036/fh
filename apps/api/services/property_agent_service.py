@@ -59,12 +59,20 @@ class PropertyAgentService(BaseService):
     # List
     # ------------------------------------------------------------------
 
-    async def list_assignments(self, property_id: UUID, tenant_id: UUID) -> list[PropertyAgent]:
+    async def list_assignments(
+        self, property_id: UUID, tenant_id: UUID
+    ) -> list[tuple[PropertyAgent, str]]:
+        """Returns (assignment, agent_full_name) tuples. The router stamps the
+        name onto the response model since PropertyAgent ORM lacks the column."""
+        from apps.api.models.agent import Agent
         await self._set_rls(tenant_id)
         r = await self.session.execute(
-            select(PropertyAgent).where(PropertyAgent.property_id == property_id)
+            select(PropertyAgent, Agent.full_name)
+            .join(Agent, Agent.id == PropertyAgent.agent_id)
+            .where(PropertyAgent.property_id == property_id)
+            .order_by(PropertyAgent.is_primary.desc(), PropertyAgent.assigned_at.asc())
         )
-        return list(r.scalars().all())
+        return [(pa, name) for pa, name in r.all()]
 
     # ------------------------------------------------------------------
     # Add
