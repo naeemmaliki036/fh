@@ -133,20 +133,26 @@ async def build_consumer_property(
     from apps.api.services.property_ref import generate_unique_reference
     from packages.common.utils.error_handlers import bad_request
 
-    try:
-        property_type = PropertyType(data["property_type"])
-    except (KeyError, ValueError):
-        raise bad_request("Invalid or missing property_type")
+    # Drafts may not yet have a property_type — default to OTHER so the row
+    # is creatable. Submit-time validation enforces a real value.
+    raw_pt = data.get("property_type")
+    if raw_pt:
+        try:
+            property_type = PropertyType(raw_pt)
+        except ValueError:
+            raise bad_request(f"Invalid property_type: {raw_pt!r}")
+    else:
+        property_type = PropertyType.OTHER
 
     tenant = await session.get(Tenant, tenant_id)
     prefix = tenant.property_ref_prefix if tenant else "PPD"
     ref = await generate_unique_reference(
-        session, tenant_id, data["property_type"], prefix=prefix
+        session, tenant_id, property_type.value, prefix=prefix
     )
     return Property(
         tenant_id=tenant_id,
         consumer_account_id=consumer_id,
-        title=data["title"],
+        title=(data.get("title") or "Untitled draft"),
         description=data.get("description"),
         property_type=property_type,
         country=data.get("country", "AE"),

@@ -16,9 +16,11 @@ interface Props {
   onBack: () => void;
   /** Inline error from a backend 422 price-validation rule. */
   priceApiError?: string | null;
+  onSaveDraft?: () => void;
+  isSaving?: boolean;
 }
 
-export function StepPricing({ state, onChange, onNext, onBack, priceApiError }: Props): React.ReactElement {
+export function StepPricing({ state, onChange, onNext, onBack, priceApiError, onSaveDraft, isSaving }: Props): React.ReactElement {
   const canAdvance = !!state.title?.trim() && (state.price ?? 0) > 0;
 
   return (
@@ -80,19 +82,29 @@ export function StepPricing({ state, onChange, onNext, onBack, priceApiError }: 
         </div>
       </div>
 
-      <div className="flex gap-3 pt-2">
+      <div className="flex flex-wrap gap-3 pt-2">
         <button
           type="button"
           onClick={onBack}
-          className="flex-1 rounded-xl border border-slate-200 py-3 text-sm font-bold text-slate-600 hover:bg-slate-50 transition"
+          className="flex-1 min-w-[120px] rounded-xl border border-slate-200 py-3 text-sm font-bold text-slate-600 hover:bg-slate-50 transition"
         >
           Back
         </button>
+        {onSaveDraft && (
+          <button
+            type="button"
+            onClick={onSaveDraft}
+            disabled={isSaving}
+            className="flex-1 min-w-[120px] rounded-xl border border-teal-300 py-3 text-sm font-bold text-teal-700 hover:bg-teal-50 transition disabled:opacity-60"
+          >
+            {isSaving ? "Saving…" : "Save draft & exit"}
+          </button>
+        )}
         <button
           type="button"
           disabled={!canAdvance}
           onClick={onNext}
-          className="flex-1 rounded-xl bg-teal-600 py-3 text-sm font-black text-white hover:bg-teal-700 transition disabled:opacity-40"
+          className="flex-1 min-w-[120px] rounded-xl bg-teal-600 py-3 text-sm font-black text-white hover:bg-teal-700 transition disabled:opacity-40"
         >
           Continue
         </button>

@@ -142,10 +142,13 @@ class ConsumerListingService(BaseService):
                 f"Maximum {_MAX_ACTIVE} active listings allowed per consumer"
             )
 
+        # Drafts can be created with partial data — purpose, title, price,
+        # property_type may all be empty. Submission validation enforces these.
+        purpose_raw = data.get("purpose")
         try:
-            purpose = ListingPurpose(data["purpose"])
-        except (KeyError, ValueError):
-            raise bad_request("Invalid or missing purpose")
+            purpose = ListingPurpose(purpose_raw) if purpose_raw else ListingPurpose.SALE
+        except ValueError:
+            raise bad_request(f"Invalid purpose: {purpose_raw!r}")
 
         price_val = data.get("price")
         if price_val is not None:
@@ -168,9 +171,9 @@ class ConsumerListingService(BaseService):
             property_id=prop.id,
             consumer_account_id=consumer_id,
             purpose=purpose,
-            title=data["title"],
+            title=(data.get("title") or "Untitled draft"),
             description=data.get("description"),
-            price=data["price"],
+            price=(price_val if price_val is not None else 0),
             currency=data.get("currency", "AED"),
             status=ListingStatus.DRAFT,
             expires_at=None,

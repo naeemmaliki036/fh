@@ -13,9 +13,11 @@ interface Props {
   onMediaChange: (media: ConsumerListingMediaItem[]) => void;
   onNext: () => void;
   onBack: () => void;
+  onSaveDraft?: () => void;
+  isSaving?: boolean;
 }
 
-export function StepPhotos({ listingId, media, onMediaChange, onNext, onBack }: Props): React.ReactElement {
+export function StepPhotos({ listingId, media, onMediaChange, onNext, onBack, onSaveDraft, isSaving }: Props): React.ReactElement {
   const inputRef = useRef<HTMLInputElement>(null);
   const [uploading, setUploading] = useState(false);
 
@@ -134,18 +136,28 @@ export function StepPhotos({ listingId, media, onMediaChange, onNext, onBack }: 
         </div>
       )}
 
-      <div className="flex gap-3 pt-2">
+      <div className="flex flex-wrap gap-3 pt-2">
         <button
           type="button"
           onClick={onBack}
-          className="flex-1 rounded-xl border border-slate-200 py-3 text-sm font-bold text-slate-600 hover:bg-slate-50 transition"
+          className="flex-1 min-w-[120px] rounded-xl border border-slate-200 py-3 text-sm font-bold text-slate-600 hover:bg-slate-50 transition"
         >
           Back
         </button>
+        {onSaveDraft && (
+          <button
+            type="button"
+            onClick={onSaveDraft}
+            disabled={isSaving}
+            className="flex-1 min-w-[120px] rounded-xl border border-teal-300 py-3 text-sm font-bold text-teal-700 hover:bg-teal-50 transition disabled:opacity-60"
+          >
+            {isSaving ? "Saving…" : "Save draft & exit"}
+          </button>
+        )}
         <button
           type="button"
           onClick={onNext}
-          className="flex-1 rounded-xl bg-teal-600 py-3 text-sm font-black text-white hover:bg-teal-700 transition"
+          className="flex-1 min-w-[120px] rounded-xl bg-teal-600 py-3 text-sm font-black text-white hover:bg-teal-700 transition"
         >
           Continue
         </button>

@@ -10,9 +10,11 @@ interface Props {
   onChange: (updates: Partial<WizardFormState>) => void;
   onNext: () => void;
   onBack: () => void;
+  onSaveDraft?: () => void;
+  isSaving?: boolean;
 }
 
-export function StepLocation({ state, onChange, onNext, onBack }: Props): React.ReactElement {
+export function StepLocation({ state, onChange, onNext, onBack, onSaveDraft, isSaving }: Props): React.ReactElement {
   const canAdvance = !!state.country && !!state.city;
 
   return (
@@ -41,19 +43,29 @@ export function StepLocation({ state, onChange, onNext, onBack }: Props): React.
       {!state.country && <p className={errCls}>Country is required</p>}
       {state.country && !state.city && <p className={errCls}>City is required</p>}
 
-      <div className="flex gap-3">
+      <div className="flex flex-wrap gap-3">
         <button
           type="button"
           onClick={onBack}
-          className="flex-1 rounded-xl border border-slate-200 py-3 text-sm font-bold text-slate-600 hover:bg-slate-50 transition"
+          className="flex-1 min-w-[120px] rounded-xl border border-slate-200 py-3 text-sm font-bold text-slate-600 hover:bg-slate-50 transition"
         >
           Back
         </button>
+        {onSaveDraft && (
+          <button
+            type="button"
+            onClick={onSaveDraft}
+            disabled={isSaving}
+            className="flex-1 min-w-[120px] rounded-xl border border-teal-300 py-3 text-sm font-bold text-teal-700 hover:bg-teal-50 transition disabled:opacity-60"
+          >
+            {isSaving ? "Saving…" : "Save draft & exit"}
+          </button>
+        )}
         <button
           type="button"
           disabled={!canAdvance}
           onClick={onNext}
-          className="flex-1 rounded-xl bg-teal-600 py-3 text-sm font-black text-white hover:bg-teal-700 transition disabled:opacity-40"
+          className="flex-1 min-w-[120px] rounded-xl bg-teal-600 py-3 text-sm font-black text-white hover:bg-teal-700 transition disabled:opacity-40"
         >
           Continue
         </button>

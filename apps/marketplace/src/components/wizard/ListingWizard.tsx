@@ -224,10 +224,24 @@ export function ListingWizard({
           <StepPurposeType state={form} onChange={updateForm} onNext={handleNext} />
         )}
         {step === "location" && (
-          <StepLocation state={form} onChange={updateForm} onNext={handleNext} onBack={handleBack} />
+          <StepLocation
+            state={form}
+            onChange={updateForm}
+            onNext={handleNext}
+            onBack={handleBack}
+            onSaveDraft={handleSaveDraft}
+            isSaving={isSaving}
+          />
         )}
         {step === "details" && (
-          <StepDetails state={form} onChange={updateForm} onNext={handleNext} onBack={handleBack} />
+          <StepDetails
+            state={form}
+            onChange={updateForm}
+            onNext={handleNext}
+            onBack={handleBack}
+            onSaveDraft={handleSaveDraft}
+            isSaving={isSaving}
+          />
         )}
         {step === "photos" && draftId && (
           <StepPhotos
@@ -236,6 +250,8 @@ export function ListingWizard({
             onMediaChange={setMedia}
             onNext={handleNext}
             onBack={handleBack}
+            onSaveDraft={handleSaveDraft}
+            isSaving={isSaving}
           />
         )}
         {step === "pricing" && (
@@ -245,6 +261,8 @@ export function ListingWizard({
             onNext={handleNext}
             onBack={handleBack}
             priceApiError={priceError}
+            onSaveDraft={handleSaveDraft}
+            isSaving={isSaving}
           />
         )}
         {step === "review" && (

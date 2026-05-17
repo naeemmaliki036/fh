@@ -85,6 +85,23 @@ class ConsumerListingModerationService(BaseService):
                 "Only draft or changes_requested listings may be submitted."
             )
 
+        # Enforce required fields before a draft can be submitted for review.
+        missing: list[str] = []
+        if not listing.title or listing.title == "Untitled draft":
+            missing.append("title")
+        if not listing.price or float(listing.price) <= 0:
+            missing.append("price")
+        if not prop.property_type:
+            missing.append("property type")
+        if not prop.country:
+            missing.append("country")
+        if not prop.city:
+            missing.append("city")
+        if missing:
+            raise bad_request(
+                "Cannot submit — please fill in: " + ", ".join(missing)
+            )
+
         prev_status = listing.status
         now = datetime.now(UTC)
         listing.status = ListingStatus.PENDING_REVIEW

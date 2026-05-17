@@ -4,7 +4,7 @@ import { useState, useRef, useEffect, Suspense } from "react";
 import Link from "next/link";
 import Image from "next/image";
 import { useRouter } from "next/navigation";
-import { Menu, X, ChevronRight, ChevronDown, Home, Heart, User, LogOut } from "lucide-react";
+import { Menu, X, ChevronRight, ChevronDown, Home, Heart, User, UserCircle2, LogOut } from "lucide-react";
 import {
   PORTAL_BRAND_NAME,
   AQARFLOW_PORTAL_URL,
@@ -95,8 +95,16 @@ function AvatarDropdown(): React.ReactElement {
         className="flex items-center gap-1.5 rounded-full border border-slate-200 px-2 py-1 hover:border-teal-300 transition"
         aria-label="Account menu"
       >
-        <span className="h-7 w-7 rounded-full bg-teal-100 flex items-center justify-center text-xs font-black text-teal-700">
-          {initials || "?"}
+        <span className="relative h-7 w-7 rounded-full bg-teal-100 flex items-center justify-center text-teal-700">
+          <UserCircle2 className="h-5 w-5" strokeWidth={1.75} />
+          {initials && (
+            <span
+              className="absolute -bottom-0.5 -right-0.5 inline-flex h-3.5 min-w-3.5 items-center justify-center rounded-full bg-teal-600 px-0.5 text-[8px] font-black leading-none text-white ring-1 ring-white"
+              aria-hidden="true"
+            >
+              {initials}
+            </span>
+          )}
         </span>
         <ChevronDown className="h-3.5 w-3.5 text-slate-400" />
       </button>

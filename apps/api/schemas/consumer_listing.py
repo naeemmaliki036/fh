@@ -8,15 +8,16 @@ from pydantic import BaseModel, ConfigDict, Field
 
 
 class ConsumerListingCreateRequest(BaseModel):
-    # Core listing fields
-    purpose: str
-    price: float
+    # Core listing fields — all optional at draft-create time. Required values
+    # are enforced when the user submits the draft for review.
+    purpose: str | None = None
+    price: float | None = None
     currency: str = "AED"
-    title: str
+    title: str | None = None
     description: str | None = None
 
     # Property identity
-    property_type: str
+    property_type: str | None = None
 
     # Location
     country: str = "AE"
