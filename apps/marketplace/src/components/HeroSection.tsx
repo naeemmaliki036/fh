@@ -143,7 +143,7 @@ export function HeroSection({
               backgroundImage: "linear-gradient(90deg, #60A5FA, #34D399, #F97316)",
             }}
           >
-            home
+            property
           </span>
           <br />
           <span className="text-slate-300 text-3xl md:text-4xl font-bold">

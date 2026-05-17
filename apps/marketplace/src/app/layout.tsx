@@ -3,8 +3,10 @@ import "@/styles/globals.css";
 import { QueryProvider } from "@/components/providers/QueryProvider";
 import { CountryProvider } from "@/lib/country-context";
 import { ConsumerProvider } from "@/lib/consumer-context";
+import { AuthDialogProvider } from "@/lib/auth-dialog-context";
 import { CountryGateModal } from "@/components/CountryGateModal";
 import { FavoritesHydrator } from "@/components/FavoritesHydrator";
+import { LoginDialog } from "@/components/auth/LoginDialog";
 import { Toaster } from "sonner";
 import { PORTAL_BRAND_NAME, PORTAL_BRAND_TAGLINE } from "@/lib/portal-brand";
 
@@ -38,12 +40,15 @@ export default function RootLayout({
       <body className="antialiased bg-white">
         <QueryProvider>
           <ConsumerProvider>
-            <CountryProvider>
-              <FavoritesHydrator />
-              <CountryGateModal />
-              {children}
-              <Toaster richColors position="top-right" />
-            </CountryProvider>
+            <AuthDialogProvider>
+              <CountryProvider>
+                <FavoritesHydrator />
+                <CountryGateModal />
+                {children}
+                <LoginDialog />
+                <Toaster richColors position="top-right" />
+              </CountryProvider>
+            </AuthDialogProvider>
           </ConsumerProvider>
         </QueryProvider>
       </body>

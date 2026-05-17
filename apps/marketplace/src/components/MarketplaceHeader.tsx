@@ -12,6 +12,7 @@ import {
 } from "@/lib/portal-brand";
 import { CountrySelector } from "@/components/CountrySelector";
 import { useConsumer } from "@/lib/consumer-context";
+import { useAuthDialog } from "@/lib/auth-dialog-context";
 
 function AgencyDropdown(): React.ReactElement {
   const [open, setOpen] = useState(false);
@@ -138,20 +139,36 @@ function AvatarDropdown(): React.ReactElement {
 
 function PostPropertyButton(): React.ReactElement {
   const { token } = useConsumer();
-  const href = token ? "/me/listings/new" : "/login?next=/me/listings/new";
+  const { open } = useAuthDialog();
+
+  if (token) {
+    return (
+      <Link
+        href="/me/listings/new"
+        className="rounded-full bg-teal-600 px-5 py-2 text-sm font-bold text-white hover:bg-teal-700 transition shrink-0"
+      >
+        Post a property
+      </Link>
+    );
+  }
+
   return (
-    <Link
-      href={href}
+    <button
+      type="button"
+      onClick={() =>
+        open({ mode: "signup", reason: "Sign up to post a property", redirectAfter: "/me/listings/new" })
+      }
       className="rounded-full bg-teal-600 px-5 py-2 text-sm font-bold text-white hover:bg-teal-700 transition shrink-0"
     >
       Post a property
-    </Link>
+    </button>
   );
 }
 
 export function MarketplaceHeader(): React.ReactElement {
   const [menuOpen, setMenuOpen] = useState(false);
   const { token, isHydrated } = useConsumer();
+  const { open: openAuthDialog } = useAuthDialog();
   const isSignedIn = isHydrated && !!token;
 
   return (
@@ -177,6 +194,15 @@ export function MarketplaceHeader(): React.ReactElement {
         </nav>
 
         <div className="hidden md:flex items-center gap-3 shrink-0">
+          {!isSignedIn && (
+            <button
+              type="button"
+              onClick={() => openAuthDialog({ mode: "login" })}
+              className="text-sm font-semibold text-slate-500 hover:text-teal-600 transition"
+            >
+              Log in
+            </button>
+          )}
           <PostPropertyButton />
           {isSignedIn ? (
             <>
@@ -188,12 +214,6 @@ export function MarketplaceHeader(): React.ReactElement {
           ) : (
             <>
               <AgencyDropdown />
-              <Link
-                href="/login"
-                className="text-sm font-semibold text-slate-500 hover:text-teal-600 transition"
-              >
-                Sign in
-              </Link>
               <Suspense>
                 <CountrySelector />
               </Suspense>
@@ -226,10 +246,16 @@ export function MarketplaceHeader(): React.ReactElement {
               </>
             ) : (
               <>
+                <button
+                  type="button"
+                  onClick={() => { setMenuOpen(false); openAuthDialog({ mode: "login" }); }}
+                  className="text-left"
+                >
+                  Log in
+                </button>
                 <a href={AQARFLOW_PORTAL_URL} target="_blank" rel="noopener noreferrer" className="text-teal-600">
                   For agencies — {AQARFLOW_BRAND_NAME}
                 </a>
-                <Link href="/login" onClick={() => setMenuOpen(false)}>Sign in</Link>
               </>
             )}
           </nav>
