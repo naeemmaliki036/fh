@@ -5,6 +5,7 @@ export interface MarketplaceCountryItem {
   name: string;
   flag_emoji: string;
   display_order: number;
+  hero_image_url: string | null;
 }
 
 export interface MarketplaceTenantSnippet {
@@ -138,6 +139,37 @@ export interface MarketplaceStats {
   by_type: Array<{ property_type: string; count: number }>;
 }
 
+export interface MarketplaceAgent {
+  id: string;
+  full_name: string;
+  photo_url: string | null;
+  license_id: string | null;
+  phone: string | null;
+  email: string | null;
+  whatsapp: string | null;
+  active_listings_count: number;
+  agency: {
+    id: string;
+    slug: string;
+    name: string;
+    logo_url: string | null;
+  };
+}
+
+export interface MarketplaceAgentsParams {
+  country?: string;
+  q?: string;
+  page?: number;
+  page_size?: number;
+}
+
+export interface MarketplaceAgentsResponse {
+  items: MarketplaceAgent[];
+  total: number;
+  page: number;
+  page_size: number;
+}
+
 export interface MarketplaceListingsParams {
   page?: number;
   page_size?: number;
@@ -147,7 +179,11 @@ export interface MarketplaceListingsParams {
   min_price?: number;
   max_price?: number;
   beds?: number;
+  min_beds?: number;
+  max_beds?: number;
   baths?: number;
+  min_baths?: number;
+  max_baths?: number;
   city?: string;
   area?: string;
   amenities?: string;

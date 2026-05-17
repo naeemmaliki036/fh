@@ -73,6 +73,28 @@ export function TenantOverviewTab({ tenant }: TenantOverviewTabProps): ReactElem
             </CardContent>
           </Card>
         )}
+
+        {(tenant.office_country ?? tenant.office_city ?? tenant.signup_notes) && (
+          <Card>
+            <CardHeader className="pb-2">
+              <CardTitle className="text-base">Signup Info</CardTitle>
+            </CardHeader>
+            <CardContent>
+              {(tenant.office_country ?? tenant.office_city) && (
+                <InfoRow
+                  label="Main office"
+                  value={[tenant.office_country, tenant.office_city].filter(Boolean).join(" · ")}
+                />
+              )}
+              {tenant.signup_notes && (
+                <div className="py-2 text-sm border-b last:border-0">
+                  <span className="text-muted-foreground block mb-1">Signup notes</span>
+                  <span className="font-medium italic">{tenant.signup_notes}</span>
+                </div>
+              )}
+            </CardContent>
+          </Card>
+        )}
       </div>
     </div>
   );

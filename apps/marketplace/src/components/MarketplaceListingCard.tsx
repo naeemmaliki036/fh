@@ -1,7 +1,7 @@
 "use client";
 
 import Link from "next/link";
-import { MapPin } from "lucide-react";
+import { MapPin, ShieldCheck } from "lucide-react";
 import { cn } from "@/lib/cn";
 import { FavoriteButton } from "@/components/FavoriteButton";
 import type { MarketplaceListingItem } from "@fh/portal-types";
@@ -85,16 +85,27 @@ export function MarketplaceListingCard({
           </div>
         )}
 
-        {/* Badges — top left */}
+        {/* Badges — top left (stacked: purpose → verified → owner → premium) */}
         <div className="absolute top-2.5 left-2.5 flex flex-col gap-1.5">
-          {isOwner && (
-            <span className="inline-flex items-center rounded-full bg-slate-100 px-2 py-0.5 text-[10px] font-bold text-slate-700 shadow">
-              Owner
+          {/* Buy / Rent purpose pill */}
+          {purpose === "sale" ? (
+            <span className="inline-flex items-center rounded-full bg-teal-600 px-2 py-0.5 text-[10px] font-bold text-white shadow">
+              Buy
+            </span>
+          ) : (
+            <span className="inline-flex items-center rounded-full bg-amber-500 px-2 py-0.5 text-[10px] font-bold text-white shadow">
+              Rent
             </span>
           )}
           {is_verified && (
-            <span className="inline-flex items-center gap-1 rounded-full bg-amber-500 px-2 py-0.5 text-[10px] font-bold text-white shadow">
+            <span className="inline-flex items-center gap-1 rounded-full bg-emerald-600 px-2 py-0.5 text-[10px] font-bold text-white shadow">
+              <ShieldCheck className="h-2.5 w-2.5" />
               Verified
+            </span>
+          )}
+          {isOwner && (
+            <span className="inline-flex items-center rounded-full bg-slate-100 px-2 py-0.5 text-[10px] font-bold text-slate-700 shadow">
+              Owner
             </span>
           )}
           {isPremium && (

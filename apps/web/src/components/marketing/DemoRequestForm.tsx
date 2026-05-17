@@ -11,13 +11,14 @@ import { Label } from "@/components/ui/label";
 import { cn } from "@/lib/utils/cn";
 import { PhoneInput } from "@/components/molecules/PhoneInput";
 import { isValidPhone } from "@/lib/utils/phone";
+import { CountrySelectField } from "@/components/molecules/CountrySelectField";
 
 const demoSchema = z.object({
   full_name: z.string().min(2, "Full name is required"),
   company_name: z.string().min(1, "Company name is required"),
   email: z.string().email("Valid email required"),
   phone: z.string().refine(isValidPhone, "Invalid phone number"),
-  country: z.enum(["UAE", "KSA", "Other"], { required_error: "Select a country" }),
+  country: z.string().optional(),
   team_size: z.enum(["1-5", "6-20", "21-50", "50+"], { required_error: "Select team size" }),
   message: z.string().optional(),
 });
@@ -153,18 +154,19 @@ export function DemoRequestForm(): React.ReactElement {
       </div>
 
       <div className="grid sm:grid-cols-2 gap-4">
-        <SelectField
-          id="country"
-          label="Country"
-          required
-          error={errors.country?.message}
-          selectProps={register("country")}
-        >
-          <option value="">Select country</option>
-          <option value="UAE">UAE</option>
-          <option value="KSA">KSA</option>
-          <option value="Other">Other</option>
-        </SelectField>
+        <Controller
+          name="country"
+          control={control}
+          render={({ field }) => (
+            <CountrySelectField
+              id="country"
+              label="Country"
+              value={field.value ?? ""}
+              onChange={field.onChange}
+              error={errors.country?.message}
+            />
+          )}
+        />
 
         <SelectField
           id="team_size"

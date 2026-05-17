@@ -34,6 +34,11 @@ export default function MarketplaceHomePage(): React.ReactElement {
       ? `${countryMeta.flag} ${countryMeta.name}`
       : "worldwide";
 
+  const heroImageUrl =
+    country && countriesData?.countries
+      ? (countriesData.countries.find((c) => c.code === country)?.hero_image_url ?? null)
+      : null;
+
   const typeList =
     stats && stats.by_type.length > 0
       ? stats.by_type
@@ -49,6 +54,7 @@ export default function MarketplaceHomePage(): React.ReactElement {
           locationLabel={locationLabel}
           stats={stats}
           countryCode={country}
+          heroImageUrl={heroImageUrl}
         />
 
         {/* Thin teal banner belt kept below hero */}
@@ -70,7 +76,7 @@ export default function MarketplaceHomePage(): React.ReactElement {
             <section>
               <div className="flex items-center justify-between mb-6">
                 <h2 className="text-xl font-black text-slate-900">
-                  Verified properties
+                  Hot properties
                 </h2>
                 <Link
                   href={`/listings?is_verified=true${country ? `&country=${country}` : ""}`}

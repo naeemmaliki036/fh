@@ -10,6 +10,7 @@ import { Label } from "@/components/ui/label";
 import { useRegisterTenant } from "@/hooks/mutations/useAuthMutations";
 import { authRepository } from "@/lib/api/repositories/auth.repository";
 import { SlugStatusIndicator, type SlugStatus } from "@/components/molecules/SlugStatusIndicator";
+import { CountrySelectField } from "@/components/molecules/CountrySelectField";
 
 const schema = z.object({
   tenant_name: z.string().min(2, "Company name too short"),
@@ -24,6 +25,9 @@ const schema = z.object({
   contact_email: z.string().email("Invalid contact email"),
   currency: z.string().default("AED"),
   timezone: z.string().default("Asia/Dubai"),
+  office_country: z.string().optional(),
+  office_city: z.string().optional(),
+  signup_notes: z.string().optional(),
 });
 
 type FormValues = z.infer<typeof schema>;
@@ -53,8 +57,17 @@ export function SignupForm(): React.ReactElement {
     formState: { errors },
   } = useForm<FormValues>({
     resolver: zodResolver(schema),
-    defaultValues: { currency: "AED", timezone: "Asia/Dubai", contact_email: "" },
+    defaultValues: {
+      currency: "AED",
+      timezone: "Asia/Dubai",
+      contact_email: "",
+      office_country: "",
+      office_city: "",
+      signup_notes: "",
+    },
   });
+
+  const officeCountryValue = watch("office_country");
 
   const nameValue = watch("tenant_name");
   const slugValue = watch("tenant_slug");
@@ -210,6 +223,35 @@ export function SignupForm(): React.ReactElement {
         {errors.contact_email && (
           <p className="text-xs text-destructive">{errors.contact_email.message}</p>
         )}
+      </div>
+
+      {/* Main office section */}
+      <div className="pt-2 border-t border-slate-100">
+        <p className="text-xs font-bold uppercase tracking-wider text-slate-400 mb-3">
+          Main office (optional)
+        </p>
+        <div className="space-y-4">
+          <CountrySelectField
+            id="office_country"
+            label="Country"
+            value={officeCountryValue ?? ""}
+            onChange={(v) => setValue("office_country", v, { shouldValidate: false })}
+          />
+          <div className="space-y-1.5">
+            <Label htmlFor="office_city">City</Label>
+            <Input id="office_city" placeholder="Dubai" {...field("office_city")} />
+          </div>
+          <div className="space-y-1.5">
+            <Label htmlFor="signup_notes">Notes for our team</Label>
+            <textarea
+              id="signup_notes"
+              rows={2}
+              placeholder="Anything you'd like us to know..."
+              {...field("signup_notes")}
+              className="flex w-full rounded-md border border-input bg-transparent px-3 py-2 text-sm shadow-sm transition-colors placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring resize-none"
+            />
+          </div>
+        </div>
       </div>
 
       <Button

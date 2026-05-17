@@ -1,4 +1,5 @@
 import type { ReactNode } from "react";
+import Image from "next/image";
 import { Building2 } from "lucide-react";
 
 interface AuthShellProps {
@@ -87,6 +88,18 @@ export function AuthShell({
               <Building2 className="h-4 w-4 text-white" />
             </div>
             <span className="text-base font-bold tracking-tight">{brandName}</span>
+          </div>
+
+          {/* AqarFlow wordmark — shown on all auth pages */}
+          <div className="flex justify-center mb-6">
+            <Image
+              src="/aqarflow-logo@2x.png"
+              alt="AqarFlow"
+              width={180}
+              height={40}
+              className="h-10 w-auto"
+              priority
+            />
           </div>
 
           <div className="mb-6">

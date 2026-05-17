@@ -8,6 +8,8 @@ import type {
   MarketplaceListingsParams,
   MarketplaceListingsResponse,
   MarketplaceAgenciesResponse,
+  MarketplaceAgentsParams,
+  MarketplaceAgentsResponse,
 } from "@fh/portal-types";
 
 const BASE = "/marketplace";
@@ -75,6 +77,14 @@ export async function getStats(
   const res = await c.get<MarketplaceStats>(`${BASE}/stats`, {
     params: country ? { country } : undefined,
   });
+  return res.data;
+}
+
+export async function getAgents(
+  c: AxiosInstance,
+  params?: MarketplaceAgentsParams,
+): Promise<MarketplaceAgentsResponse> {
+  const res = await c.get<MarketplaceAgentsResponse>(`${BASE}/agents`, { params });
   return res.data;
 }
 

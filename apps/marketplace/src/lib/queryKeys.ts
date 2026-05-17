@@ -11,6 +11,8 @@ export const queryKeys = {
       ["marketplace", "agency", slug, "listings", params] as const,
     stats: (country?: string) => ["marketplace", "stats", country] as const,
     featured: (country?: string) => ["marketplace", "featured", country] as const,
+    agents: (params?: Record<string, unknown>) =>
+      ["marketplace", "agents", params] as const,
   },
   consumer: {
     me: ["consumer", "me"] as const,

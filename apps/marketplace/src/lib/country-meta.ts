@@ -9,6 +9,25 @@
 
 import type { MarketplaceCountryItem } from "@fh/portal-types";
 
+/** Map ISO-2 → ISO-3 alpha codes for the GCC + common region countries. */
+export const ISO2_TO_ISO3: Record<string, string> = {
+  AE: "ARE",
+  SA: "SAU",
+  QA: "QAT",
+  BH: "BHR",
+  KW: "KWT",
+  OM: "OMN",
+  JO: "JOR",
+  EG: "EGY",
+  LB: "LBN",
+  IQ: "IRQ",
+};
+
+/** Return the ISO-3 code for a country, falling back to the ISO-2 if unmapped. */
+export function toIso3(code: string): string {
+  return ISO2_TO_ISO3[code] ?? code;
+}
+
 export interface CountryMeta {
   name: string;
   flag: string;

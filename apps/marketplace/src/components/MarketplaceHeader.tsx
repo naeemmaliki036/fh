@@ -51,7 +51,7 @@ function AgencyDropdown(): React.ReactElement {
             rel="noopener noreferrer"
             className="inline-flex items-center gap-1.5 rounded-xl bg-teal-600 px-4 py-2 text-sm font-bold text-white hover:bg-teal-700 transition w-full justify-center"
           >
-            Go to {AQARFLOW_BRAND_NAME} <ChevronRight className="h-4 w-4" />
+            Go to platform <ChevronRight className="h-4 w-4" />
           </a>
         </div>
       )}
@@ -166,10 +166,12 @@ export function MarketplaceHeader(): React.ReactElement {
           />
         </Link>
 
-        <nav className="hidden md:flex items-center gap-8 text-sm font-semibold text-slate-600">
+        <nav className="hidden md:flex items-center gap-6 text-sm font-semibold text-slate-600">
           <Link href="/listings?purpose=sale" className="hover:text-teal-600 transition">Buy</Link>
           <Link href="/listings?purpose=rent_long" className="hover:text-teal-600 transition">Rent</Link>
           <Link href="/agencies" className="hover:text-teal-600 transition">Agencies</Link>
+          <Link href="/listings?completion_status=off_plan" className="hover:text-teal-600 transition">New Projects</Link>
+          <Link href="/agents" className="hover:text-teal-600 transition">Find Your Agent</Link>
         </nav>
 
         <div className="hidden md:flex items-center gap-3 shrink-0">
@@ -178,9 +180,6 @@ export function MarketplaceHeader(): React.ReactElement {
             <AvatarDropdown />
           ) : (
             <>
-              <Suspense>
-                <CountrySelector />
-              </Suspense>
               <AgencyDropdown />
               <Link
                 href="/login"
@@ -188,6 +187,9 @@ export function MarketplaceHeader(): React.ReactElement {
               >
                 Sign in
               </Link>
+              <Suspense>
+                <CountrySelector />
+              </Suspense>
             </>
           )}
         </div>
@@ -207,6 +209,8 @@ export function MarketplaceHeader(): React.ReactElement {
             <Link href="/listings?purpose=sale" onClick={() => setMenuOpen(false)}>Buy</Link>
             <Link href="/listings?purpose=rent_long" onClick={() => setMenuOpen(false)}>Rent</Link>
             <Link href="/agencies" onClick={() => setMenuOpen(false)}>Agencies</Link>
+            <Link href="/listings?completion_status=off_plan" onClick={() => setMenuOpen(false)}>New Projects</Link>
+            <Link href="/agents" onClick={() => setMenuOpen(false)}>Find Your Agent</Link>
             {isSignedIn ? (
               <>
                 <Link href="/me/listings" onClick={() => setMenuOpen(false)}>My listings</Link>

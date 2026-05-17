@@ -5,6 +5,7 @@ import { useRouter, usePathname, useSearchParams } from "next/navigation";
 import { ChevronDown } from "lucide-react";
 import { useCountry } from "@/lib/country-context";
 import { useMarketplaceCountries } from "@/hooks/queries/useMarketplaceCountries";
+import { toIso3 } from "@/lib/country-meta";
 
 export function CountrySelector(): React.ReactElement {
   const { country, setCountry, isHydrated } = useCountry();
@@ -31,6 +32,7 @@ export function CountrySelector(): React.ReactElement {
   const selected = countries.find((c) => c.code === country);
   const selectedName = selected?.name ?? country;
   const selectedFlag = selected?.flag_emoji ?? "🏳️";
+  const collapsedCode = toIso3(country);
 
   function handleSelect(code: string): void {
     setCountry(code);
@@ -51,7 +53,7 @@ export function CountrySelector(): React.ReactElement {
         <span role="img" aria-label={selectedName} className="text-base leading-none">
           {selectedFlag}
         </span>
-        <span className="hidden sm:inline max-w-[120px] truncate">{selectedName}</span>
+        <span className="hidden sm:inline font-mono text-xs tracking-wide">{collapsedCode}</span>
         <ChevronDown className="h-3.5 w-3.5 shrink-0 text-slate-400" />
       </button>
 

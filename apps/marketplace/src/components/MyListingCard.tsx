@@ -1,7 +1,7 @@
 "use client";
 
 import Link from "next/link";
-import { MapPin, Calendar } from "lucide-react";
+import { MapPin, Calendar, ShieldCheck } from "lucide-react";
 import { cn } from "@/lib/cn";
 import type { ConsumerListingItem, ConsumerListingStatus } from "@fh/portal-types";
 import { useMarkListingStatus, useDeleteListing } from "@/hooks/mutations/useMyListingMutations";
@@ -46,18 +46,38 @@ export function MyListingCard({ listing }: MyListingCardProps): React.ReactEleme
             No image
           </div>
         )}
-        <div className="absolute top-2.5 left-2.5 flex flex-wrap gap-1">
-          <span className={cn("rounded-full px-2 py-0.5 text-[10px] font-bold capitalize", STATUS_COLORS[listing.status])}>
-            {listing.status}
-          </span>
-          {days !== null && (
-            <span className={cn(
-              "rounded-full px-2 py-0.5 text-[10px] font-bold",
-              days <= 7 ? "bg-red-100 text-red-700" : "bg-slate-100 text-slate-600",
-            )}>
-              {days}d left
+        <div className="absolute top-2.5 left-2.5 flex flex-col gap-1">
+          {/* Purpose pill */}
+          {listing.purpose === "sale" ? (
+            <span className="inline-flex items-center rounded-full bg-teal-600 px-2 py-0.5 text-[10px] font-bold text-white shadow w-fit">
+              Buy
+            </span>
+          ) : (
+            <span className="inline-flex items-center rounded-full bg-amber-500 px-2 py-0.5 text-[10px] font-bold text-white shadow w-fit">
+              Rent
             </span>
           )}
+          {/* Verified */}
+          {(listing as ConsumerListingItem & { is_verified?: boolean }).is_verified && (
+            <span className="inline-flex items-center gap-1 rounded-full bg-emerald-600 px-2 py-0.5 text-[10px] font-bold text-white shadow w-fit">
+              <ShieldCheck className="h-2.5 w-2.5" />
+              Verified
+            </span>
+          )}
+          {/* Status + expiry */}
+          <div className="flex flex-wrap gap-1">
+            <span className={cn("rounded-full px-2 py-0.5 text-[10px] font-bold capitalize", STATUS_COLORS[listing.status])}>
+              {listing.status}
+            </span>
+            {days !== null && (
+              <span className={cn(
+                "rounded-full px-2 py-0.5 text-[10px] font-bold",
+                days <= 7 ? "bg-red-100 text-red-700" : "bg-slate-100 text-slate-600",
+              )}>
+                {days}d left
+              </span>
+            )}
+          </div>
         </div>
       </div>
 

@@ -2,8 +2,8 @@
 
 import { useState } from "react";
 import { useRouter } from "next/navigation";
-import { Search } from "lucide-react";
-import type { MarketplaceStats } from "@fh/portal-types";
+import { Search, Flame } from "lucide-react";
+import type { MarketplaceStats, MarketplaceCountryItem } from "@fh/portal-types";
 
 // ---------------------------------------------------------------------------
 // Types
@@ -16,6 +16,7 @@ interface HeroSectionProps {
   locationLabel: string;
   stats: MarketplaceStats | undefined;
   countryCode: string | null;
+  heroImageUrl?: string | null;
 }
 
 // ---------------------------------------------------------------------------
@@ -44,25 +45,21 @@ interface StatDef {
 const STAT_DEFS: StatDef[] = [
   {
     key: "listings",
-    value: (s) =>
-      s ? `${s.total_listings.toLocaleString()}+` : "—",
+    value: (s) => (s ? `${s.total_listings.toLocaleString()}+` : "—"),
     label: "Active Listings",
   },
   {
     key: "countries",
-    // TODO: wire to real country count when API exposes it
     value: (_s, cc) => (cc > 0 ? `${cc}` : "6"),
     label: "GCC Countries",
   },
   {
     key: "agents",
-    // TODO: replace placeholder when API exposes agent count
     value: () => "3,200+",
     label: "Verified Agents",
   },
   {
     key: "transactions",
-    // TODO: replace placeholder when API exposes transaction volume
     value: () => "AED 2.4B+",
     label: "Transactions 2025",
   },
@@ -77,14 +74,13 @@ export function HeroSection({
   locationLabel,
   stats,
   countryCode,
+  heroImageUrl,
 }: HeroSectionProps): React.ReactElement {
   const router = useRouter();
   const [tab, setTab] = useState<HeroTab>("buy");
   const [q, setQ] = useState("");
 
-  // Derive country count from stats context (passed from page)
-  // We don't have a direct count; the fallback constant 6 covers GCC
-  const countryCount = 0; // page passes 0 to use default "6"
+  const countryCount = 0;
 
   function buildSearchUrl(): string {
     const params = new URLSearchParams();
@@ -114,17 +110,33 @@ export function HeroSection({
     router.push(buildSearchUrl());
   }
 
+  const fallbackGradient =
+    "linear-gradient(135deg, #0F172A 0%, #1E3A8A 55%, #0369A1 100%)";
+
+  const sectionStyle: React.CSSProperties = heroImageUrl
+    ? {
+        backgroundImage: `url(${heroImageUrl})`,
+        backgroundSize: "cover",
+        backgroundPosition: "center",
+      }
+    : { background: fallbackGradient };
+
   return (
-    <section
-      className="relative overflow-hidden py-24 px-4"
-      style={{
-        background: "linear-gradient(135deg, #0F172A 0%, #1E3A8A 55%, #0369A1 100%)",
-      }}
-    >
-      {/* Floating animated blobs */}
-      <Blob className="top-[-80px] left-[-80px] h-96 w-96 bg-blue-600 opacity-20" />
-      <Blob className="bottom-[-60px] right-[-60px] h-80 w-80 bg-teal-500 opacity-20" />
-      <Blob className="top-[30%] left-[60%] h-64 w-64 bg-indigo-500 opacity-10" />
+    <section className="relative overflow-hidden py-24 px-4" style={sectionStyle}>
+      {/* Gradient overlay — always rendered; replaces blobs when photo is set */}
+      <div
+        aria-hidden="true"
+        className="absolute inset-0 bg-gradient-to-b from-slate-900/70 via-slate-900/55 to-slate-900/85"
+      />
+
+      {/* Floating blobs only when no photo background */}
+      {!heroImageUrl && (
+        <>
+          <Blob className="top-[-80px] left-[-80px] h-96 w-96 bg-blue-600 opacity-20" />
+          <Blob className="bottom-[-60px] right-[-60px] h-80 w-80 bg-teal-500 opacity-20" />
+          <Blob className="top-[30%] left-[60%] h-64 w-64 bg-indigo-500 opacity-10" />
+        </>
+      )}
 
       <div className="relative mx-auto max-w-3xl text-center space-y-8">
         {/* Trust badge */}
@@ -136,8 +148,7 @@ export function HeroSection({
           <span
             className="bg-clip-text text-transparent"
             style={{
-              backgroundImage:
-                "linear-gradient(90deg, #60A5FA, #34D399, #F97316)",
+              backgroundImage: "linear-gradient(90deg, #60A5FA, #34D399, #F97316)",
             }}
           >
             Dream Property
@@ -186,12 +197,12 @@ function TrustBadge(): React.ReactElement {
   return (
     <div className="flex justify-center">
       <div className="inline-flex items-center gap-2 rounded-full border border-white/20 bg-white/10 px-4 py-1.5 backdrop-blur-sm">
-        <span className="relative flex h-2 w-2">
-          <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-green-400 opacity-75" />
-          <span className="relative inline-flex h-2 w-2 rounded-full bg-green-400" />
+        <span className="relative flex h-4 w-4 items-center justify-center">
+          <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-orange-400 opacity-60" />
+          <Flame className="relative h-3.5 w-3.5 text-orange-400" />
         </span>
         <span className="text-xs font-semibold text-white/90 tracking-wide">
-          #1 Real Estate Platform in UAE &amp; GCC
+          Hot Real Estate Platform in UAE &amp; GCC
         </span>
       </div>
     </div>
@@ -234,10 +245,7 @@ function SearchPanel({
       </div>
 
       {/* Search input row */}
-      <form
-        onSubmit={onSearch}
-        className="flex flex-col sm:flex-row gap-2"
-      >
+      <form onSubmit={onSearch} className="flex flex-col sm:flex-row gap-2">
         <input
           type="text"
           value={q}
@@ -277,3 +285,6 @@ function StatsBar({
     </div>
   );
 }
+
+// Re-export helper type so page.tsx can use it without importing portal-types directly
+export type { MarketplaceCountryItem };

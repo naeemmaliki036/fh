@@ -11,7 +11,10 @@ export default function SignupPage(): React.ReactElement {
       <SignupForm />
       <p className="mt-4 text-center text-sm text-muted-foreground">
         Already have an account?{" "}
-        <Link href="/login" className="text-primary hover:underline">
+        <Link
+          href="/login"
+          className="text-teal-600 hover:text-teal-700 font-semibold underline-offset-4 hover:underline"
+        >
           Sign in
         </Link>
       </p>

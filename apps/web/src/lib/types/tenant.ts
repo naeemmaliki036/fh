@@ -95,6 +95,9 @@ export interface TenantDetailResponse extends Tenant {
   counts: TenantCounts;
   recent_activity: TenantActivityEntry[];
   subscription_info: TenantSubscriptionInfo | null;
+  office_country: string | null;
+  office_city: string | null;
+  signup_notes: string | null;
 }
 
 export interface TenantLifecycleRequest {
