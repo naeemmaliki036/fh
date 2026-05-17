@@ -29,8 +29,8 @@ export const propertyFormSchema = z.object({
   city: z.string().optional().nullable(),
   area: z.string().optional().nullable(),
   property_type: z.enum(TYPES as [PropertyType, ...PropertyType[]]),
-  bedrooms: z.coerce.number().int().min(0).optional().nullable(),
-  bathrooms: z.coerce.number().int().min(0).optional().nullable(),
+  bedrooms: z.coerce.number().int().min(0).max(50, "Max 50").optional().nullable(),
+  bathrooms: z.coerce.number().int().min(0).max(50, "Max 50").optional().nullable(),
   size_sqft: z.string().optional().nullable()
     .refine((v) => !v || /^\d+(\.\d+)?$/.test(v), "Must be a number"),
   price: z.string().optional().nullable()

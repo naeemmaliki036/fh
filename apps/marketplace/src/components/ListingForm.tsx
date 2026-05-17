@@ -215,8 +215,12 @@ export function ListingForm({
           <input
             type="number"
             min={0}
+            max={50}
             value={form.bedrooms ?? ""}
-            onChange={(e) => setForm((f) => ({ ...f, bedrooms: e.target.value ? Number(e.target.value) : null }))}
+            onChange={(e) => {
+              const n = e.target.value ? Number(e.target.value) : null;
+              setForm((f) => ({ ...f, bedrooms: n !== null && n > 50 ? 50 : n }));
+            }}
             placeholder="3"
             className={inputCls}
           />
@@ -226,8 +230,12 @@ export function ListingForm({
           <input
             type="number"
             min={0}
+            max={50}
             value={form.bathrooms ?? ""}
-            onChange={(e) => setForm((f) => ({ ...f, bathrooms: e.target.value ? Number(e.target.value) : null }))}
+            onChange={(e) => {
+              const n = e.target.value ? Number(e.target.value) : null;
+              setForm((f) => ({ ...f, bathrooms: n !== null && n > 50 ? 50 : n }));
+            }}
             placeholder="2"
             className={inputCls}
           />

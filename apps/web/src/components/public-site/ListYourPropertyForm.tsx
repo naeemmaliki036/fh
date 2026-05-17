@@ -249,7 +249,7 @@ export function ListYourPropertyForm({
         {!hideBeds && (
           <div>
             <label className={labelCls}>Bedrooms (optional)</label>
-            <input type="number" min={0} value={form.bedrooms} onChange={set("bedrooms")} placeholder="e.g. 3" className={fieldCls} />
+            <input type="number" min={0} max={50} value={form.bedrooms} onChange={set("bedrooms")} placeholder="e.g. 3" className={fieldCls} />
           </div>
         )}
         <div>

@@ -154,8 +154,8 @@ export function PropertyDetailsSection({ register, showBedrooms, showBathrooms, 
     <div className="space-y-1.5">
       <SectionHeader label="Property details" />
       <div className="grid grid-cols-2 md:grid-cols-3 gap-3">
-        {showBedrooms && <div className="space-y-1"><Label>Bedrooms <span className="text-xs text-muted-foreground">(optional)</span></Label><Input type="number" {...register("bedrooms")} /></div>}
-        {showBathrooms && <div className="space-y-1"><Label>Bathrooms <span className="text-xs text-muted-foreground">(optional)</span></Label><Input type="number" {...register("bathrooms")} /></div>}
+        {showBedrooms && <div className="space-y-1"><Label>Bedrooms <span className="text-xs text-muted-foreground">(optional)</span></Label><Input type="number" min={0} max={50} {...register("bedrooms")} /></div>}
+        {showBathrooms && <div className="space-y-1"><Label>Bathrooms <span className="text-xs text-muted-foreground">(optional)</span></Label><Input type="number" min={0} max={50} {...register("bathrooms")} /></div>}
         <div className="space-y-1">
           <Label>{isPlot ? "Plot area (sqft)" : "Size (sqft)"} <span className="text-xs text-muted-foreground">(optional)</span></Label>
           <Input {...register("size_sqft")} />

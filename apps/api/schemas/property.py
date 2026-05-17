@@ -4,7 +4,7 @@ import uuid
 from datetime import datetime
 from decimal import Decimal
 
-from pydantic import BaseModel, ConfigDict, field_validator
+from pydantic import BaseModel, ConfigDict, Field, field_validator
 
 from apps.api.models.enums import (
     CommissionType,
@@ -79,8 +79,8 @@ class PropertyCreateRequest(BaseModel):
     title: str
     description: str | None = None
     property_type: PropertyType
-    bedrooms: int | None = None
-    bathrooms: int | None = None
+    bedrooms: int | None = Field(default=None, ge=0, le=50)
+    bathrooms: int | None = Field(default=None, ge=0, le=50)
     size_sqft: Decimal | None = None
     price: Decimal | None = None
     currency: str | None = None
@@ -141,8 +141,8 @@ class PropertyUpdateRequest(BaseModel):
     title: str | None = None
     description: str | None = None
     property_type: PropertyType | None = None
-    bedrooms: int | None = None
-    bathrooms: int | None = None
+    bedrooms: int | None = Field(default=None, ge=0, le=50)
+    bathrooms: int | None = Field(default=None, ge=0, le=50)
     size_sqft: Decimal | None = None
     price: Decimal | None = None
     currency: str | None = None
@@ -206,8 +206,8 @@ class PropertyResponse(BaseModel):
     title: str
     description: str | None = None
     property_type: PropertyType
-    bedrooms: int | None = None
-    bathrooms: int | None = None
+    bedrooms: int | None = Field(default=None, ge=0, le=50)
+    bathrooms: int | None = Field(default=None, ge=0, le=50)
     size_sqft: Decimal | None = None
     price: Decimal | None = None
     currency: str | None = None

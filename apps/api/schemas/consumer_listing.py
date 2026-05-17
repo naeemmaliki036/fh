@@ -4,7 +4,7 @@ from datetime import datetime
 from typing import Any
 from uuid import UUID
 
-from pydantic import BaseModel, ConfigDict
+from pydantic import BaseModel, ConfigDict, Field
 
 
 class ConsumerListingCreateRequest(BaseModel):
@@ -24,8 +24,8 @@ class ConsumerListingCreateRequest(BaseModel):
     area: str | None = None
 
     # Physical attributes
-    bedrooms: int | None = None
-    bathrooms: int | None = None
+    bedrooms: int | None = Field(default=None, ge=0, le=50)
+    bathrooms: int | None = Field(default=None, ge=0, le=50)
     size_sqft: float | None = None
     latitude: float | None = None
     longitude: float | None = None
@@ -55,8 +55,8 @@ class ConsumerListingUpdateRequest(BaseModel):
     currency: str | None = None
     city: str | None = None
     area: str | None = None
-    bedrooms: int | None = None
-    bathrooms: int | None = None
+    bedrooms: int | None = Field(default=None, ge=0, le=50)
+    bathrooms: int | None = Field(default=None, ge=0, le=50)
     size_sqft: float | None = None
     latitude: float | None = None
     longitude: float | None = None
@@ -99,8 +99,8 @@ class ConsumerListingResponse(BaseModel):
     country: str | None = None
     city: str | None = None
     area: str | None = None
-    bedrooms: int | None = None
-    bathrooms: int | None = None
+    bedrooms: int | None = Field(default=None, ge=0, le=50)
+    bathrooms: int | None = Field(default=None, ge=0, le=50)
     size_sqft: float | None = None
     latitude: float | None = None
     longitude: float | None = None
