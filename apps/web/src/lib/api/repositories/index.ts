@@ -29,3 +29,4 @@ export { reportsRepository } from "./reports.repository";
 export { openHouseRepository } from "./open-house.repository";
 export { marketplaceCountryRepository } from "./marketplace-country.repository";
 export { adminConsumerListingsRepository } from "./admin-consumer-listings.repository";
+export { priceValidationRepository } from "./price-validation.repository";

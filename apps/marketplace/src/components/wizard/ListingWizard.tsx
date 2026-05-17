@@ -4,7 +4,12 @@ import { useState, useCallback } from "react";
 import { useRouter } from "next/navigation";
 import { Check } from "lucide-react";
 import { cn } from "@/lib/cn";
-import { useCreateDraft, usePatchDraft, useSubmitListing } from "@/hooks/mutations/useDraftListing";
+import {
+  useCreateDraft,
+  usePatchDraft,
+  useSubmitListing,
+  extractMarketplacePriceError,
+} from "@/hooks/mutations/useDraftListing";
 import { StepPurposeType } from "./steps/StepPurposeType";
 import { StepLocation } from "./steps/StepLocation";
 import { StepDetails } from "./steps/StepDetails";
@@ -62,6 +67,8 @@ export function ListingWizard({
   const [draftId, setDraftId] = useState<string | null>(initialListing?.id ?? null);
   const [media, setMedia] = useState<ConsumerListingMediaItem[]>(initialListing?.media ?? []);
   const [savedAt, setSavedAt] = useState<Date | null>(null);
+  const [priceError, setPriceError] = useState<string | null>(null);
+  const [reviewPriceError, setReviewPriceError] = useState<string | null>(null);
 
   const createDraft = useCreateDraft();
   const patchDraft = usePatchDraft();
@@ -69,6 +76,9 @@ export function ListingWizard({
 
   const updateForm = useCallback((updates: Partial<WizardFormState>): void => {
     setForm((prev) => ({ ...prev, ...updates }));
+    if ("price" in updates || "currency" in updates) {
+      setPriceError(null);
+    }
   }, []);
 
   const stepIdx = WIZARD_STEPS.indexOf(step);
@@ -109,18 +119,23 @@ export function ListingWizard({
   }
 
   async function goToPhotos(): Promise<void> {
-    await saveOrPatch();
-    setStep("photos");
+    try {
+      await saveOrPatch();
+      setStep("photos");
+    } catch (err) {
+      const pvErr = extractMarketplacePriceError(err);
+      if (pvErr) setPriceError(pvErr);
+    }
   }
 
   function handleNext(): void {
     const next = WIZARD_STEPS[stepIdx + 1];
     if (!next) return;
-    // Saving draft before photos step (draft must exist for media upload)
     if (next === "photos") {
       void goToPhotos();
       return;
     }
+    setPriceError(null);
     setStep(next);
   }
 
@@ -130,16 +145,32 @@ export function ListingWizard({
   }
 
   function handleSaveDraft(): void {
-    void saveOrPatch().then(() => router.replace("/me/listings"));
+    setReviewPriceError(null);
+    void saveOrPatch()
+      .then(() => router.replace("/me/listings"))
+      .catch((err) => {
+        const pvErr = extractMarketplacePriceError(err);
+        if (pvErr) setReviewPriceError(pvErr);
+      });
   }
 
   function handleSubmit(): void {
     if (!draftId) return;
-    void saveOrPatch().then(() => {
-      submitMut.mutate(draftId, {
-        onSuccess: () => router.replace("/me/listings"),
+    setReviewPriceError(null);
+    void saveOrPatch()
+      .then((id) => {
+        submitMut.mutate(id, {
+          onSuccess: () => router.replace("/me/listings"),
+          onError: (err) => {
+            const pvErr = extractMarketplacePriceError(err);
+            if (pvErr) setReviewPriceError(pvErr);
+          },
+        });
+      })
+      .catch((err) => {
+        const pvErr = extractMarketplacePriceError(err);
+        if (pvErr) setReviewPriceError(pvErr);
       });
-    });
   }
 
   const isSaving = createDraft.isPending || patchDraft.isPending;
@@ -208,7 +239,13 @@ export function ListingWizard({
           />
         )}
         {step === "pricing" && (
-          <StepPricing state={form} onChange={updateForm} onNext={handleNext} onBack={handleBack} />
+          <StepPricing
+            state={form}
+            onChange={updateForm}
+            onNext={handleNext}
+            onBack={handleBack}
+            priceApiError={priceError}
+          />
         )}
         {step === "review" && (
           <StepReview
@@ -219,6 +256,8 @@ export function ListingWizard({
             onSaveDraft={handleSaveDraft}
             onSubmit={handleSubmit}
             onBack={handleBack}
+            priceError={reviewPriceError}
+            onGoToPricing={() => setStep("pricing")}
           />
         )}
       </div>

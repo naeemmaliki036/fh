@@ -132,6 +132,11 @@ export const queryKeys = {
     detail: (id: string) => ["consumer-listings", "detail", id] as const,
     pendingCount: ["consumer-listings", "pending-count"] as const,
   },
+  priceValidation: {
+    all: ["price-validation"] as const,
+    list: ["price-validation", "list"] as const,
+    preview: (params: Record<string, unknown>) => ["price-validation", "preview", params] as const,
+  },
   locations: {
     tree: ["locations", "tree"] as const,
     countries: ["locations", "countries"] as const,

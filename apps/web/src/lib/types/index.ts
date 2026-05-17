@@ -280,6 +280,17 @@ export type {
 } from "./marketplace-country";
 
 export type {
+  PriceValidationPurpose,
+  PriceValidationRule,
+  PriceValidationRuleListResponse,
+  PriceValidationRuleCreateRequest,
+  PriceValidationRuleUpdateRequest,
+  PriceValidationPreviewSource,
+  PriceValidationPreviewResponse,
+  PriceValidationPreviewParams,
+} from "./price-validation";
+
+export type {
   ConsumerListingStatus,
   ConsumerListingMediaItem,
   AdminConsumerListingQueueItem,

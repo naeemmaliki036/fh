@@ -52,9 +52,11 @@ interface ListingFormProps {
   submitLabel: string;
   onSubmit: (data: ListingCreateRequest | ListingUpdateRequest) => void;
   onCancel?: () => void;
+  /** Inline price error from a backend 422 (string detail). Cleared on next submit. */
+  priceApiError?: string | null;
 }
 
-export function ListingForm({ defaultValues, isPending, submitLabel, onSubmit, onCancel }: ListingFormProps): React.ReactElement {
+export function ListingForm({ defaultValues, isPending, submitLabel, onSubmit, onCancel, priceApiError }: ListingFormProps): React.ReactElement {
   const { register, handleSubmit, control, watch, formState: { errors } } = useForm<FormValues>({
     resolver: zodResolver(schema),
     defaultValues: {
@@ -113,7 +115,9 @@ export function ListingForm({ defaultValues, isPending, submitLabel, onSubmit, o
           )} />
         </div>
         <div className="space-y-1.5"><Label htmlFor="form-price">Price</Label><Input id="form-price" {...register("price")} />
-          {errors.price && <p className="text-xs text-destructive">{errors.price.message}</p>}
+          {(errors.price || priceApiError) && (
+            <p className="text-xs text-destructive">{errors.price?.message ?? priceApiError}</p>
+          )}
         </div>
         <div className="space-y-1.5">
           <Label>Currency</Label>

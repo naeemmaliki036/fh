@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { Bell, Building2, Globe, Inbox, LogOut, Mail, MapPin, Store, Users } from "lucide-react";
+import { Bell, Building2, DollarSign, Globe, Inbox, LogOut, Mail, MapPin, Store, Users } from "lucide-react";
 import { cn } from "@/lib/utils/cn";
 import { usePlatformLogout } from "@/hooks/mutations/useAuthMutations";
 import { Button } from "@/components/ui/button";
@@ -22,6 +22,7 @@ const NAV_ITEMS: NavItem[] = [
   { href: "/users", label: "Platform Users", icon: Users, superAdminOnly: true },
   { href: "/locations", label: "Locations", icon: MapPin, superAdminOnly: true },
   { href: "/marketplace-countries", label: "Marketplace Countries", icon: Globe, superAdminOnly: true },
+  { href: "/price-validation", label: "Price Validation", icon: DollarSign, superAdminOnly: true },
   { href: "/consumer-listings", label: "Consumer Listings", icon: Store, badgeKey: "pendingConsumerListings" },
   { href: "/email-templates", label: "Email Templates", icon: Mail },
   { href: "/email-outbox", label: "Email Outbox", icon: Inbox },

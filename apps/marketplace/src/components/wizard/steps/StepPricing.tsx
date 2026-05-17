@@ -14,9 +14,11 @@ interface Props {
   onChange: (updates: Partial<WizardFormState>) => void;
   onNext: () => void;
   onBack: () => void;
+  /** Inline error from a backend 422 price-validation rule. */
+  priceApiError?: string | null;
 }
 
-export function StepPricing({ state, onChange, onNext, onBack }: Props): React.ReactElement {
+export function StepPricing({ state, onChange, onNext, onBack, priceApiError }: Props): React.ReactElement {
   const canAdvance = !!state.title?.trim() && (state.price ?? 0) > 0;
 
   return (
@@ -59,9 +61,12 @@ export function StepPricing({ state, onChange, onNext, onBack }: Props): React.R
             value={state.price ?? ""}
             onChange={(e) => onChange({ price: e.target.value ? Number(e.target.value) : undefined })}
             placeholder="1,000,000"
-            className={inputCls}
+            className={priceApiError ? `${inputCls} border-red-400 ring-2 ring-red-400/20` : inputCls}
           />
-          {!(state.price && state.price > 0) && <p className={errCls}>Price is required</p>}
+          {!(state.price && state.price > 0) && !priceApiError && (
+            <p className={errCls}>Price is required</p>
+          )}
+          {priceApiError && <p className={errCls}>{priceApiError}</p>}
         </div>
         <div>
           <label className={labelCls}>Currency</label>

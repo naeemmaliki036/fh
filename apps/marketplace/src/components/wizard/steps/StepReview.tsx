@@ -12,6 +12,10 @@ interface Props {
   onSaveDraft: () => void;
   onSubmit: () => void;
   onBack: () => void;
+  /** Price-validation error from a 422 on submit/save. */
+  priceError?: string | null;
+  /** Navigate user back to the pricing step to fix the error. */
+  onGoToPricing?: () => void;
 }
 
 function Row({ label, value }: { label: string; value: string | null | undefined }): React.ReactElement | null {
@@ -24,7 +28,7 @@ function Row({ label, value }: { label: string; value: string | null | undefined
   );
 }
 
-export function StepReview({ state, media, isSaving, isSubmitting, onSaveDraft, onSubmit, onBack }: Props): React.ReactElement {
+export function StepReview({ state, media, isSaving, isSubmitting, onSaveDraft, onSubmit, onBack, priceError, onGoToPricing }: Props): React.ReactElement {
   const coverUrl = media[0]?.url ?? null;
   const locationStr = [state.area, state.city, state.country].filter(Boolean).join(", ");
 
@@ -78,6 +82,21 @@ export function StepReview({ state, media, isSaving, isSubmitting, onSaveDraft, 
           <span className="text-xs font-semibold text-slate-800">{media.length} uploaded</span>
         </div>
       </div>
+
+      {priceError && (
+        <div className="rounded-xl bg-red-50 border border-red-200 px-4 py-3 text-xs text-red-800">
+          <span className="font-semibold">Price issue: </span>{priceError}
+          {onGoToPricing && (
+            <button
+              type="button"
+              onClick={onGoToPricing}
+              className="ml-2 underline underline-offset-2 font-semibold hover:text-red-900"
+            >
+              Fix price
+            </button>
+          )}
+        </div>
+      )}
 
       <div className="rounded-xl bg-amber-50 border border-amber-200 px-4 py-3 text-xs text-amber-800">
         After submitting, your listing will be reviewed by our team. This typically takes less than 24 hours.

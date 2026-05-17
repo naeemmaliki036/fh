@@ -26,9 +26,11 @@ interface PropertyFormProps {
   submitLabel: string;
   onSubmit: (data: PropertyCreateRequest | PropertyUpdateRequest) => void;
   onCancel?: () => void;
+  /** Inline price error from a backend 422 (string detail). Cleared on next submit. */
+  priceApiError?: string | null;
 }
 
-export function PropertyForm({ defaultValues, showStatus, isPending, submitLabel, onSubmit, onCancel }: PropertyFormProps): React.ReactElement {
+export function PropertyForm({ defaultValues, showStatus, isPending, submitLabel, onSubmit, onCancel, priceApiError }: PropertyFormProps): React.ReactElement {
   const { data: tenant } = useMyTenant();
   const operatingCountries = tenant?.operating_countries ?? [];
 
@@ -113,7 +115,7 @@ export function PropertyForm({ defaultValues, showStatus, isPending, submitLabel
       <Divider />
       <div className="space-y-1.5"><SectionHeader label="Amenities" /><PropertyFormAmenities control={control} /></div>
       <Divider />
-      <PricingSection register={register} control={control} priceError={errors.price?.message} />
+      <PricingSection register={register} control={control} priceError={errors.price?.message ?? priceApiError ?? undefined} />
       <Divider />
       <div className="space-y-1.5"><SectionHeader label="Description" /><Textarea {...register("description")} rows={3} /></div>
       <div className="flex gap-2 justify-end pt-2">
