@@ -277,6 +277,7 @@ class MarketplaceService(BaseService):
                     "name": mc.name,
                     "flag_emoji": mc.flag_emoji,
                     "display_order": mc.display_order,
+                    "hero_image_url": mc.hero_image_url,
                 }
                 for mc in rows
             ]

@@ -15,6 +15,7 @@ class MarketplaceCountryResponse(BaseModel):
     flag_emoji: str
     display_order: int
     enabled: bool
+    hero_image_url: str | None = None
     created_at: datetime
     updated_at: datetime
 
@@ -30,11 +31,21 @@ class MarketplaceCountryCreateRequest(BaseModel):
     flag_emoji: str = Field(..., min_length=1, max_length=8)
     display_order: int | None = None
     enabled: bool = True
+    hero_image_url: str | None = Field(default=None, max_length=1024)
 
     @field_validator("code", mode="before")
     @classmethod
     def upper_code(cls, v: str) -> str:
         return v.upper() if isinstance(v, str) else v
+
+    @field_validator("hero_image_url", mode="before")
+    @classmethod
+    def validate_hero_url(cls, v: str | None) -> str | None:
+        if v is None:
+            return None
+        if not v.startswith(("http://", "https://")):
+            raise ValueError("hero_image_url must start with http:// or https://")
+        return v
 
 
 class MarketplaceCountryUpdateRequest(BaseModel):
@@ -42,6 +53,16 @@ class MarketplaceCountryUpdateRequest(BaseModel):
     flag_emoji: str | None = Field(default=None, min_length=1, max_length=8)
     display_order: int | None = None
     enabled: bool | None = None
+    hero_image_url: str | None = Field(default=None, max_length=1024)
+
+    @field_validator("hero_image_url", mode="before")
+    @classmethod
+    def validate_hero_url(cls, v: str | None) -> str | None:
+        if v is None:
+            return None
+        if not v.startswith(("http://", "https://")):
+            raise ValueError("hero_image_url must start with http:// or https://")
+        return v
 
 
 class MarketplaceCountryReorderRequest(BaseModel):
@@ -56,6 +77,7 @@ class MarketplaceCountryPublicItem(BaseModel):
     name: str
     flag_emoji: str
     display_order: int
+    hero_image_url: str | None = None
 
 
 class MarketplaceCountriesPublicResponse(BaseModel):

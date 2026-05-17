@@ -25,6 +25,7 @@ def _row_snapshot(mc: MarketplaceCountry) -> dict:
         "flag_emoji": mc.flag_emoji,
         "display_order": mc.display_order,
         "enabled": mc.enabled,
+        "hero_image_url": mc.hero_image_url,
     }
 
 
@@ -92,6 +93,7 @@ class MarketplaceCountryService(BaseService):
             flag_emoji=data["flag_emoji"],
             display_order=display_order,
             enabled=data.get("enabled", True),
+            hero_image_url=data.get("hero_image_url"),
         )
         self.session.add(mc)
         await self.session.flush()
