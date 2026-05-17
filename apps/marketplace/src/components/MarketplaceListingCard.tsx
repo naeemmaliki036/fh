@@ -1,10 +1,24 @@
 "use client";
 
 import Link from "next/link";
-import { MapPin, ShieldCheck } from "lucide-react";
+import { MapPin, ShieldCheck, Building2, Home, Castle, Briefcase, Store, Warehouse, LandPlot } from "lucide-react";
 import { cn } from "@/lib/cn";
 import { FavoriteButton } from "@/components/FavoriteButton";
 import type { MarketplaceListingItem } from "@fh/portal-types";
+
+// Visual fallback when a listing has no media uploaded — soft teal gradient
+// behind a large property-type icon, never the bald "No image" placeholder.
+const TYPE_ICONS: Record<string, React.ComponentType<{ className?: string }>> = {
+  apartment: Building2,
+  villa: Home,
+  townhouse: Home,
+  penthouse: Castle,
+  office: Briefcase,
+  retail: Store,
+  warehouse: Warehouse,
+  plot: LandPlot,
+  land: LandPlot,
+};
 
 interface MarketplaceListingCardProps {
   listing: MarketplaceListingItem;
@@ -80,9 +94,17 @@ export function MarketplaceListingCard({
             className="h-full w-full object-cover group-hover:scale-105 transition-transform duration-300"
           />
         ) : (
-          <div className="h-full w-full flex items-center justify-center text-slate-300 text-xs select-none">
-            No image
-          </div>
+          (() => {
+            const Icon = TYPE_ICONS[property_type] ?? Building2;
+            return (
+              <div className="h-full w-full bg-gradient-to-br from-teal-100 via-teal-50 to-amber-50 flex flex-col items-center justify-center text-teal-600/70 select-none">
+                <Icon className="h-12 w-12" />
+                <span className="mt-1 text-[10px] uppercase tracking-wider font-bold text-teal-700/60 capitalize">
+                  {property_type.replace(/_/g, " ")}
+                </span>
+              </div>
+            );
+          })()
         )}
 
         {/* Badges — top left (stacked: purpose → verified → owner → premium) */}

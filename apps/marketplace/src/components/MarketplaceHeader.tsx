@@ -137,28 +137,31 @@ function AvatarDropdown(): React.ReactElement {
   );
 }
 
+// All right-cluster elements share these size/shape rules so the bar
+// reads as a single horizontal rhythm — 36px tall pills with matching
+// horizontal padding. Variant flips colour only.
+const PILL_BASE =
+  "inline-flex items-center h-9 rounded-full px-4 text-sm font-semibold transition shrink-0";
+
 function PostPropertyButton(): React.ReactElement {
   const { token } = useConsumer();
   const { open } = useAuthDialog();
 
+  const cls = `${PILL_BASE} bg-teal-600 text-white font-bold hover:bg-teal-700`;
   if (token) {
     return (
-      <Link
-        href="/me/listings/new"
-        className="rounded-full bg-teal-600 px-5 py-2 text-sm font-bold text-white hover:bg-teal-700 transition shrink-0"
-      >
+      <Link href="/me/listings/new" className={cls}>
         Post a property
       </Link>
     );
   }
-
   return (
     <button
       type="button"
       onClick={() =>
         open({ mode: "signup", reason: "Sign up to post a property", redirectAfter: "/me/listings/new" })
       }
-      className="rounded-full bg-teal-600 px-5 py-2 text-sm font-bold text-white hover:bg-teal-700 transition shrink-0"
+      className={cls}
     >
       Post a property
     </button>

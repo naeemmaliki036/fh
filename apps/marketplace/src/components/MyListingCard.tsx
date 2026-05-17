@@ -1,7 +1,19 @@
 "use client";
 
 import Link from "next/link";
-import { MapPin, Calendar, ShieldCheck } from "lucide-react";
+import { MapPin, Calendar, ShieldCheck, Building2, Home, Castle, Briefcase, Store, Warehouse, LandPlot } from "lucide-react";
+
+const TYPE_ICONS: Record<string, React.ComponentType<{ className?: string }>> = {
+  apartment: Building2,
+  villa: Home,
+  townhouse: Home,
+  penthouse: Castle,
+  office: Briefcase,
+  retail: Store,
+  warehouse: Warehouse,
+  plot: LandPlot,
+  land: LandPlot,
+};
 import { cn } from "@/lib/cn";
 import type { ConsumerListingItem, ConsumerListingStatus } from "@fh/portal-types";
 import { useMarkListingStatus, useDeleteListing } from "@/hooks/mutations/useMyListingMutations";
@@ -42,9 +54,17 @@ export function MyListingCard({ listing }: MyListingCardProps): React.ReactEleme
             className="h-full w-full object-cover"
           />
         ) : (
-          <div className="h-full w-full flex items-center justify-center text-slate-300 text-xs">
-            No image
-          </div>
+          (() => {
+            const Icon = TYPE_ICONS[listing.property_type] ?? Building2;
+            return (
+              <div className="h-full w-full bg-gradient-to-br from-teal-100 via-teal-50 to-amber-50 flex flex-col items-center justify-center text-teal-600/70">
+                <Icon className="h-12 w-12" />
+                <span className="mt-1 text-[10px] uppercase tracking-wider font-bold text-teal-700/60 capitalize">
+                  {listing.property_type.replace(/_/g, " ")}
+                </span>
+              </div>
+            );
+          })()
         )}
         <div className="absolute top-2.5 left-2.5 flex flex-col gap-1">
           {/* Purpose pill */}
