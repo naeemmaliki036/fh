@@ -68,7 +68,7 @@ export default function MeDashboardPage(): React.ReactElement {
           href="/me/listings/new"
           className="inline-flex items-center gap-2 rounded-xl bg-teal-600 px-5 py-2.5 text-sm font-bold text-white hover:bg-teal-700 transition"
         >
-          <Plus className="h-4 w-4" /> Post a property
+          <Plus className="h-4 w-4" /> List your property
         </Link>
         <Link
           href="/listings"

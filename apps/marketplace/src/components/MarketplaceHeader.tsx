@@ -159,7 +159,7 @@ function PostPropertyButton(): React.ReactElement {
   if (token) {
     return (
       <Link href="/me/listings/new" className={cls}>
-        Post a property
+        List your property
       </Link>
     );
   }
@@ -171,7 +171,7 @@ function PostPropertyButton(): React.ReactElement {
       }
       className={cls}
     >
-      Post a property
+      List your property
     </button>
   );
 }
