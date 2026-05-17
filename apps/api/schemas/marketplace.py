@@ -143,6 +143,36 @@ class MarketplaceAgencyListResponse(BaseModel):
 
 
 # ---------------------------------------------------------------------------
+# Agent list (Find Your Agent page)
+# ---------------------------------------------------------------------------
+
+
+class MarketplaceAgencyTinyRef(BaseModel):
+    id: uuid.UUID
+    slug: str
+    name: str
+    logo_url: str | None = None
+
+
+class MarketplaceAgentItem(BaseModel):
+    id: uuid.UUID
+    full_name: str
+    phone: str | None = None
+    email: str
+    photo_url: str | None = None
+    license_id: str | None = None
+    agency: MarketplaceAgencyTinyRef
+    active_listings_count: int
+
+
+class MarketplaceAgentsResponse(BaseModel):
+    items: list[MarketplaceAgentItem]
+    total: int
+    page: int
+    page_size: int
+
+
+# ---------------------------------------------------------------------------
 # Stats
 # ---------------------------------------------------------------------------
 

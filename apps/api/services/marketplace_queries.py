@@ -202,7 +202,11 @@ async def fetch_marketplace_listings(  # noqa: PLR0913
     min_price: float | None = None,
     max_price: float | None = None,
     beds: int | None = None,
+    min_beds: int | None = None,
+    max_beds: int | None = None,
     baths: int | None = None,
+    min_baths: int | None = None,
+    max_baths: int | None = None,
     city: str | None = None,
     area: str | None = None,
     amenities: list[str] | None = None,
@@ -240,8 +244,16 @@ async def fetch_marketplace_listings(  # noqa: PLR0913
         stmt = stmt.where(Listing.price <= max_price)
     if beds is not None:
         stmt = stmt.where(Property.bedrooms == beds)
+    if min_beds is not None:
+        stmt = stmt.where(Property.bedrooms >= min_beds)
+    if max_beds is not None:
+        stmt = stmt.where(Property.bedrooms <= max_beds)
     if baths is not None:
         stmt = stmt.where(Property.bathrooms == baths)
+    if min_baths is not None:
+        stmt = stmt.where(Property.bathrooms >= min_baths)
+    if max_baths is not None:
+        stmt = stmt.where(Property.bathrooms <= max_baths)
     if city is not None:
         stmt = stmt.where(Property.city.ilike(f"%{city}%"))
     if area is not None:

@@ -14,6 +14,7 @@ from apps.api.models.agent import Agent
 from apps.api.models.listing import Listing
 from apps.api.models.tenant import Tenant
 from apps.api.services.base import BaseService
+from apps.api.services.marketplace_agent_queries import fetch_marketplace_agents
 from apps.api.services.marketplace_queries import (
     _marketplace_tenant_filter,
     _tenant_snippet,
@@ -33,6 +34,27 @@ class MarketplaceService(BaseService):
 
     async def list_listings(self, **kwargs) -> dict:  # noqa: ANN003
         return await fetch_marketplace_listings(self.session, **kwargs)
+
+    # ------------------------------------------------------------------
+    # Agents
+    # ------------------------------------------------------------------
+
+    async def list_agents(
+        self,
+        *,
+        page: int,
+        page_size: int,
+        country: str | None = None,
+        q: str | None = None,
+    ) -> dict:
+        """Paginated active agents across qualifying agencies."""
+        return await fetch_marketplace_agents(
+            self.session,
+            page=page,
+            page_size=page_size,
+            country=country,
+            q=q,
+        )
 
     async def get_listing_detail(self, listing_id: UUID) -> dict:
         """Public listing detail with tenant snippet.

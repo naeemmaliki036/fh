@@ -13,6 +13,8 @@ from apps.api.models.enums import CompletionStatus, FurnishingStatus, ViewOrient
 from apps.api.schemas.marketplace import (
     MarketplaceAgencyDetail,
     MarketplaceAgencyListResponse,
+    MarketplaceAgentItem,
+    MarketplaceAgentsResponse,
     MarketplaceListingDetailResponse,
     MarketplaceListingListResponse,
     MarketplaceStatsResponse,
@@ -92,7 +94,11 @@ async def marketplace_listings(
     min_price: float | None = Query(default=None, ge=0),
     max_price: float | None = Query(default=None, ge=0),
     beds: int | None = Query(default=None, ge=0),
+    min_beds: int | None = Query(default=None, ge=0),
+    max_beds: int | None = Query(default=None, ge=0),
     baths: int | None = Query(default=None, ge=0),
+    min_baths: int | None = Query(default=None, ge=0),
+    max_baths: int | None = Query(default=None, ge=0),
     city: str | None = Query(default=None),
     area: str | None = Query(default=None),
     amenities: str | None = Query(default=None, description="CSV of amenity keys"),
@@ -123,7 +129,11 @@ async def marketplace_listings(
         min_price=min_price,
         max_price=max_price,
         beds=beds,
+        min_beds=min_beds,
+        max_beds=max_beds,
         baths=baths,
+        min_baths=min_baths,
+        max_baths=max_baths,
         city=city,
         area=area,
         amenities=_parse_amenities(amenities),
@@ -236,3 +246,30 @@ async def marketplace_agency_listings(
         tenant_id=agency["id"],
     )
     return MarketplaceListingListResponse(**data)
+
+
+# ---------------------------------------------------------------------------
+# GET /marketplace/agents
+# ---------------------------------------------------------------------------
+
+
+@router.get("/agents", response_model=MarketplaceAgentsResponse)
+async def marketplace_agents(
+    page: int = Query(default=1, ge=1),
+    page_size: int = Query(default=24, ge=1, le=100),
+    country: str | None = Query(default=None, max_length=2, description="ISO-3166 alpha-2"),
+    q: str | None = Query(default=None, description="Case-insensitive match on agent full_name"),
+    svc: MarketplaceService = Depends(_svc),
+) -> MarketplaceAgentsResponse:
+    """Paginated active agents across all qualifying agencies.
+
+    Sort: most active listings first; ties by license presence (licensed first);
+    ties alphabetical by full_name.
+    """
+    data = await svc.list_agents(
+        page=page,
+        page_size=page_size,
+        country=country,
+        q=q,
+    )
+    return MarketplaceAgentsResponse(**data)
