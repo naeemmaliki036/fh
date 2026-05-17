@@ -65,6 +65,9 @@ async def register_tenant(
         owner_email=str(body.owner_email),
         owner_password=body.owner_password,
         owner_full_name=body.owner_full_name,
+        office_country=body.office_country,
+        office_city=body.office_city,
+        signup_notes=body.signup_notes,
         ip_address=ctx.ip_address,
         user_agent=ctx.user_agent,
     )

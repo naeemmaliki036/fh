@@ -173,6 +173,20 @@ class Tenant(Base, UUIDMixin, TimestampMixin):
         nullable=True,
     )
 
+    # Office / signup info — captured at self-registration.
+    office_country: Mapped[str | None] = mapped_column(
+        String(2),
+        nullable=True,
+    )
+    office_city: Mapped[str | None] = mapped_column(
+        String(120),
+        nullable=True,
+    )
+    signup_notes: Mapped[str | None] = mapped_column(
+        Text,
+        nullable=True,
+    )
+
     # Suspension audit trail — populated when status transitions to SUSPENDED.
     suspended_at: Mapped[datetime | None] = mapped_column(
         nullable=True,

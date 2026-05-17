@@ -79,6 +79,9 @@ class AuthService(BaseService):
         owner_email: str,
         owner_password: str,
         owner_full_name: str,
+        office_country: str | None = None,
+        office_city: str | None = None,
+        signup_notes: str | None = None,
         ip_address: str | None = None,
         user_agent: str | None = None,
     ) -> dict:
@@ -98,6 +101,9 @@ class AuthService(BaseService):
             locale=locale,
             contact_email=contact_email.lower(),
             contact_phone=contact_phone,
+            office_country=office_country,
+            office_city=office_city,
+            signup_notes=signup_notes,
         )
         self.session.add(tenant)
         await self.session.flush()

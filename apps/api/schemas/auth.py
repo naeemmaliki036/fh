@@ -17,6 +17,15 @@ class RegisterTenantRequest(BaseModel):
     owner_email: EmailStr
     owner_password: str
     owner_full_name: str
+    # Office / signup info — all optional, captured at self-registration.
+    office_country: str | None = Field(
+        default=None,
+        min_length=2,
+        max_length=2,
+        pattern=r"^[A-Z]{2}$",
+    )
+    office_city: str | None = Field(default=None, max_length=120)
+    signup_notes: str | None = Field(default=None, max_length=4000)
 
 
 class LoginRequest(BaseModel):

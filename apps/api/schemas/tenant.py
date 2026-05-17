@@ -83,6 +83,10 @@ class TenantResponse(BaseModel):
     banner_url: str | None = None
     aggregator_enabled: bool = True
     aggregator_disabled_reason: str | None = None
+    # migration 0045 — office / signup info
+    office_country: str | None = None
+    office_city: str | None = None
+    signup_notes: str | None = None
     created_at: datetime
     updated_at: datetime
 
