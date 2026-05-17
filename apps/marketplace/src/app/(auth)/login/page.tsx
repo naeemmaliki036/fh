@@ -3,6 +3,7 @@
 import { useState, Suspense } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import Link from "next/link";
+import { ArrowLeft } from "lucide-react";
 import { PORTAL_BRAND_NAME } from "@/lib/portal-brand";
 import { GoogleSignInButton } from "@/components/auth/GoogleSignInButton";
 import { OtpEntryForm } from "@/components/auth/OtpEntryForm";
@@ -57,6 +58,12 @@ function LoginContent(): React.ReactElement {
   return (
     <div className="min-h-screen flex items-center justify-center bg-slate-50 px-4 py-12">
       <div className="w-full max-w-sm space-y-6">
+        <Link
+          href="/"
+          className="inline-flex items-center gap-1.5 text-sm font-semibold text-slate-500 hover:text-teal-700 transition"
+        >
+          <ArrowLeft className="h-4 w-4" /> Back to homepage
+        </Link>
         <div className="text-center space-y-1">
           <Link href="/" className="text-lg font-black text-teal-600">{PORTAL_BRAND_NAME}</Link>
           <h1 className="text-2xl font-black text-slate-900">Sign in</h1>

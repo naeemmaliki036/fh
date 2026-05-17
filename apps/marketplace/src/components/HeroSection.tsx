@@ -110,16 +110,16 @@ export function HeroSection({
     router.push(buildSearchUrl());
   }
 
-  const fallbackGradient =
-    "linear-gradient(135deg, #0F172A 0%, #1E3A8A 55%, #0369A1 100%)";
-
-  const sectionStyle: React.CSSProperties = heroImageUrl
-    ? {
-        backgroundImage: `url(${heroImageUrl})`,
-        backgroundSize: "cover",
-        backgroundPosition: "center",
-      }
-    : { background: fallbackGradient };
+  // Generic fallback: stable GCC-coastal skyline photo so countries without
+  // an admin-set hero_image_url still show a banner instead of a flat gradient.
+  const GENERIC_HERO =
+    "https://images.unsplash.com/photo-1518684079-3c830dcef090?w=2200&auto=format&fit=crop&q=80";
+  const bg = heroImageUrl || GENERIC_HERO;
+  const sectionStyle: React.CSSProperties = {
+    backgroundImage: `url(${bg})`,
+    backgroundSize: "cover",
+    backgroundPosition: "center",
+  };
 
   return (
     <section className="relative overflow-hidden py-24 px-4" style={sectionStyle}>
@@ -129,14 +129,6 @@ export function HeroSection({
         className="absolute inset-0 bg-gradient-to-b from-slate-900/70 via-slate-900/55 to-slate-900/85"
       />
 
-      {/* Floating blobs only when no photo background */}
-      {!heroImageUrl && (
-        <>
-          <Blob className="top-[-80px] left-[-80px] h-96 w-96 bg-blue-600 opacity-20" />
-          <Blob className="bottom-[-60px] right-[-60px] h-80 w-80 bg-teal-500 opacity-20" />
-          <Blob className="top-[30%] left-[60%] h-64 w-64 bg-indigo-500 opacity-10" />
-        </>
-      )}
 
       <div className="relative mx-auto max-w-3xl text-center space-y-8">
         {/* Trust badge */}
@@ -144,14 +136,14 @@ export function HeroSection({
 
         {/* H1 */}
         <h1 className="text-4xl md:text-6xl font-black text-white leading-tight tracking-tight">
-          Discover your{" "}
+          Find your next{" "}
           <span
             className="bg-clip-text text-transparent"
             style={{
               backgroundImage: "linear-gradient(90deg, #60A5FA, #34D399, #F97316)",
             }}
           >
-            Dream Property
+            home
           </span>
           <br />
           <span className="text-slate-300 text-3xl md:text-4xl font-bold">
@@ -184,14 +176,6 @@ export function HeroSection({
 // Sub-components
 // ---------------------------------------------------------------------------
 
-function Blob({ className }: { className: string }): React.ReactElement {
-  return (
-    <div
-      aria-hidden="true"
-      className={`pointer-events-none absolute rounded-full blur-3xl ${className}`}
-    />
-  );
-}
 
 function TrustBadge(): React.ReactElement {
   return (

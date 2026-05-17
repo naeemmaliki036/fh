@@ -29,7 +29,7 @@ function SidebarNav(): React.ReactElement {
 
   function handleSignOut(): void {
     signOut();
-    router.replace("/login");
+    router.replace("/");
   }
 
   return (

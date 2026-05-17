@@ -82,6 +82,8 @@ function AvatarDropdown(): React.ReactElement {
   function handleSignOut(): void {
     signOut();
     setOpen(false);
+    // Always land on the homepage after sign-out, even if the current route
+    // is auth-gated (/me/*); never bounce to /login.
     router.replace("/");
   }
 
@@ -177,7 +179,12 @@ export function MarketplaceHeader(): React.ReactElement {
         <div className="hidden md:flex items-center gap-3 shrink-0">
           <PostPropertyButton />
           {isSignedIn ? (
-            <AvatarDropdown />
+            <>
+              <Suspense>
+                <CountrySelector />
+              </Suspense>
+              <AvatarDropdown />
+            </>
           ) : (
             <>
               <AgencyDropdown />
