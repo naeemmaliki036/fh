@@ -17,20 +17,22 @@ import type {
 } from "@fh/portal-types";
 
 /**
- * Returns the price-validation error message if the Axios error is a 422
- * with a plain-string `detail`. Returns null for other error shapes.
+ * Returns a friendly server-supplied message when the Axios error carries
+ * a plain-string `detail` body. Covers both 422 (validation) and 400
+ * (business-rule) responses — e.g. price-rule violations, missing-field
+ * checks at submit time.
  */
 export function extractMarketplacePriceError(err: unknown): string | null {
   if (!isAxiosError(err)) return null;
   const status = err.response?.status;
-  if (status !== 422) return null;
+  if (status !== 422 && status !== 400) return null;
   const detail = (err.response?.data as { detail?: unknown } | undefined)?.detail;
   if (typeof detail === "string" && detail.length > 0) return detail;
   return null;
 }
 
-function isSilenceable(err: unknown): boolean {
-  return extractMarketplacePriceError(err) !== null;
+function friendlyMessage(err: unknown): string | null {
+  return extractMarketplacePriceError(err);
 }
 
 export function useCreateDraft(): UseMutationResult<
@@ -46,9 +48,9 @@ export function useCreateDraft(): UseMutationResult<
       void qc.invalidateQueries({ queryKey: queryKeys.consumer.myListings() });
     },
     onError: (err) => {
-      if (!isSilenceable(err)) {
-        toast.error("Failed to save draft. Please try again.");
-      }
+      const msg = friendlyMessage(err);
+      if (msg) toast.error(msg);
+      else toast.error("Failed to save draft. Please try again.");
     },
   });
 }
@@ -66,9 +68,9 @@ export function usePatchDraft(): UseMutationResult<
       void qc.invalidateQueries({ queryKey: queryKeys.consumer.myListings() });
     },
     onError: (err) => {
-      if (!isSilenceable(err)) {
-        toast.error("Failed to save. Please try again.");
-      }
+      const msg = friendlyMessage(err);
+      if (msg) toast.error(msg);
+      else toast.error("Failed to save. Please try again.");
     },
   });
 }
@@ -86,9 +88,9 @@ export function useSubmitListing(): UseMutationResult<
       toast.success("Submitted for review! You'll hear from us within 24 hours.");
     },
     onError: (err) => {
-      if (!isSilenceable(err)) {
-        toast.error("Failed to submit. Please try again.");
-      }
+      const msg = friendlyMessage(err);
+      if (msg) toast.error(msg);
+      else toast.error("Failed to submit. Please try again.");
     },
   });
 }

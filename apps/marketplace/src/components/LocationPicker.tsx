@@ -19,7 +19,8 @@ export interface LocationPickerProps {
 }
 
 const selectCls =
-  "w-full rounded-xl border border-slate-200 px-4 py-2.5 text-sm text-slate-900 focus:outline-none focus:ring-2 focus:ring-teal-500 placeholder:text-slate-400 disabled:opacity-50 bg-white";
+  // pr-10 leaves space for the native dropdown chevron so it doesn't crowd the text
+  "w-full rounded-xl border border-slate-200 pl-4 pr-10 py-2.5 text-sm text-slate-900 focus:outline-none focus:ring-2 focus:ring-teal-500 placeholder:text-slate-400 disabled:opacity-50 bg-white appearance-none bg-no-repeat bg-[length:1rem_1rem] bg-[position:right_0.75rem_center] bg-[image:url('data:image/svg+xml;utf8,%3Csvg%20xmlns=%22http://www.w3.org/2000/svg%22%20viewBox=%220%200%2020%2020%22%20fill=%22%2364748b%22%3E%3Cpath%20fill-rule=%22evenodd%22%20d=%22M5.23%207.21a.75.75%200%20011.06.02L10%2011.06l3.71-3.83a.75.75%200%20111.08%201.04l-4.25%204.39a.75.75%200%2001-1.08%200L5.21%208.27a.75.75%200%2001.02-1.06z%22%20clip-rule=%22evenodd%22/%3E%3C/svg%3E')]";
 const labelCls = "block text-xs font-bold text-slate-600 mb-1";
 
 interface DropdownProps {

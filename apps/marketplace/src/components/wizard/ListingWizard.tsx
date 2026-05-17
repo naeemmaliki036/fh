@@ -213,8 +213,8 @@ export function ListingWizard({
 
       {/* Saved indicator */}
       {savedAt && (
-        <p className="text-[11px] text-emerald-600 -mt-3">
-          Saved {savedAt.toLocaleTimeString()}
+        <p className="text-[11px] text-emerald-600 -mt-3 inline-flex items-center gap-1">
+          <Check className="h-3 w-3" /> Draft saved
         </p>
       )}
 

@@ -150,8 +150,11 @@ class ConsumerListingService(BaseService):
         except ValueError:
             raise bad_request(f"Invalid purpose: {purpose_raw!r}")
 
+        # Drafts may be created with a placeholder price of 0 — only validate
+        # when the user has actually entered a positive number. Submit-time
+        # validation enforces the floor/ceiling against price_validation_rules.
         price_val = data.get("price")
-        if price_val is not None:
+        if price_val is not None and price_val > 0:
             await self._validate_price(
                 country=data.get("country", "AE"),
                 city=data.get("city"),
@@ -206,7 +209,13 @@ class ConsumerListingService(BaseService):
         if listing.status in _EDIT_BLOCKED:
             raise bad_request(f"Cannot edit a listing with status '{listing.status.value}'")
 
-        if "price" in data and data["price"] is not None:
+        # Skip price-rule enforcement while the listing is still a draft —
+        # the wizard may PATCH placeholder 0s as the user moves between steps.
+        # Submit-time validation enforces the real value.
+        skip_price_rules = listing.status in (
+            ListingStatus.DRAFT, ListingStatus.CHANGES_REQUESTED,
+        )
+        if "price" in data and data["price"] is not None and not skip_price_rules:
             await self._validate_price(
                 country=prop.country,
                 city=prop.city,

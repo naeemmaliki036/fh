@@ -179,7 +179,7 @@ export function HeroSection({
 
 function TrustBadge(): React.ReactElement {
   return (
-    <div className="flex justify-center">
+    <div className="flex flex-col items-center gap-2">
       <div className="inline-flex items-center gap-2 rounded-full border border-white/20 bg-white/10 px-4 py-1.5 backdrop-blur-sm">
         <span className="relative flex h-4 w-4 items-center justify-center">
           <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-orange-400 opacity-60" />
@@ -189,6 +189,9 @@ function TrustBadge(): React.ReactElement {
           Hot Real Estate Platform in UAE &amp; GCC
         </span>
       </div>
+      <p className="text-xs text-white/70 tracking-wide max-w-sm text-center">
+        A trusted platform to help you rent, buy or sell a property.
+      </p>
     </div>
   );
 }

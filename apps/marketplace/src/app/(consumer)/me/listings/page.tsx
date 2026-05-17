@@ -42,7 +42,7 @@ export default function MyListingsPage(): React.ReactElement {
         {hasDraft && firstDraft ? (
           <Link
             href={`/me/listings/${firstDraft.id}/edit`}
-            className="inline-flex items-center gap-2 rounded-xl bg-amber-500 px-4 py-2.5 text-sm font-bold text-white hover:bg-amber-600 transition"
+            className="inline-flex items-center gap-2 rounded-xl bg-teal-600 px-4 py-2.5 text-sm font-bold text-white hover:bg-teal-700 transition"
           >
             Continue draft
           </Link>
@@ -73,7 +73,7 @@ export default function MyListingsPage(): React.ReactElement {
             href="/me/listings/new"
             className="inline-flex items-center gap-2 rounded-xl bg-teal-600 px-5 py-2.5 text-sm font-bold text-white hover:bg-teal-700 transition"
           >
-            <Plus className="h-4 w-4" /> Post your first property
+            <Plus className="h-4 w-4" /> List your first property
           </Link>
         </div>
       )}

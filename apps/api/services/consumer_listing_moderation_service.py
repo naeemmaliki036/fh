@@ -102,6 +102,17 @@ class ConsumerListingModerationService(BaseService):
                 "Cannot submit — please fill in: " + ", ".join(missing)
             )
 
+        # Submit-time price-rule enforcement so a real value lands in moderation.
+        from decimal import Decimal
+        from apps.api.services.price_validation_service import PriceValidationService
+        await PriceValidationService(self.session).validate(
+            country=prop.country,
+            city=prop.city,
+            purpose=listing.purpose.value if hasattr(listing.purpose, "value") else str(listing.purpose),
+            currency=(listing.currency or "AED").upper(),
+            amount=Decimal(str(listing.price)),
+        )
+
         prev_status = listing.status
         now = datetime.now(UTC)
         listing.status = ListingStatus.PENDING_REVIEW

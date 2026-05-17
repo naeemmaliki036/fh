@@ -122,9 +122,13 @@ export function MyListingCard({ listing }: MyListingCardProps): React.ReactEleme
 
       <div className="p-4 space-y-3">
         <div>
-          <p className="text-sm font-black text-slate-900 line-clamp-2">{listing.title}</p>
+          <p className="text-sm font-black text-slate-900 line-clamp-2">
+            {listing.title || <span className="italic text-slate-400">Untitled draft</span>}
+          </p>
           <p className="text-base font-black text-teal-700 mt-0.5">
-            {listing.currency} {listing.price.toLocaleString("en-AE")}
+            {listing.price > 0
+              ? `${listing.currency} ${listing.price.toLocaleString("en-AE")}`
+              : <span className="text-slate-400 italic font-medium text-sm">Price not set</span>}
           </p>
           <div className="flex items-center gap-1 text-xs text-slate-400 mt-1">
             <MapPin className="h-3 w-3 text-teal-500" />
