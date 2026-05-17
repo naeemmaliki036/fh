@@ -155,6 +155,7 @@ class TenantService(BaseService):
         default_properties_view=None, operating_countries: list[str] | None = None,
         property_ref_prefix: str | None = None,
         banner_url: str | None = None,
+        document_request_default_instructions: str | None = None,
         ip_address: str | None = None, user_agent: str | None = None,
     ) -> Tenant:
         role = current_user.get("role")
@@ -189,6 +190,8 @@ class TenantService(BaseService):
         if operating_countries is not None: tenant.operating_countries = operating_countries
         if property_ref_prefix is not None: tenant.property_ref_prefix = property_ref_prefix
         if banner_url is not None: tenant.banner_url = banner_url
+        if document_request_default_instructions is not None:
+            tenant.document_request_default_instructions = document_request_default_instructions
         await self.session.flush()
         after = {
             "name": tenant.name, "currency": tenant.currency, "timezone": tenant.timezone,

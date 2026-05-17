@@ -7,7 +7,12 @@ import { WizardStep3Items } from "@/components/organisms/doc-request-wizard/Wiza
 import { WizardStep4Details } from "@/components/organisms/doc-request-wizard/WizardStep4Details";
 import { WizardStep5Review } from "@/components/organisms/doc-request-wizard/WizardStep5Review";
 import { useCreateDocumentRequest } from "@/hooks/mutations/useDocumentRequestMutations";
-import type { WizardState, WizardStep, WizardItem, WizardCustomer } from "@/components/organisms/doc-request-wizard/wizardTypes";
+import type {
+  WizardState,
+  WizardStep,
+  WizardItem,
+  WizardCustomer,
+} from "@/components/organisms/doc-request-wizard/wizardTypes";
 
 const STEP_LABELS = ["Customer", "Property", "Documents", "Details", "Review"];
 
@@ -20,17 +25,27 @@ function StepIndicator({ current }: { current: WizardStep }): React.ReactElement
         const active = current === step;
         return (
           <div key={label} className="flex items-center gap-2">
-            <div className={`flex h-7 w-7 items-center justify-center rounded-full text-xs font-bold ${
-              done ? "bg-primary text-primary-foreground" :
-              active ? "border-2 border-primary text-primary" :
-              "border-2 border-muted text-muted-foreground"
-            }`}>
+            <div
+              className={`flex h-7 w-7 items-center justify-center rounded-full text-xs font-bold ${
+                done
+                  ? "bg-primary text-primary-foreground"
+                  : active
+                  ? "border-2 border-primary text-primary"
+                  : "border-2 border-muted text-muted-foreground"
+              }`}
+            >
               {idx + 1}
             </div>
-            <span className={`text-xs hidden sm:inline ${active ? "text-foreground font-medium" : "text-muted-foreground"}`}>
+            <span
+              className={`text-xs hidden sm:inline ${
+                active ? "text-foreground font-medium" : "text-muted-foreground"
+              }`}
+            >
               {label}
             </span>
-            {idx < STEP_LABELS.length - 1 && <div className="w-6 h-px bg-border" />}
+            {idx < STEP_LABELS.length - 1 && (
+              <div className="w-6 h-px bg-border" />
+            )}
           </div>
         );
       })}
@@ -47,6 +62,7 @@ export default function NewDocumentRequestWizardPage(): React.ReactElement {
     items: [],
     agentNote: "",
     expiresInDays: 7,
+    sendEmail: true,
   });
   const [verificationCode, setVerificationCode] = useState<string | null>(null);
   const [publicUrl, setPublicUrl] = useState<string | null>(null);
@@ -64,6 +80,7 @@ export default function NewDocumentRequestWizardPage(): React.ReactElement {
         agent_note: state.agentNote || null,
         instructions: state.agentNote || null,
         expires_in_days: state.expiresInDays,
+        send_email: state.sendEmail,
       },
       {
         onSuccess: (data) => {
@@ -76,20 +93,26 @@ export default function NewDocumentRequestWizardPage(): React.ReactElement {
 
   return (
     <div className="max-w-2xl">
-      <h1 className="text-2xl font-semibold tracking-tight mb-6">Request Documents</h1>
+      <h1 className="text-2xl font-semibold tracking-tight mb-6">
+        Request Documents
+      </h1>
       <StepIndicator current={verificationCode ? 5 : step} />
 
       {step === 1 && (
         <WizardStep1Customer
           value={state.customer}
-          onSelect={(c: WizardCustomer) => setState((s) => ({ ...s, customer: c ?? null }))}
+          onSelect={(c: WizardCustomer) =>
+            setState((s) => ({ ...s, customer: c ?? null }))
+          }
           onNext={() => setStep(2)}
         />
       )}
       {step === 2 && (
         <WizardStep2Property
           propertyId={state.propertyId}
-          onSelect={(id, title) => setState((s) => ({ ...s, propertyId: id, propertyTitle: title }))}
+          onSelect={(id, title) =>
+            setState((s) => ({ ...s, propertyId: id, propertyTitle: title }))
+          }
           onNext={() => setStep(3)}
           onBack={() => setStep(1)}
         />
@@ -106,8 +129,10 @@ export default function NewDocumentRequestWizardPage(): React.ReactElement {
         <WizardStep4Details
           agentNote={state.agentNote}
           expiresInDays={state.expiresInDays}
+          sendEmail={state.sendEmail}
           onChangeNote={(v) => setState((s) => ({ ...s, agentNote: v }))}
           onChangeDays={(v) => setState((s) => ({ ...s, expiresInDays: v }))}
+          onChangeSendEmail={(v) => setState((s) => ({ ...s, sendEmail: v }))}
           onNext={() => setStep(5)}
           onBack={() => setStep(3)}
         />

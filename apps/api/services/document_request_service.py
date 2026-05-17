@@ -55,6 +55,7 @@ class DocumentRequestService(BaseService):
         items_data: list[dict], expires_in_days: int,
         property_id: UUID | None = None,
         agent_note: str | None = None,
+        send_email: bool = True,  # noqa: ARG002 — reserved for future email dispatch
     ) -> tuple[DocumentRequest, list[DocumentRequestItem], str]:
         self._require_role(current_user["role"])
         await self._set_rls(tenant_id)

@@ -76,10 +76,19 @@ export function WizardStep5Review({ state, verificationCode, publicUrl, isPendin
           <span className="text-muted-foreground">Expires in</span>
           <span className="font-medium">{state.expiresInDays} days</span>
         </div>
+        <div className="px-4 py-3 flex justify-between">
+          <span className="text-muted-foreground">Delivery</span>
+          <span className="font-medium">
+            {state.sendEmail ? "Send email to customer" : "Link only"}
+          </span>
+        </div>
         {state.agentNote && (
           <div className="px-4 py-3">
             <p className="text-muted-foreground">Note</p>
-            <p className="mt-1">{state.agentNote}</p>
+            <div
+              className="mt-1 prose prose-sm max-w-none"
+              dangerouslySetInnerHTML={{ __html: state.agentNote }}
+            />
           </div>
         )}
       </div>

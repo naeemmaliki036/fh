@@ -7,7 +7,7 @@ import { useUpdateProperty } from "@/hooks/mutations/usePropertyMutations";
 import type { Property } from "@/lib/types/property";
 
 const RichTextEditor = dynamic(
-  () => import("@/components/molecules/RichTextEditor"),
+  () => import("@/components/molecules/RichTextEditor/index"),
   { ssr: false, loading: () => <div className="min-h-[70vh] animate-pulse bg-zinc-50 rounded-lg" /> },
 );
 

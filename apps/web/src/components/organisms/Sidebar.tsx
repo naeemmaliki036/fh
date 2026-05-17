@@ -12,6 +12,7 @@ import {
   Home,
   Target,
   FileCheck,
+  FileText,
   Handshake,
   ExternalLink,
   LogOut,
@@ -23,6 +24,7 @@ import {
   Wallet,
   BarChart2,
   Percent,
+  Globe,
 } from "lucide-react";
 import { cn } from "@/lib/utils/cn";
 import { useAuth } from "@/contexts/AuthContext";
@@ -67,9 +69,11 @@ const TOOLS_ITEMS: NavItem[] = [
   { href: "/settings/users", label: "Users", icon: Users, adminOnly: true },
   { href: "/settings/profile", label: "Profile", icon: Settings },
   { href: "/settings/company", label: "Company", icon: Building2, adminOnly: true },
+  { href: "/settings/public-site", label: "Public Site", icon: Globe, adminOnly: true },
   { href: "/settings/email-templates", label: "Email Templates", icon: Mail, adminOnly: true },
   { href: "/settings/off-market-reasons", label: "Off-Market Reasons", icon: Home, adminOnly: true },
   { href: "/settings/commission-rates", label: "Commission Rates", icon: Percent, financeOnly: true },
+  { href: "/settings/document-requests", label: "Doc Request Defaults", icon: FileText, adminOnly: true },
 ];
 
 const ADMIN_ROLES = new Set(["company_owner", "company_admin"]);

@@ -33,6 +33,8 @@ export interface Tenant {
   max_videos_per_property: number;
   max_image_mb: number;
   max_video_mb: number;
+  // migration 0051 — doc request default instructions (HTML string)
+  document_request_default_instructions: string;
   created_at: string;
   updated_at: string;
 }
@@ -52,6 +54,7 @@ export interface TenantUpdateRequest {
   default_properties_view?: PropertiesViewMode;
   operating_countries?: string[];
   banner_url?: string | null;
+  document_request_default_instructions?: string;
 }
 
 export interface TenantListResponse {

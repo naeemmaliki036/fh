@@ -25,6 +25,7 @@ class DocumentRequestCreate(BaseModel):
     agent_note: str | None = None
     items: list[DocumentRequestItemCreate] = Field(min_length=1)
     expires_in_days: int = Field(default=7, ge=7, le=14)
+    send_email: bool = True
 
 
 class DocumentRequestItemResponse(BaseModel):

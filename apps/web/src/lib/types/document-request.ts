@@ -57,6 +57,7 @@ export interface DocumentRequestCreate {
   agent_note?: string | null;
   instructions?: string | null;
   expires_in_days?: number;
+  send_email?: boolean;
 }
 
 export interface DocumentRequestListResponse {

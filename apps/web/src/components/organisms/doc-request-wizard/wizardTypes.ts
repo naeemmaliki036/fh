@@ -18,6 +18,7 @@ export interface WizardState {
   items: WizardItem[];
   agentNote: string;
   expiresInDays: number;
+  sendEmail: boolean;
 }
 
 export type WizardStep = 1 | 2 | 3 | 4 | 5;

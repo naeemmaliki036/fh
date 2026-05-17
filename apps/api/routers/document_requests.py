@@ -53,6 +53,7 @@ async def create_document_request(
         agent_note=body.agent_note,
         items_data=[it.model_dump() for it in body.items],
         expires_in_days=body.expires_in_days,
+        send_email=body.send_email,
     )
     return DocumentRequestCreateResponse.model_validate(dr).model_copy(update={
         "items": items,

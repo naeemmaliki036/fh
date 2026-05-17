@@ -102,6 +102,7 @@ async def update_my_tenant(
         operating_countries=updates.get("operating_countries"),
         property_ref_prefix=updates.get("property_ref_prefix"),
         banner_url=updates.get("banner_url"),
+        document_request_default_instructions=updates.get("document_request_default_instructions"),
         ip_address=ctx.ip_address,
         user_agent=ctx.user_agent,
     )

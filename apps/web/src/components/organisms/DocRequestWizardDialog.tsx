@@ -48,6 +48,7 @@ export function DocRequestWizardDialog({
     items: [],
     agentNote: "",
     expiresInDays: 7,
+    sendEmail: true,
   });
   const [verificationCode, setVerificationCode] = useState<string | null>(null);
   const [publicUrl, setPublicUrl] = useState<string | null>(null);
@@ -65,6 +66,7 @@ export function DocRequestWizardDialog({
         agent_note: state.agentNote || null,
         instructions: state.agentNote || null,
         expires_in_days: state.expiresInDays,
+        send_email: state.sendEmail,
       },
       {
         onSuccess: (data) => {
@@ -85,6 +87,7 @@ export function DocRequestWizardDialog({
         items: [],
         agentNote: "",
         expiresInDays: 7,
+        sendEmail: true,
       });
       setVerificationCode(null);
       setPublicUrl(null);
@@ -126,8 +129,10 @@ export function DocRequestWizardDialog({
           <WizardStep4Details
             agentNote={state.agentNote}
             expiresInDays={state.expiresInDays}
+            sendEmail={state.sendEmail}
             onChangeNote={(v) => setState((s) => ({ ...s, agentNote: v }))}
             onChangeDays={(v) => setState((s) => ({ ...s, expiresInDays: v }))}
+            onChangeSendEmail={(v) => setState((s) => ({ ...s, sendEmail: v }))}
             onNext={() => setStep(5)}
             onBack={() => setStep(3)}
           />

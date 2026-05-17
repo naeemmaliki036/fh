@@ -87,6 +87,8 @@ class TenantResponse(BaseModel):
     office_country: str | None = None
     office_city: str | None = None
     signup_notes: str | None = None
+    # migration 0051 — doc request default instructions
+    document_request_default_instructions: str = ""
     created_at: datetime
     updated_at: datetime
 
@@ -111,6 +113,8 @@ class TenantUpdateRequest(BaseModel):
     property_ref_prefix: str | None = None
     # migration 0042 — tenant can set their own banner
     banner_url: str | None = Field(default=None, max_length=512)
+    # migration 0051 — doc request default instructions
+    document_request_default_instructions: str | None = Field(default=None, max_length=20000)
 
     @field_validator("operating_countries", mode="before")
     @classmethod
