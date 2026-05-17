@@ -19,6 +19,7 @@ from apps.api.models.media import Media
 from apps.api.services._media_thumbs import batch_fallback_thumbnails as _batch_thumbs
 from apps.api.services.audit_service import AuditService
 from apps.api.services.base import BaseService
+from apps.api.services.price_validation_service import PriceValidationService
 from apps.api.services.listing_filters import apply_listing_filters as _apply_filters
 from apps.api.services.listing_review_service import LOCKED_FOR_EDIT_STATUSES
 from apps.api.services.listing_video_validation import validate_video_upload as _validate_video
@@ -197,9 +198,33 @@ class ListingService(BaseService):
     async def create_listing(
         self, property_id: UUID, tenant_id: UUID, current_user: dict, **fields
     ) -> Listing:
+        from decimal import Decimal
+        from apps.api.models.property import Property as PropertyModel
+
         self._require_manager(current_user["role"])
         await self._set_rls(tenant_id)
         self._validate_purpose_rent(fields["purpose"], fields.get("rent_period"))
+
+        # Fetch parent property for country/city used in price validation.
+        prop = await self.session.get(PropertyModel, property_id)
+        if prop:
+            purpose_val = (
+                fields["purpose"].value
+                if hasattr(fields["purpose"], "value")
+                else str(fields["purpose"])
+            )
+            price = fields.get("price")
+            currency = (fields.get("currency") or "AED").upper()
+            if price is not None:
+                await PriceValidationService(self.session).validate(
+                    country=prop.country,
+                    city=prop.city,
+                    purpose=purpose_val,
+                    currency=currency,
+                    amount=Decimal(str(price)),
+                    actor_user_id=UUID(current_user["id"]),
+                )
+
         listing = Listing(property_id=property_id, tenant_id=tenant_id, **fields)
         self.session.add(listing)
         await self.session.flush()
@@ -233,8 +258,12 @@ class ListingService(BaseService):
             "rent_period", "listing_tier", "valid_from", "valid_until",
             # migration 0040 UAE market fields
             "rent_cheque_count", "trakheesi_permit",
-            # "price" excluded — use PATCH /{id}/price (audited price history)
+            # "price" excluded — use PATCH /{id}/price (audited + price-validated)
         }
+        # Note: price validation fires in listing_price_service.change_price
+        # (the only path that may mutate price). Purpose changes here do not
+        # re-trigger price validation; current price is assumed valid since it
+        # passed validation at create time.
         for k, v in updates.items():
             if k in allowed:
                 setattr(listing, k, v)

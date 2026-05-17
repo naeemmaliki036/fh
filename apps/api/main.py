@@ -40,6 +40,7 @@ from apps.api.routers import (
     off_market_reasons,
     open_houses,
     platform_users,
+    price_validation_admin,
     private_documents,
     properties,
     reports,
@@ -177,6 +178,11 @@ app.include_router(
     marketplace_countries_admin.router,
     prefix="/admin/marketplace-countries",
     tags=["admin-marketplace-countries"],
+)
+app.include_router(
+    price_validation_admin.router,
+    prefix="/admin/price-validation-rules",
+    tags=["admin-price-validation"],
 )
 # Consumer (marketplace end-user) routes
 app.include_router(consumer_auth.router, prefix="/consumer", tags=["consumer-auth"])

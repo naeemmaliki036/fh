@@ -14,6 +14,7 @@ from apps.api.models.listing_price_history import ListingPriceHistory
 from apps.api.models.media import Media
 from apps.api.services.audit_service import AuditService
 from apps.api.services.base import BaseService
+from apps.api.services.price_validation_service import PriceValidationService
 from packages.common.utils.error_handlers import conflict, forbidden, not_found
 
 _MANAGER_ROLES = {
@@ -68,6 +69,23 @@ class ListingPriceService(BaseService):
         old_price = Decimal(str(listing.price))
         if new_price == old_price:
             raise conflict("Price unchanged — no update performed")
+
+        # Price validation — fetch parent property for country/city scope.
+        from apps.api.models.property import Property as PropertyModel
+        prop = await self.session.get(PropertyModel, listing.property_id)
+        purpose_val = (
+            listing.purpose.value
+            if hasattr(listing.purpose, "value")
+            else str(listing.purpose)
+        )
+        await PriceValidationService(self.session).validate(
+            country=prop.country if prop else None,
+            city=prop.city if prop else None,
+            purpose=purpose_val,
+            currency=listing.currency,
+            amount=new_price,
+            actor_user_id=UUID(current_user["id"]),
+        )
 
         history = ListingPriceHistory(
             tenant_id=tenant_id,

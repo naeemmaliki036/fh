@@ -21,6 +21,7 @@ from apps.api.models.tenant import Tenant
 from apps.api.services.audit_service import AuditService
 from apps.api.services.base import BaseService
 from apps.api.services.consumer_listing_helpers import listing_to_dict
+from apps.api.services.price_validation_service import PriceValidationService
 from apps.api.services.property_ref import generate_unique_reference
 from packages.common.utils.error_handlers import bad_request, not_found
 
@@ -124,6 +125,18 @@ class ConsumerListingService(BaseService):
         except (KeyError, ValueError):
             raise bad_request("Invalid or missing purpose")
 
+        # Price validation — full scope available here (property + listing in one call).
+        from decimal import Decimal
+        price_val = data.get("price")
+        if price_val is not None:
+            await PriceValidationService(self.session).validate(
+                country=data.get("country", "AE"),
+                city=data.get("city"),
+                purpose=purpose.value,
+                currency=(data.get("currency") or "AED").upper(),
+                amount=Decimal(str(price_val)),
+            )
+
         from apps.api.models.enums import PropertyType
         try:
             property_type = PropertyType(data["property_type"])
@@ -207,6 +220,23 @@ class ConsumerListingService(BaseService):
         await self._set_rls(ppd_id)
 
         listing, prop = await self._get_owned(consumer_id, listing_id)
+
+        # Price validation on update — only fires when price is changing.
+        if "price" in data and data["price"] is not None:
+            from decimal import Decimal
+            eff_currency = (data.get("currency") or listing.currency or "AED").upper()
+            purpose_val = (
+                listing.purpose.value
+                if hasattr(listing.purpose, "value")
+                else str(listing.purpose)
+            )
+            await PriceValidationService(self.session).validate(
+                country=prop.country,
+                city=prop.city,
+                purpose=purpose_val,
+                currency=eff_currency,
+                amount=Decimal(str(data["price"])),
+            )
 
         for field in ("title", "description", "price", "currency"):
             if field in data and data[field] is not None:

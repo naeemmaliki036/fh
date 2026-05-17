@@ -186,6 +186,12 @@ class AuditAction(str, enum.Enum):
     CONSUMER_FAVORITE_ADDED = "consumer_favorite_added"
     CONSUMER_LISTING_LEAD_SUBMITTED = "consumer_listing_lead_submitted"
 
+    # Price validation rules (added in migration 0047)
+    PRICE_RULE_CREATED = "price_rule_created"
+    PRICE_RULE_UPDATED = "price_rule_updated"
+    PRICE_RULE_DELETED = "price_rule_deleted"
+    PRICE_VALIDATION_FAILED = "price_validation_failed"
+
     # Catch-all for ad-hoc events
     OTHER = "other"
 

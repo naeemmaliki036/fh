@@ -62,6 +62,7 @@ from .listing_price_history import ListingPriceHistory
 from .media import Media
 from .notification import Notification
 from .platform_user import PlatformUser
+from .price_validation_rule import PriceValidationRule
 from .private_document import PrivateDocument
 from .property import Property
 from .property_agent import PropertyAgent
@@ -134,6 +135,8 @@ __all__ = [
     "City",
     "Area",
     "MarketplaceCountry",
+    # Price validation rules (migration 0047)
+    "PriceValidationRule",
     # Consumer accounts (migration 0044)
     "ConsumerAccountStatus",
     "ConsumerAccount",

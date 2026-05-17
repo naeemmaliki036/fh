@@ -15,6 +15,7 @@ from apps.api.models.tenant import Tenant
 from apps.api.services._media_thumbs import batch_first_active_listing, batch_first_media
 from apps.api.services.audit_service import AuditService
 from apps.api.services.base import BaseService
+from apps.api.services.price_validation_service import PriceValidationService
 from apps.api.services.property_filters import apply_property_attribute_filters
 from apps.api.services.property_ref import generate_unique_reference
 from packages.common.utils.error_handlers import bad_request, forbidden, not_found
@@ -257,6 +258,22 @@ class PropertyService(BaseService):
         await validate_country_for_tenant(self.session, tenant_id, country)
         tags = fields.pop("tags", None) or []
 
+        # Price validation — purpose is on the Listing, not the Property.
+        # We validate only against purpose=NULL rules here (global floors).
+        # Full purpose-scoped validation fires at listing create/update.
+        price = fields.get("price")
+        currency = fields.get("currency", "AED") or "AED"
+        if price is not None:
+            from decimal import Decimal
+            await PriceValidationService(self.session).validate(
+                country=country,
+                city=fields.get("city"),
+                purpose=None,  # purpose lives on Listing; only global rules apply here
+                currency=str(currency).upper(),
+                amount=Decimal(str(price)),
+                actor_user_id=UUID(current_user["id"]),
+            )
+
         # Auto-generate internal_reference when the caller omits it.
         internal_reference = fields.pop("internal_reference", None)
         if not internal_reference:
@@ -337,6 +354,21 @@ class PropertyService(BaseService):
         if "country" in updates and updates["country"]:
             from apps.api.services.operating_countries_validator import validate_country_for_tenant
             await validate_country_for_tenant(self.session, tenant_id, updates["country"])
+
+        # Price validation on update — only fires when price actually changes.
+        if "price" in updates and updates["price"] is not None:
+            from decimal import Decimal
+            eff_country = updates.get("country", prop.country) or "AE"
+            eff_currency = (updates.get("currency", prop.currency) or "AED").upper()
+            await PriceValidationService(self.session).validate(
+                country=eff_country,
+                city=updates.get("city", prop.city),
+                purpose=None,  # purpose lives on Listing; only global rules here
+                currency=eff_currency,
+                amount=Decimal(str(updates["price"])),
+                actor_user_id=UUID(current_user["id"]),
+            )
+
         for k, v in updates.items():
             if k in allowed:
                 setattr(prop, k, v)
