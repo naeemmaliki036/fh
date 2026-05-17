@@ -38,6 +38,7 @@ const schema = z.object({
   locale: z.string().min(2),
   default_properties_view: z.enum(["card", "list"]),
   operating_countries: z.array(z.string()).min(1, "Select at least 1 country").max(20),
+  office_city: z.string().max(120).optional().nullable(),
 });
 
 type FormValues = z.infer<typeof schema>;
@@ -58,6 +59,7 @@ export default function CompanyPage(): React.ReactElement {
       locale: tenant?.locale ?? "en",
       default_properties_view: tenant?.default_properties_view ?? "card",
       operating_countries: tenant?.operating_countries ?? [],
+      office_city: tenant?.office_city ?? "",
     },
   });
 
@@ -163,6 +165,49 @@ export default function CompanyPage(): React.ReactElement {
           </CardHeader>
           <CardContent>
             <BannerUploader currentUrl={tenant.banner_url} canEdit={canEdit} />
+          </CardContent>
+        </Card>
+      )}
+
+      {tenant && (
+        <Card className="max-w-md">
+          <CardHeader>
+            <CardTitle>Office Location</CardTitle>
+            <CardDescription>
+              Country is set at signup and cannot be changed here — contact support if your business has relocated. City can be updated as you grow.
+            </CardDescription>
+          </CardHeader>
+          <CardContent>
+            <form
+              onSubmit={handleSubmit((data) => update({ office_city: data.office_city ?? null }))}
+              className="space-y-4"
+            >
+              <div className="space-y-1.5">
+                <Label>Office Country</Label>
+                <Input
+                  value={tenant.office_country ?? "—"}
+                  disabled
+                  readOnly
+                  className="bg-muted/40"
+                />
+                <p className="text-[11px] text-muted-foreground">Locked at signup.</p>
+              </div>
+              <div className="space-y-1.5">
+                <Label htmlFor="office_city">Office City</Label>
+                <Input
+                  id="office_city"
+                  disabled={!canEdit}
+                  placeholder="e.g. Dubai"
+                  {...register("office_city")}
+                />
+                {errors.office_city && <p className="text-xs text-destructive">{errors.office_city.message}</p>}
+              </div>
+              {canEdit && (
+                <Button type="submit" disabled={isPending} variant="outline">
+                  {isPending ? "Saving..." : "Save city"}
+                </Button>
+              )}
+            </form>
           </CardContent>
         </Card>
       )}

@@ -15,6 +15,8 @@ export interface Tenant {
   contact_phone: string;
   property_ref_prefix: string;
   banner_url: string | null;
+  office_country: string | null;
+  office_city: string | null;
   aggregator_enabled: boolean;
   aggregator_disabled_at: string | null;
   aggregator_disabled_reason: string | null;
@@ -55,6 +57,7 @@ export interface TenantUpdateRequest {
   operating_countries?: string[];
   banner_url?: string | null;
   document_request_default_instructions?: string;
+  office_city?: string | null;
 }
 
 export interface TenantListResponse {

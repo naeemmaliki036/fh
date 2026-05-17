@@ -115,6 +115,10 @@ class TenantUpdateRequest(BaseModel):
     banner_url: str | None = Field(default=None, max_length=512)
     # migration 0051 — doc request default instructions
     document_request_default_instructions: str | None = Field(default=None, max_length=20000)
+    # Tenant can update their office city post-signup. office_country is
+    # intentionally NOT in this list — it's locked at signup. Changing it
+    # would shift commission rules, regulator filings, etc.
+    office_city: str | None = Field(default=None, max_length=120)
 
     @field_validator("operating_countries", mode="before")
     @classmethod

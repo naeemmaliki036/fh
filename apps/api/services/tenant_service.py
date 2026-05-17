@@ -156,6 +156,7 @@ class TenantService(BaseService):
         property_ref_prefix: str | None = None,
         banner_url: str | None = None,
         document_request_default_instructions: str | None = None,
+        office_city: str | None = None,
         ip_address: str | None = None, user_agent: str | None = None,
     ) -> Tenant:
         role = current_user.get("role")
@@ -192,6 +193,7 @@ class TenantService(BaseService):
         if banner_url is not None: tenant.banner_url = banner_url
         if document_request_default_instructions is not None:
             tenant.document_request_default_instructions = document_request_default_instructions
+        if office_city is not None: tenant.office_city = office_city
         await self.session.flush()
         after = {
             "name": tenant.name, "currency": tenant.currency, "timezone": tenant.timezone,

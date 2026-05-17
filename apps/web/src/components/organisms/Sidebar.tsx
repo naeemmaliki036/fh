@@ -25,6 +25,7 @@ import {
   BarChart2,
   Percent,
   Globe,
+  History,
 } from "lucide-react";
 import { cn } from "@/lib/utils/cn";
 import { useAuth } from "@/contexts/AuthContext";
@@ -74,6 +75,7 @@ const TOOLS_ITEMS: NavItem[] = [
   { href: "/settings/off-market-reasons", label: "Off-Market Reasons", icon: Home, adminOnly: true },
   { href: "/settings/commission-rates", label: "Commission Rates", icon: Percent, financeOnly: true },
   { href: "/settings/document-requests", label: "Doc Request Defaults", icon: FileText, adminOnly: true },
+  { href: "/settings/audit-log", label: "Audit Log", icon: History, adminOnly: true },
 ];
 
 const ADMIN_ROLES = new Set(["company_owner", "company_admin"]);
