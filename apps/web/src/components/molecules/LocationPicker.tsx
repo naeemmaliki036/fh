@@ -123,10 +123,12 @@ export function LocationPicker({
           value={area ?? ""}
           placeholder={
             !city ? "Select city first" :
-            (areas?.length === 0 ? "No areas — ask admin to add" : "Select area (optional)")
+            (areas?.length === 0 ? "No areas — ask admin to add" :
+              (required ? "Select area" : "Select area (optional)"))
           }
           isLoading={loadingAreas}
           disabled={disabled || !city}
+          required={required}
           onValueChange={(label) => onChange({ country, city, area: label || null })}
         >
           {(areas ?? []).map((a: Area) => (

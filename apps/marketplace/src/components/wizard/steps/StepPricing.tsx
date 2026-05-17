@@ -1,5 +1,6 @@
 "use client";
 
+import { PriceHint } from "@/components/PriceHint";
 import type { WizardFormState } from "../wizard-types";
 
 const inputCls =
@@ -58,13 +59,18 @@ export function StepPricing({ state, onChange, onNext, onBack, priceApiError, on
         <div>
           <label className={labelCls}>Price *</label>
           <input
-            type="number"
-            min={0}
+            type="text"
+            inputMode="numeric"
+            pattern="[0-9]*"
             value={state.price ?? ""}
-            onChange={(e) => onChange({ price: e.target.value ? Number(e.target.value) : undefined })}
-            placeholder="1,000,000"
+            onChange={(e) => {
+              const cleaned = e.target.value.replace(/[^0-9]/g, "");
+              onChange({ price: cleaned ? Number(cleaned) : undefined });
+            }}
+            placeholder="1000000"
             className={priceApiError ? `${inputCls} border-red-400 ring-2 ring-red-400/20` : inputCls}
           />
+          <PriceHint value={state.price ?? null} currency={state.currency ?? "AED"} />
           {!(state.price && state.price > 0) && !priceApiError && (
             <p className={errCls}>Price is required</p>
           )}

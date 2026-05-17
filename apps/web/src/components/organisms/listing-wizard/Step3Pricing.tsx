@@ -1,6 +1,6 @@
 "use client";
 
-import { Controller } from "react-hook-form";
+import { Controller, useWatch } from "react-hook-form";
 import type { Control } from "react-hook-form";
 import { Label } from "@/components/ui/label";
 import { Input } from "@/components/ui/input";
@@ -12,6 +12,7 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { CURRENCIES } from "@/lib/constants/regions";
+import { PriceHint } from "@/components/molecules/PriceHint";
 import type { WizardFormValues } from "./wizard-schema";
 import type { ListingTier } from "@/lib/types/listing";
 
@@ -30,6 +31,8 @@ interface Step3PricingProps {
 }
 
 export function Step3Pricing({ control, register, errors, disabled }: Step3PricingProps): React.ReactElement {
+  const price = useWatch({ control, name: "price" });
+  const currency = useWatch({ control, name: "currency" });
   return (
     <div className="space-y-4">
       <div>
@@ -44,14 +47,19 @@ export function Step3Pricing({ control, register, errors, disabled }: Step3Prici
           <Label htmlFor="wizard-price">Price <span className="text-xs text-muted-foreground">(whole number)</span></Label>
           <Input
             id="wizard-price"
-            type="number"
-            min="0"
-            step="1"
+            type="text"
             inputMode="numeric"
+            pattern="[0-9]*"
             {...register("price")}
             disabled={disabled}
             placeholder="e.g. 1500000"
+            onInput={(e) => {
+              const t = e.currentTarget;
+              const cleaned = t.value.replace(/[^0-9]/g, "");
+              if (t.value !== cleaned) t.value = cleaned;
+            }}
           />
+          <PriceHint value={typeof price === "string" ? price : ""} currency={typeof currency === "string" ? currency : undefined} />
           {errors.price && (
             <p className="text-xs text-destructive">{errors.price.message}</p>
           )}

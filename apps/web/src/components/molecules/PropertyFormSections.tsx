@@ -7,6 +7,7 @@ import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { TagsInput } from "@/components/molecules/TagsInput";
 import { LocationPicker } from "@/components/molecules/LocationPicker";
+import { PriceHint } from "@/components/molecules/PriceHint";
 import { CURRENCIES } from "@/lib/constants/regions";
 import { TYPES, STATUSES, type PropertyFormValues } from "@/components/molecules/PropertyForm.config";
 
@@ -120,6 +121,7 @@ export function LocationSection({ register, control, setValue }: LocationProps):
                       }
                     }}
                     layout="grid"
+                    required
                   />
                 )}
               />
@@ -182,15 +184,33 @@ interface PricingSectionProps {
   register: UseFormRegister<PropertyFormValues>;
   control: Control<PropertyFormValues>;
   priceError?: string;
+  currentPrice?: string | null;
+  currentCurrency?: string | null;
 }
-export function PricingSection({ register, control, priceError }: PricingSectionProps): React.ReactElement {
+export function PricingSection({ register, control, priceError, currentPrice, currentCurrency }: PricingSectionProps): React.ReactElement {
   return (
     <div className="space-y-1.5">
       <SectionHeader label="Pricing" />
       <div className="grid grid-cols-2 gap-3">
         <div className="space-y-1">
           <Label>Price <span className="text-xs text-muted-foreground">(whole number)</span></Label>
-          <Input type="number" min="0" step="1" inputMode="numeric" {...register("price")} />
+          {/* type="text" not "number" — the latter renders large values in
+              scientific notation (e.g. 2.5E+5 instead of 250000). The onInput
+              handler strips anything that isn't a digit so the user can't even
+              type a decimal point. */}
+          <Input
+            type="text"
+            inputMode="numeric"
+            pattern="[0-9]*"
+            placeholder="e.g. 250000"
+            {...register("price")}
+            onInput={(e) => {
+              const t = e.currentTarget;
+              const cleaned = t.value.replace(/[^0-9]/g, "");
+              if (t.value !== cleaned) t.value = cleaned;
+            }}
+          />
+          <PriceHint value={currentPrice ?? ""} currency={currentCurrency ?? undefined} />
           {priceError && <p className="text-xs text-destructive">{priceError}</p>}
         </div>
         <div className="space-y-1">

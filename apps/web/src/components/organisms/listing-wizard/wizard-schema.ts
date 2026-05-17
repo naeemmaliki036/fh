@@ -31,6 +31,14 @@ export const wizardSchema = z
         message: "Must be on or after start date",
       });
     }
+    const todayIso = new Date().toISOString().slice(0, 10);
+    if (v.valid_from && v.valid_from < todayIso) {
+      ctx.addIssue({
+        code: z.ZodIssueCode.custom,
+        path: ["valid_from"],
+        message: "Valid From cannot be in the past",
+      });
+    }
   });
 
 export type WizardFormValues = z.infer<typeof wizardSchema>;

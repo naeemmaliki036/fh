@@ -17,6 +17,7 @@ from .enums import (
     AgentStatus,
     AuditAction,
     CommissionPayoutStatus,
+    CommissionRateTransactionType,
     CommissionType,
     CustomerListingInterestStatus,
     CustomerSource,
@@ -64,6 +65,7 @@ from .notification import Notification
 from .platform_user import PlatformUser
 from .price_validation_rule import PriceValidationRule
 from .private_document import PrivateDocument
+from .tenant_commission_rate import TenantCommissionRate
 from .property import Property
 from .property_agent import PropertyAgent
 from .tenant import Tenant
@@ -79,6 +81,7 @@ __all__ = [
     "AgentStatus",
     "CommissionType",
     "CommissionPayoutStatus",
+    "CommissionRateTransactionType",
     "CustomerListingInterestStatus",
     "PrivateDocumentApprovalStatus",
     "PrivateDocumentEntityType",
@@ -137,6 +140,8 @@ __all__ = [
     "MarketplaceCountry",
     # Price validation rules (migration 0047)
     "PriceValidationRule",
+    # Tenant commission rates (migration 0049)
+    "TenantCommissionRate",
     # Consumer accounts (migration 0044)
     "ConsumerAccountStatus",
     "ConsumerAccount",

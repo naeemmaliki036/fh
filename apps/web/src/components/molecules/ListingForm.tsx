@@ -9,6 +9,7 @@ import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { CURRENCIES } from "@/lib/constants/regions";
 import { Textarea } from "@/components/atoms/Textarea";
+import { PriceHint } from "@/components/molecules/PriceHint";
 import type { Listing, ListingCreateRequest, ListingUpdateRequest, ListingPurpose, RentPeriod, ListingTier, RentChequeCount } from "@/lib/types/listing";
 
 const PURPOSES: ListingPurpose[] = ["sale", "rent_short", "rent_long"];
@@ -40,6 +41,14 @@ const schema = z
         code: z.ZodIssueCode.custom,
         path: ["valid_until"],
         message: "Must be on or after start date",
+      });
+    }
+    const todayIso = new Date().toISOString().slice(0, 10);
+    if (v.valid_from && v.valid_from < todayIso) {
+      ctx.addIssue({
+        code: z.ZodIssueCode.custom,
+        path: ["valid_from"],
+        message: "Valid From cannot be in the past",
       });
     }
   });
@@ -114,7 +123,21 @@ export function ListingForm({ defaultValues, isPending, submitLabel, onSubmit, o
             </Select>
           )} />
         </div>
-        <div className="space-y-1.5"><Label htmlFor="form-price">Price</Label><Input id="form-price" {...register("price")} />
+        <div className="space-y-1.5"><Label htmlFor="form-price">Price</Label>
+          <Input
+            id="form-price"
+            type="text"
+            inputMode="numeric"
+            pattern="[0-9]*"
+            placeholder="e.g. 1500000"
+            {...register("price")}
+            onInput={(e) => {
+              const t = e.currentTarget;
+              const cleaned = t.value.replace(/[^0-9]/g, "");
+              if (t.value !== cleaned) t.value = cleaned;
+            }}
+          />
+          <PriceHint value={watch("price")} currency={watch("currency")} />
           {(errors.price || priceApiError) && (
             <p className="text-xs text-destructive">{errors.price?.message ?? priceApiError}</p>
           )}
@@ -158,12 +181,18 @@ export function ListingForm({ defaultValues, isPending, submitLabel, onSubmit, o
         )}
         <div className="space-y-1.5">
           <Label>Valid From</Label>
-          <Input type="date" {...register("valid_from")} />
-          <p className="text-xs text-muted-foreground mt-1">Leave blank for no expiry</p>
+          <Input type="date" min={new Date().toISOString().slice(0, 10)} {...register("valid_from")} />
+          {errors.valid_from && (
+            <p className="text-xs text-destructive">{errors.valid_from.message}</p>
+          )}
+          <p className="text-xs text-muted-foreground mt-1">Today or later. Leave blank to start immediately.</p>
         </div>
         <div className="space-y-1.5">
           <Label>Valid Until</Label>
-          <Input type="date" {...register("valid_until")} />
+          <Input type="date" min={new Date().toISOString().slice(0, 10)} {...register("valid_until")} />
+          {errors.valid_until && (
+            <p className="text-xs text-destructive">{errors.valid_until.message}</p>
+          )}
           <p className="text-xs text-muted-foreground mt-1">Leave blank for no expiry</p>
         </div>
         <div className="space-y-1.5 col-span-2">

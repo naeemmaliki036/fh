@@ -2,6 +2,7 @@
 
 import { useState } from "react";
 import { LocationPicker } from "@/components/molecules/LocationPicker";
+import { PriceHint } from "@/components/molecules/PriceHint";
 import { useCreatePublicLead } from "@/hooks/mutations/public-site/useCreatePublicLead";
 import { PhoneInput } from "@/components/molecules/PhoneInput";
 import { isValidPhone } from "@/lib/utils/phone";
@@ -226,8 +227,19 @@ export function ListYourPropertyForm({
           <label className={labelCls}>Approx price / rent</label>
           <div className="relative">
             <span className="pointer-events-none absolute left-3 top-1/2 -translate-y-1/2 text-xs font-semibold text-slate-400">{currency}</span>
-            <input value={form.price} onChange={set("price")} placeholder="1,200,000" className={`${fieldCls} pl-12`} />
+            <input
+              inputMode="numeric"
+              pattern="[0-9]*"
+              value={form.price}
+              onChange={(e) => {
+                const cleaned = e.target.value.replace(/[^0-9]/g, "");
+                setForm((prev) => ({ ...prev, price: cleaned }));
+              }}
+              placeholder="1200000"
+              className={`${fieldCls} pl-12`}
+            />
           </div>
+          <PriceHint value={form.price} currency={currency} />
         </div>
       </div>
 

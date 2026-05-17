@@ -198,6 +198,10 @@ class AuditAction(str, enum.Enum):
     CONSUMER_LISTING_CHANGES_REQUESTED = "consumer_listing_changes_requested"
     CONSUMER_LISTING_RESUBMITTED = "consumer_listing_resubmitted"
 
+    # Tenant company commission rates (added in migration 0049)
+    TENANT_COMMISSION_RATE_CREATED = "tenant_commission_rate_created"
+    TENANT_COMMISSION_RATE_UPDATED = "tenant_commission_rate_updated"
+
     # Catch-all for ad-hoc events
     OTHER = "other"
 
@@ -211,6 +215,20 @@ class AgentStatus(str, enum.Enum):
 class CommissionType(str, enum.Enum):
     PERCENTAGE = "percentage"
     FIXED = "fixed"
+
+
+class CommissionRateTransactionType(str, enum.Enum):
+    """Transaction categories for per-tenant company commission rates.
+
+    off_plan is a distinct category here even though it maps to a property
+    completion_status on the inventory side — off-plan deals warrant their own
+    rate configuration.
+    """
+
+    SALE = "sale"
+    RENT_LONG = "rent_long"
+    RENT_SHORT = "rent_short"
+    OFF_PLAN = "off_plan"
 
 
 class PrivateDocumentEntityType(str, enum.Enum):

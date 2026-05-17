@@ -27,7 +27,7 @@ export const propertyFormSchema = z.object({
   title: z.string().min(2, "Title required"),
   country: z.string().optional().nullable(),
   city: z.string().optional().nullable(),
-  area: z.string().optional().nullable(),
+  area: z.string().min(1, "Area is required"),
   property_type: z.enum(TYPES as [PropertyType, ...PropertyType[]]),
   bedrooms: z.coerce.number().int().min(0).max(50, "Max 50").optional().nullable(),
   bathrooms: z.coerce.number().int().min(0).max(50, "Max 50").optional().nullable(),

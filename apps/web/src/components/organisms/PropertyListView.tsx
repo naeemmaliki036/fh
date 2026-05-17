@@ -37,9 +37,9 @@ export function getPropertyTransitions(p: Property): TransitionDef[] {
     case "available":
       return [{ label: "Mark off-market", status: "off_market", destructive: true }];
     case "off_market":
-      return [{ label: "Mark available", status: "available", destructive: false }];
+      return [{ label: "Publish", status: "available", destructive: false }];
     case "draft":
-      return [{ label: "Mark available", status: "available", destructive: false }];
+      return [{ label: "Publish", status: "available", destructive: false }];
     case "reserved":
       return [{ label: "Mark off-market", status: "off_market", destructive: true }];
     default:
@@ -98,10 +98,14 @@ export function PropertyListView({ items, onStatusChange }: PropertyListViewProp
                   {p.bathrooms != null ? ` / ${p.bathrooms}ba` : ""}
                 </td>
                 <td className="px-3 py-2.5 text-muted-foreground">
-                  {p.size_sqft ? `${p.size_sqft} sqft` : "—"}
+                  {p.size_sqft != null
+                    ? `${Number(p.size_sqft).toLocaleString("en-AE", { maximumFractionDigits: 0 })} sqft`
+                    : "—"}
                 </td>
                 <td className="px-3 py-2.5 text-muted-foreground">
-                  {p.price ? `${p.currency ?? ""} ${p.price}` : "—"}
+                  {p.price != null
+                    ? `${p.currency ?? ""} ${Number(p.price).toLocaleString("en-AE", { maximumFractionDigits: 0 })}`
+                    : "—"}
                 </td>
                 <td className="px-3 py-2.5">
                   <PropertyStatusBadge status={p.status} />

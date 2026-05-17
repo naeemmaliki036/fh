@@ -55,6 +55,7 @@ from apps.api.routers import (
     consumer_favorites,
     consumer_listing_leads,
     consumer_listings,
+    tenant_commission_rates,
 )
 
 logging.basicConfig(level=logging.INFO)
@@ -198,6 +199,11 @@ app.include_router(
     admin_consumer_listings.router,
     prefix="/platform-admin/consumer-listings",
     tags=["admin-consumer-listings"],
+)
+app.include_router(
+    tenant_commission_rates.router,
+    prefix="/tenant/commission-rates",
+    tags=["tenant-commission-rates"],
 )
 
 
