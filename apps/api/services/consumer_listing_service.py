@@ -220,8 +220,8 @@ class ConsumerListingService(BaseService):
             if field in data and data[field] is not None:
                 setattr(prop, field, data[field])
 
-        # State machine: active → pending_review on edit (re-review required)
-        if listing.status == ListingStatus.ACTIVE:
+        # State machine: edits to an approved/rejected listing re-enter moderation.
+        if listing.status in (ListingStatus.ACTIVE, ListingStatus.CHANGES_REQUESTED):
             listing.status = ListingStatus.PENDING_REVIEW
             listing.submitted_at = datetime.now(UTC)
 
