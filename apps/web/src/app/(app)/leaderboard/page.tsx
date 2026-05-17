@@ -56,18 +56,37 @@ export default function LeaderboardPage(): React.ReactElement {
             </SelectContent>
           </Select>
         </div>
-        {period === "custom" && (
-          <>
-            <div className="space-y-1.5">
-              <Label>From</Label>
-              <Input type="date" value={from} onChange={(e) => setFrom(e.target.value)} className="w-40" />
-            </div>
-            <div className="space-y-1.5">
-              <Label>To</Label>
-              <Input type="date" value={to} onChange={(e) => setTo(e.target.value)} className="w-40" />
-            </div>
-          </>
-        )}
+        {period === "custom" && (() => {
+          // Historic report — no future dates, and From must be ≤ To.
+          const todayIso = new Date().toISOString().slice(0, 10);
+          const fromOver = !!from && !!to && from > to;
+          return (
+            <>
+              <div className="space-y-1.5">
+                <Label>From</Label>
+                <Input
+                  type="date"
+                  value={from}
+                  max={to || todayIso}
+                  onChange={(e) => setFrom(e.target.value)}
+                  className="w-40"
+                />
+                {fromOver && <p className="text-xs text-destructive">Must be on or before "To"</p>}
+              </div>
+              <div className="space-y-1.5">
+                <Label>To</Label>
+                <Input
+                  type="date"
+                  value={to}
+                  min={from || undefined}
+                  max={todayIso}
+                  onChange={(e) => setTo(e.target.value)}
+                  className="w-40"
+                />
+              </div>
+            </>
+          );
+        })()}
         <div className="space-y-1.5">
           <Label>Sort by</Label>
           <Select value={sortKey} onValueChange={(v) => setSortKey(v as SortKey)}>

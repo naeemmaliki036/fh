@@ -95,6 +95,15 @@ class Tenant(Base, UUIDMixin, TimestampMixin):
         nullable=True,
     )
 
+    # HTML template used by the New Document Request wizard's
+    # "Load default instructions" button. NOT NULL; column has a
+    # server default seeded in migration 0051.
+    document_request_default_instructions: Mapped[str] = mapped_column(
+        Text,
+        nullable=False,
+        server_default="",
+    )
+
     # UI preferences — default view mode for the properties list.
     default_properties_view: Mapped[PropertiesViewMode] = mapped_column(
         Enum(PropertiesViewMode, name="properties_view_mode", create_type=False,

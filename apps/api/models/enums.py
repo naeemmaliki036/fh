@@ -248,6 +248,7 @@ class PrivateDocumentKind(str, enum.Enum):
     KYC = "kyc"
     OTHER = "other"
     # Pseudo-field items (text-type document items for UI)
+    FULL_NAME = "full_name"
     DATE_OF_BIRTH = "date_of_birth"
     NATIONALITY = "nationality"
     PHONE = "phone"
