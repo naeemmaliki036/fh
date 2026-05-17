@@ -2,6 +2,7 @@ import { Badge } from "@/components/ui/badge";
 import type { CustomerSource } from "@/lib/types";
 
 const LABELS: Record<CustomerSource, string> = {
+  agent: "Agent",
   portal: "Portal",
   website: "Website",
   manual: "Manual",

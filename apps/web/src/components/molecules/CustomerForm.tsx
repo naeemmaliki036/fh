@@ -22,6 +22,7 @@ import type { Customer, CustomerCreateRequest, CustomerUpdateRequest, CustomerSo
 import type { Agent } from "@/lib/types";
 
 const SOURCES: { value: CustomerSource; label: string }[] = [
+  { value: "agent", label: "Agent" },
   { value: "manual", label: "Manual" },
   { value: "portal", label: "Portal" },
   { value: "website", label: "Website" },
@@ -45,6 +46,7 @@ export const customerFormSchema = z
     source: z.enum(SOURCE_VALUES),
     notes: z.string().optional(),
     assigned_agent_id: z.string().optional(),
+    source_agent_id: z.string().optional(),
     company_trade_license: z.string().max(64).optional(),
     contact_person_name: z.string().optional(),
     contact_person_designation: z.string().max(128).optional(),
@@ -58,6 +60,13 @@ export const customerFormSchema = z
           message: "Contact person name required (min 2 chars)",
         });
       }
+    }
+    if (v.source === "agent" && !v.source_agent_id) {
+      ctx.addIssue({
+        code: z.ZodIssueCode.custom,
+        path: ["source_agent_id"],
+        message: "Pick which agent brought this customer in",
+      });
     }
   });
 
@@ -94,6 +103,7 @@ export function CustomerForm({
         source: defaultValues?.source ?? "manual",
         notes: defaultValues?.notes ?? "",
         assigned_agent_id: defaultValues?.assigned_agent_id ?? "",
+        source_agent_id: defaultValues?.source_agent_id ?? "",
         company_trade_license: defaultValues?.company_trade_license ?? "",
         contact_person_name: defaultValues?.contact_person_name ?? "",
         contact_person_designation: defaultValues?.contact_person_designation ?? "",
@@ -102,6 +112,8 @@ export function CustomerForm({
 
   const customerType = watch("customer_type");
   const isCompany = customerType === "company";
+  const source = watch("source");
+  const isSourceAgent = source === "agent";
 
   const handleFormSubmit = (values: CustomerFormValues): void => {
     const companyFields =
@@ -128,6 +140,9 @@ export function CustomerForm({
       source: values.source,
       notes: values.notes || null,
       assigned_agent_id: values.assigned_agent_id || null,
+      // Only persist source_agent_id when source is "agent"; clear otherwise
+      // so a stale value doesn't survive a source change.
+      source_agent_id: values.source === "agent" ? values.source_agent_id || null : null,
       ...companyFields,
     });
   };
@@ -257,6 +272,29 @@ export function CustomerForm({
             )}
           />
         </div>
+        {agents && isSourceAgent && (
+          <div className="space-y-1.5 col-span-2">
+            <Label>Brought in by *</Label>
+            <Controller
+              name="source_agent_id"
+              control={control}
+              render={({ field }) => (
+                <Select value={field.value || ""} onValueChange={(v) => field.onChange(v)}>
+                  <SelectTrigger><SelectValue placeholder="Select agent" /></SelectTrigger>
+                  <SelectContent>
+                    {agents.map((a) => (
+                      <SelectItem key={a.id} value={a.id}>{a.full_name}</SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              )}
+            />
+            {errors.source_agent_id && (
+              <p className="text-xs text-destructive">{errors.source_agent_id.message}</p>
+            )}
+            <p className="text-[11px] text-muted-foreground">Recorded for reporting and commission attribution.</p>
+          </div>
+        )}
         {agents && (
           <div className="space-y-1.5 col-span-2">
             <Label>Assigned Agent</Label>

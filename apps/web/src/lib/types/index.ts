@@ -302,6 +302,15 @@ export type {
 } from "./consumer-listing";
 
 export type {
+  TransactionType,
+  TenantCommissionRate,
+  CommissionRateListResponse,
+  CommissionRateUpdateRequest,
+  CommissionRateAuditEntry,
+} from "./commission-rate";
+export { COMMISSION_RATE_DEFAULTS, TRANSACTION_TYPE_LABELS } from "./commission-rate";
+
+export type {
   PublicSiteStats,
   HeroConfig,
   ThemeConfig,

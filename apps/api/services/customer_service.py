@@ -38,6 +38,7 @@ _COMPANY_FIELDS = {"company_trade_license", "contact_person_name", "contact_pers
 _ALLOWED_UPDATE = {
     "full_name", "email", "nationality", "language",
     "preferred_currency", "source", "notes", "assigned_agent_id",
+    "source_agent_id",
     "customer_type", "company_trade_license", "contact_person_name",
     "contact_person_designation",
 }

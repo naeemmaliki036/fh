@@ -22,6 +22,7 @@ import {
   Trophy,
   Wallet,
   BarChart2,
+  Percent,
 } from "lucide-react";
 import { cn } from "@/lib/utils/cn";
 import { useAuth } from "@/contexts/AuthContext";
@@ -36,6 +37,8 @@ interface NavItem {
   adminOnly?: boolean;
   reviewerOnly?: boolean;
   agentOnly?: boolean;
+  /** Visible to company_owner, company_admin, and finance_user */
+  financeOnly?: boolean;
 }
 
 const MAIN_ITEMS: NavItem[] = [
@@ -66,11 +69,13 @@ const TOOLS_ITEMS: NavItem[] = [
   { href: "/settings/company", label: "Company", icon: Building2, adminOnly: true },
   { href: "/settings/email-templates", label: "Email Templates", icon: Mail, adminOnly: true },
   { href: "/settings/off-market-reasons", label: "Off-Market Reasons", icon: Home, adminOnly: true },
+  { href: "/settings/commission-rates", label: "Commission Rates", icon: Percent, financeOnly: true },
 ];
 
 const ADMIN_ROLES = new Set(["company_owner", "company_admin"]);
 const REVIEWER_ROLES = new Set(["listing_manager", "company_admin", "company_owner"]);
 const AGENT_ROLES = new Set(["agent"]);
+const FINANCE_ROLES = new Set(["company_owner", "company_admin", "finance_user"]);
 
 function SectionLabel({ label }: { label: string }): React.ReactElement {
   return (
@@ -134,6 +139,7 @@ export function Sidebar(): React.ReactElement {
   const isAdmin = currentUser && ADMIN_ROLES.has(currentUser.role);
   const isReviewer = currentUser && REVIEWER_ROLES.has(currentUser.role);
   const isAgent = currentUser && AGENT_ROLES.has(currentUser.role);
+  const isFinance = currentUser && FINANCE_ROLES.has(currentUser.role);
 
   const { data: pendingReviewsData } = useMyPendingReviews(isReviewer ? (currentUser?.id ?? "") : "");
   const pendingReviewCount = pendingReviewsData?.total ?? 0;
@@ -146,6 +152,7 @@ export function Sidebar(): React.ReactElement {
       if (item.adminOnly && !isAdmin) return false;
       if (item.reviewerOnly && !isReviewer) return false;
       if (item.agentOnly && !isAgent) return false;
+      if (item.financeOnly && !isFinance) return false;
       return true;
     });
   }

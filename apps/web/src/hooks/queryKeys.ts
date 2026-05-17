@@ -137,6 +137,10 @@ export const queryKeys = {
     list: ["price-validation", "list"] as const,
     preview: (params: Record<string, unknown>) => ["price-validation", "preview", params] as const,
   },
+  commissionRates: {
+    all: ["commission-rates"] as const,
+    audit: (transactionType: string) => ["commission-rates", "audit", transactionType] as const,
+  },
   locations: {
     tree: ["locations", "tree"] as const,
     countries: ["locations", "countries"] as const,

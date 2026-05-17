@@ -274,6 +274,7 @@ class CustomerType(str, enum.Enum):
 
 
 class CustomerSource(str, enum.Enum):
+    AGENT = "agent"
     PORTAL = "portal"
     WEBSITE = "website"
     MANUAL = "manual"

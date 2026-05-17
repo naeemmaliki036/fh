@@ -20,6 +20,7 @@ class CustomerCreateRequest(BaseModel):
     status: CustomerStatus = CustomerStatus.ACTIVE
     notes: str | None = None
     assigned_agent_id: uuid.UUID | None = None
+    source_agent_id: uuid.UUID | None = None
     customer_type: Literal["individual", "company"] = "individual"
     company_trade_license: str | None = None
     contact_person_name: str | None = None
@@ -59,6 +60,7 @@ class CustomerUpdateRequest(BaseModel):
     source: CustomerSource | None = None
     notes: str | None = None
     assigned_agent_id: uuid.UUID | None = None
+    source_agent_id: uuid.UUID | None = None
     customer_type: Literal["individual", "company"] | None = None
     company_trade_license: str | None = None
     contact_person_name: str | None = None
@@ -106,6 +108,7 @@ class CustomerResponse(BaseModel):
     status: CustomerStatus
     notes: str | None = None
     assigned_agent_id: uuid.UUID | None = None
+    source_agent_id: uuid.UUID | None = None
     created_by_user_id: uuid.UUID | None = None
     company_trade_license: str | None = None
     contact_person_name: str | None = None

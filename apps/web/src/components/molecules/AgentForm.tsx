@@ -17,6 +17,7 @@ import { Controller } from "react-hook-form";
 import { PhoneInput } from "@/components/molecules/PhoneInput";
 import { isValidPhone } from "@/lib/utils/phone";
 import type { Agent, AgentCreateRequest, AgentUpdateRequest } from "@/lib/types";
+import { AgentCommissionPreview } from "@/components/molecules/AgentCommissionPreview";
 
 const schema = z.object({
   full_name: z.string().min(2, "Name required"),
@@ -162,6 +163,10 @@ export function AgentForm({ defaultValues, isPending, submitLabel, onSubmit, onC
           {showZeroWarning && (
             <p className="text-xs text-amber-600">0% commission is unusual — confirm this is intentional.</p>
           )}
+          <AgentCommissionPreview
+            commissionValue={commissionValue}
+            commissionType={commissionType}
+          />
         </div>
       </div>
       <div className="flex gap-2 justify-end pt-2">

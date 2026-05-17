@@ -1,4 +1,5 @@
 export type CustomerSource =
+  | "agent"
   | "portal"
   | "website"
   | "manual"
@@ -24,6 +25,7 @@ export interface Customer {
   status: CustomerStatus;
   notes: string | null;
   assigned_agent_id: string | null;
+  source_agent_id: string | null;
   created_by_user_id: string | null;
   created_at: string;
   updated_at: string;
@@ -44,6 +46,7 @@ export interface CustomerCreateRequest {
   status?: CustomerStatus;
   notes?: string | null;
   assigned_agent_id?: string | null;
+  source_agent_id?: string | null;
   customer_type?: CustomerType;
   company_trade_license?: string | null;
   contact_person_name?: string | null;
@@ -60,6 +63,7 @@ export interface CustomerUpdateRequest {
   source?: CustomerSource | null;
   notes?: string | null;
   assigned_agent_id?: string | null;
+  source_agent_id?: string | null;
   customer_type?: CustomerType | null;
   company_trade_license?: string | null;
   contact_person_name?: string | null;

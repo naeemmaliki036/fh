@@ -85,6 +85,7 @@ async def create_customer(
             status=body.status,
             notes=body.notes,
             assigned_agent_id=body.assigned_agent_id,
+            source_agent_id=body.source_agent_id,
             customer_type=body.customer_type,
             company_trade_license=body.company_trade_license,
             contact_person_name=body.contact_person_name,

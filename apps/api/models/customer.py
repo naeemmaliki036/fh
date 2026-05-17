@@ -129,6 +129,14 @@ class Customer(Base, UUIDMixin, TimestampMixin, TenantMixin):
         nullable=True,
     )
 
+    # Attribution: which agent brought this customer in (source=agent only).
+    # Distinct from assigned_agent_id which records who currently manages them.
+    source_agent_id: Mapped[uuid.UUID | None] = mapped_column(
+        UUID(as_uuid=True),
+        ForeignKey("agents.id", ondelete="SET NULL"),
+        nullable=True,
+    )
+
     # Who entered this customer into the system.
     created_by_user_id: Mapped[uuid.UUID | None] = mapped_column(
         UUID(as_uuid=True),
